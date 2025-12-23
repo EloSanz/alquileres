@@ -1,0 +1,69 @@
+# 🤖 REGLAS PARA PROGRAMACIÓN AGENTICA (OBLIGATORIO)
+
+**LEE AGENT_RULES.md PRIMERO**: https://github.com/tu-repo/AGENT_RULES.md
+
+Este archivo es un resumen. Las reglas completas están en AGENT_RULES.md
+
+## 🚫 PROHIBICIONES ABSOLUTAS
+
+### Backend - NUNCA uses:
+- ❌ Express, NestJS, Fastify
+- ❌ Axios, Fetch nativo
+- ❌ TypeORM, MikroORM, Sequelize
+- ❌ Joi, Yup, Zod
+- ❌ Librerías de mapeo automático
+- ❌ Implementaciones sin interfaces
+
+### Frontend - NUNCA uses:
+- ❌ Axios, Fetch nativo, Eden Fetch
+- ❌ Carpeta `/src/types/` (excepto tipos compartidos mínimos)
+- ❌ Redux, Zustand, Jotai
+- ❌ CSS Modules, styled-components
+
+## ✅ STACK OBLIGATORIO
+
+- **Backend**: Elysia + Prisma + PostgreSQL + TypeScript
+- **Frontend**: React + Vite + Eden Treaty + Material UI + TypeScript
+- **Type-Safety**: Eden Treaty (inferencia automática end-to-end)
+
+## 📋 CHECKLIST ANTES DE COMMIT
+
+```bash
+# Backend
+[ ] export type App = typeof app en src/index.ts
+[ ] grep -r "interface I.*Service" src/interfaces/
+[ ] grep -r "interface I.*Repository" src/interfaces/
+[ ] grep -r "toDTO()" src/entities/
+[ ] grep -r "fromPrisma()" src/entities/
+[ ] npm run dev:full funciona (dev + type-check)
+
+# Frontend
+[ ] treaty<App> de @elysiajs/eden
+[ ] import type { App } from '../../../server/src/index'
+[ ] NO carpeta src/types/ (excepto mínimos)
+[ ] npm run dev:full funciona (dev + type-check)
+```
+
+## 📚 DOCUMENTACIÓN
+
+1. **AGENT_RULES.md** - Reglas completas con templates para copiar/pegar
+2. **QUICK_REFERENCE.md** - Referencia técnica y comandos
+3. **ARCHITECTURE_STANDARD.md** - Estándar completo
+4. **templates/** - Templates concretos listos para usar
+
+## 🚀 SETUP RÁPIDO
+
+```bash
+# Setup completo
+./setup.sh
+
+# Desarrollo
+npm run dev  # Backend + Frontend simultáneo
+```
+
+## ⚠️ SI NO SIGUES ESTAS REGLAS
+
+**DETENTE. NO PROGRAMES.**
+
+Este estándar funciona completo o no se usa. Copia los templates exactamente.
+

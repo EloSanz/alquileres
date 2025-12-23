@@ -1,0 +1,19 @@
+{
+  "name": "alquileres-app",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión de Alquileres - Full Stack",
+  "scripts": {
+    "setup": "./setup.sh",
+    "dev": "concurrently -n backend,frontend \"cd server && npm run dev:full\" \"cd web && npm run dev:full\"",
+    "dev:backend": "cd server && npm run dev:full",
+    "dev:frontend": "cd web && npm run dev:full",
+    "build": "cd server && npm run build && cd ../web && npm run build",
+    "clean": "find . -name node_modules -type d -exec rm -rf {} + 2>/dev/null || true"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  },
+  "keywords": ["fullstack", "elysia", "react", "typescript", "prisma"],
+  "author": "",
+  "license": "ISC"
+}
