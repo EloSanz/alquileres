@@ -22,16 +22,26 @@
       "no-any-types": "warn",
       "interface-prefix": "I"
     },
+    "after-change": {
+      "required-commands": [
+        "cd server && npm run type-check && npm run build",
+        "cd web && npm run type-check && npm run build"
+      ]
+    },
     "before-commit": {
       "backend-checks": [
         "export type App = typeof app",
         "interfaces exist for services/repositories",
         "entities have toDTO()/fromPrisma()",
+        "✅ npm run type-check passes",
+        "✅ npm run build compiles",
         "dev:full works"
       ],
       "frontend-checks": [
         "treaty<App> import",
         "no src/types/ folder",
+        "✅ npm run type-check passes",
+        "✅ npm run build compiles",
         "dev:full works"
       ]
     }

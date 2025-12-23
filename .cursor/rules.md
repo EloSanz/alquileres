@@ -44,18 +44,49 @@ web/src/
 └── pages/          # Páginas/rutas
 ```
 
+## 🔄 VERIFICACIÓN OBLIGATORIA DESPUÉS DE CADA CAMBIO
+
+**ANTES de continuar programando, ejecutar:**
+```bash
+# Backend
+cd server && npm run type-check && npm run build
+
+# Frontend
+cd web && npm run type-check && npm run build
+```
+
 ## 📋 CHECKLIST ANTES DE CADA CAMBIO
 ### Backend
 - [ ] `export type App = typeof app` en `src/index.ts`
 - [ ] Interfaces existen: `grep -r "interface I.*Service"`
 - [ ] Entities tienen métodos: `toDTO()`, `fromPrisma()`, `toPrisma()`
+- [ ] **Controllers usan contexto de Elysia correctamente** (NO `userId` como parámetro directo)
+- [ ] **Auth plugin expone `getCurrentUserId()` en contexto**
+- [ ] **✅ `npm run type-check` pasa sin errores**
+- [ ] **✅ `npm run build` compila exitosamente**
 - [ ] `npm run dev:full` funciona (dev + type-check)
 
 ### Frontend
 - [ ] `treaty<App>` import correcto
 - [ ] `import type { App }` desde server
 - [ ] NO carpeta `src/types/`
+- [ ] **✅ `npm run type-check` pasa sin errores**
+- [ ] **✅ `npm run build` compila exitosamente**
 - [ ] `npm run dev:full` funciona
+
+## 🚨 ERRORES COMUNES A EVITAR
+
+### Controllers en Elysia
+❌ **MALO:** `({ userId }: { userId: number }) =>`
+✅ **BUENO:** `({ getCurrentUserId }: { getCurrentUserId: () => number }) =>`
+
+### Auth Context
+❌ **MALO:** Esperar `userId` directamente en parámetros
+✅ **BUENO:** Usar `getCurrentUserId()` del auth plugin
+
+### Tipos de Contexto
+❌ **MALO:** Definir tipos manuales que no coinciden con Elysia
+✅ **BUENO:** Dejar que Elysia infiera los tipos automáticamente
 
 ## 🔄 WORKFLOW RECOMENDADO
 1. **Planificar** la funcionalidad según dominio (inquilinos, pagos, propiedades)

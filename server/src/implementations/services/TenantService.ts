@@ -1,16 +1,17 @@
 import { ITenantService } from '../../interfaces/services/ITenantService';
 import { ITenantRepository } from '../../interfaces/repositories/ITenantRepository';
-import { TenantDTO, CreateTenantDTO, UpdateTenantDTO, TenantEntity } from '../../entities/Tenant.entity';
+import { TenantDTO, CreateTenantDTO, UpdateTenantDTO } from '../../dtos/tenant.dto';
+import { TenantEntity } from '../../entities/Tenant.entity';
 
 export class TenantService implements ITenantService {
   constructor(private tenantRepository: ITenantRepository) {}
 
-  async getAllTenants(): Promise<TenantDTO[]> {
+  async getAllTenants(_userId: number): Promise<TenantDTO[]> {
     const entities = await this.tenantRepository.findAll();
     return entities.map(entity => entity.toDTO());
   }
 
-  async getTenantById(id: number): Promise<TenantDTO> {
+  async getTenantById(id: number, _userId: number): Promise<TenantDTO> {
     const entity = await this.tenantRepository.findById(id);
     if (!entity) {
       throw new Error('Tenant not found');
@@ -18,7 +19,7 @@ export class TenantService implements ITenantService {
     return entity.toDTO();
   }
 
-  async getTenantByEmail(email: string): Promise<TenantDTO> {
+  async getTenantByEmail(email: string, _userId: number): Promise<TenantDTO> {
     const entity = await this.tenantRepository.findByEmail(email);
     if (!entity) {
       throw new Error('Tenant not found');
@@ -26,7 +27,7 @@ export class TenantService implements ITenantService {
     return entity.toDTO();
   }
 
-  async getTenantByDocumentId(documentId: string): Promise<TenantDTO> {
+  async getTenantByDocumentId(documentId: string, _userId: number): Promise<TenantDTO> {
     const entity = await this.tenantRepository.findByDocumentId(documentId);
     if (!entity) {
       throw new Error('Tenant not found');
@@ -34,7 +35,7 @@ export class TenantService implements ITenantService {
     return entity.toDTO();
   }
 
-  async createTenant(data: CreateTenantDTO): Promise<TenantDTO> {
+  async createTenant(data: CreateTenantDTO, _userId: number): Promise<TenantDTO> {
     // Check if email already exists
     const existingEmail = await this.tenantRepository.findByEmail(data.email);
     if (existingEmail) {
@@ -69,7 +70,7 @@ export class TenantService implements ITenantService {
     return created.toDTO();
   }
 
-  async updateTenant(id: number, data: UpdateTenantDTO): Promise<TenantDTO> {
+  async updateTenant(id: number, data: UpdateTenantDTO, _userId: number): Promise<TenantDTO> {
     const entity = await this.tenantRepository.findById(id);
     if (!entity) {
       throw new Error('Tenant not found');
@@ -100,7 +101,7 @@ export class TenantService implements ITenantService {
     return updated.toDTO();
   }
 
-  async deleteTenant(id: number): Promise<void> {
+  async deleteTenant(id: number, _userId: number): Promise<void> {
     const entity = await this.tenantRepository.findById(id);
     if (!entity) {
       throw new Error('Tenant not found');

@@ -1,64 +1,113 @@
 import { ITenantService } from '../interfaces/services/ITenantService';
-import { CreateTenantDTO, UpdateTenantDTO } from '../entities/Tenant.entity';
+import { CreateTenantDTO, UpdateTenantDTO } from '../dtos/tenant.dto';
 
 export class TenantController {
   constructor(private tenantService: ITenantService) {}
 
-  getAll = async () => ({
-    success: true,
-    message: 'Tenants retrieved successfully',
-    data: await this.tenantService.getAllTenants(),
-    timestamp: new Date().toISOString()
-  });
+  getAll = async ({ getCurrentUserId }: { getCurrentUserId: () => Promise<number> }) => {
+    const userId = await getCurrentUserId();
+    const tenants = await this.tenantService.getAllTenants(userId);
+    return {
+      success: true,
+      message: 'Tenants retrieved successfully',
+      data: tenants,
+    };
+  };
 
-  getById = async ({ params }: { params: { id: number } }) => ({
-    success: true,
-    message: 'Tenant retrieved successfully',
-    data: await this.tenantService.getTenantById(params.id),
-    timestamp: new Date().toISOString()
-  });
+  getById = async ({
+    params: { id },
+    getCurrentUserId,
+  }: {
+    params: { id: number };
+    getCurrentUserId: () => Promise<number>;
+  }) => {
+    const userId = await getCurrentUserId();
+    const tenant = await this.tenantService.getTenantById(id, userId);
+    return {
+      success: true,
+      message: 'Tenant retrieved successfully',
+      data: tenant,
+    };
+  };
 
-  getByEmail = async ({ params }: { params: { email: string } }) => ({
-    success: true,
-    message: 'Tenant retrieved successfully',
-    data: await this.tenantService.getTenantByEmail(params.email),
-    timestamp: new Date().toISOString()
-  });
+  getByEmail = async ({
+    params: { email },
+    getCurrentUserId,
+  }: {
+    params: { email: string };
+    getCurrentUserId: () => Promise<number>;
+  }) => {
+    const userId = await getCurrentUserId();
+    const tenant = await this.tenantService.getTenantByEmail(email, userId);
+    return {
+      success: true,
+      message: 'Tenant retrieved successfully',
+      data: tenant,
+    };
+  };
 
-  getByDocumentId = async ({ params }: { params: { documentId: string } }) => ({
-    success: true,
-    message: 'Tenant retrieved successfully',
-    data: await this.tenantService.getTenantByDocumentId(params.documentId),
-    timestamp: new Date().toISOString()
-  });
+  getByDocumentId = async ({
+    params: { documentId },
+    getCurrentUserId,
+  }: {
+    params: { documentId: string };
+    getCurrentUserId: () => Promise<number>;
+  }) => {
+    const userId = await getCurrentUserId();
+    const tenant = await this.tenantService.getTenantByDocumentId(documentId, userId);
+    return {
+      success: true,
+      message: 'Tenant retrieved successfully',
+      data: tenant,
+    };
+  };
 
-  create = async ({ body }: { body: CreateTenantDTO }) => ({
-    success: true,
-    message: 'Tenant created successfully',
-    data: await this.tenantService.createTenant(body),
-    timestamp: new Date().toISOString()
-  });
+  create = async ({
+    body,
+    getCurrentUserId,
+  }: {
+    body: CreateTenantDTO;
+    getCurrentUserId: () => Promise<number>;
+  }) => {
+    const userId = await getCurrentUserId();
+    const tenant = await this.tenantService.createTenant(body, userId);
+    return {
+      success: true,
+      message: 'Tenant created successfully',
+      data: tenant,
+    };
+  };
 
   update = async ({
-    params,
-    body
+    params: { id },
+    body,
+    getCurrentUserId,
   }: {
-    params: { id: number },
-    body: UpdateTenantDTO
-  }) => ({
-    success: true,
-    message: 'Tenant updated successfully',
-    data: await this.tenantService.updateTenant(params.id, body),
-    timestamp: new Date().toISOString()
-  });
+    params: { id: number };
+    body: UpdateTenantDTO;
+    getCurrentUserId: () => Promise<number>;
+  }) => {
+    const userId = await getCurrentUserId();
+    const tenant = await this.tenantService.updateTenant(id, body, userId);
+    return {
+      success: true,
+      message: 'Tenant updated successfully',
+      data: tenant,
+    };
+  };
 
-  delete = async ({ params }: { params: { id: number } }) => {
-    await this.tenantService.deleteTenant(params.id);
+  delete = async ({
+    params: { id },
+    getCurrentUserId,
+  }: {
+    params: { id: number };
+    getCurrentUserId: () => Promise<number>;
+  }) => {
+    const userId = await getCurrentUserId();
+    await this.tenantService.deleteTenant(id, userId);
     return {
       success: true,
       message: 'Tenant deleted successfully',
-      data: null,
-      timestamp: new Date().toISOString()
     };
   };
 }

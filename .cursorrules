@@ -26,6 +26,14 @@ Este archivo es un resumen. Las reglas completas están en AGENT_RULES.md
 - **Frontend**: React + Vite + Eden Treaty + Material UI + TypeScript
 - **Type-Safety**: Eden Treaty (inferencia automática end-to-end)
 
+## 🔄 DESPUÉS DE CADA CAMBIO (OBLIGATORIO)
+
+```bash
+# Siempre ejecutar después de modificar código:
+cd server && npm run type-check && npm run build
+cd ../web && npm run type-check && npm run build
+```
+
 ## 📋 CHECKLIST ANTES DE COMMIT
 
 ```bash
@@ -35,13 +43,13 @@ Este archivo es un resumen. Las reglas completas están en AGENT_RULES.md
 [ ] grep -r "interface I.*Repository" src/interfaces/
 [ ] grep -r "toDTO()" src/entities/
 [ ] grep -r "fromPrisma()" src/entities/
-[ ] npm run dev:full funciona (dev + type-check)
+[ ] npm run type-check ✅ && npm run build ✅ (verificación final)
 
 # Frontend
 [ ] treaty<App> de @elysiajs/eden
 [ ] import type { App } from '../../../server/src/index'
 [ ] NO carpeta src/types/ (excepto mínimos)
-[ ] npm run dev:full funciona (dev + type-check)
+[ ] npm run type-check ✅ && npm run build ✅ (verificación final)
 ```
 
 ## 📚 DOCUMENTACIÓN

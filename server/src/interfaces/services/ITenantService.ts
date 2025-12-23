@@ -1,11 +1,11 @@
-import { TenantDTO, CreateTenantDTO, UpdateTenantDTO } from '../../entities/Tenant.entity';
+import { TenantDTO, CreateTenantDTO, UpdateTenantDTO } from '../../dtos/tenant.dto';
 
 export interface ITenantService {
-  getAllTenants(): Promise<TenantDTO[]>;
-  getTenantById(id: number): Promise<TenantDTO>;
-  getTenantByEmail(email: string): Promise<TenantDTO>;
-  getTenantByDocumentId(documentId: string): Promise<TenantDTO>;
-  createTenant(data: CreateTenantDTO): Promise<TenantDTO>;
-  updateTenant(id: number, data: UpdateTenantDTO): Promise<TenantDTO>;
-  deleteTenant(id: number): Promise<void>;
+  getAllTenants(userId: number): Promise<TenantDTO[]>;
+  getTenantById(id: number, userId: number): Promise<TenantDTO>;
+  getTenantByEmail(email: string, userId: number): Promise<TenantDTO>;
+  getTenantByDocumentId(documentId: string, userId: number): Promise<TenantDTO>;
+  createTenant(data: CreateTenantDTO, userId: number): Promise<TenantDTO>;
+  updateTenant(id: number, data: UpdateTenantDTO, userId: number): Promise<TenantDTO>;
+  deleteTenant(id: number, userId: number): Promise<void>;
 }

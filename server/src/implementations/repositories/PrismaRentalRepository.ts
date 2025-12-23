@@ -1,0 +1,108 @@
+import { IRentalRepository } from '../../interfaces/repositories/IRentalRepository';
+import { RentalEntity } from '../../entities/Rental.entity';
+import { prisma } from '../../lib/prisma';
+
+export class PrismaRentalRepository implements IRentalRepository {
+  async findAll(): Promise<RentalEntity[]> {
+    const rentals = await prisma.rental.findMany({
+      include: {
+        tenant: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        property: {
+          select: {
+            id: true,
+            name: true,
+            address: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    return rentals.map(rental => RentalEntity.fromPrisma(rental));
+  }
+
+  async findById(id: number): Promise<RentalEntity | null> {
+    const rental = await prisma.rental.findUnique({
+      where: { id },
+      include: {
+        tenant: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        property: {
+          select: {
+            id: true,
+            name: true,
+            address: true
+          }
+        }
+      }
+    });
+    return rental ? RentalEntity.fromPrisma(rental) : null;
+  }
+
+  async create(entity: RentalEntity): Promise<RentalEntity> {
+    const rental = await prisma.rental.create({
+      data: entity.toPrisma(),
+      include: {
+        tenant: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        property: {
+          select: {
+            id: true,
+            name: true,
+            address: true
+          }
+        }
+      }
+    });
+    return RentalEntity.fromPrisma(rental);
+  }
+
+  async update(entity: RentalEntity): Promise<RentalEntity> {
+    const rental = await prisma.rental.update({
+      where: { id: entity.id! },
+      data: entity.toPrisma(),
+      include: {
+        tenant: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        property: {
+          select: {
+            id: true,
+            name: true,
+            address: true
+          }
+        }
+      }
+    });
+    return RentalEntity.fromPrisma(rental);
+  }
+
+  async delete(id: number): Promise<void> {
+    await prisma.rental.delete({
+      where: { id }
+    });
+  }
+}
