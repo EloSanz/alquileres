@@ -90,10 +90,10 @@ export class RentalService implements IRentalService {
     return savedEntity.toDTO();
   }
 
-  async deleteRental(id: number, _userId: number): Promise<void> {
+  async deleteRental(id: number, _userId: number): Promise<boolean> {
     const entity = await this.rentalRepository.findById(id);
     if (!entity) {
-      throw new Error('Rental not found');
+      return false; // Rental not found
     }
 
     // Mark property as available again
@@ -103,6 +103,7 @@ export class RentalService implements IRentalService {
       await this.propertyRepository.update(property);
     }
 
-    await this.rentalRepository.delete(id);
+    const deleted = await this.rentalRepository.delete(id);
+    return deleted;
   }
 }

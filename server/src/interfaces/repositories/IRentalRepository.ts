@@ -5,5 +5,5 @@ export interface IRentalRepository {
   findById(id: number): Promise<RentalEntity | null>;
   create(entity: RentalEntity): Promise<RentalEntity>;
   update(entity: RentalEntity): Promise<RentalEntity>;
-  delete(id: number): Promise<void>;
+  delete(id: number): Promise<boolean>;
 }

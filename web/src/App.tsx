@@ -8,6 +8,7 @@ import Navigation from './components/Navigation';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
+import PropertyPage from './pages/PropertyPage';
 
 // Component to protect authenticated routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -60,6 +61,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/property"
+            element={
+              <ProtectedRoute>
+                <PropertyPage />
               </ProtectedRoute>
             }
           />

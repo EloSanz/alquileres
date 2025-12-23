@@ -5,5 +5,5 @@ export interface IPropertyService {
   getPropertyById(id: number, userId: number): Promise<PropertyDTO>;
   createProperty(data: CreatePropertyDTO, userId: number): Promise<PropertyDTO>;
   updateProperty(id: number, data: UpdatePropertyDTO, userId: number): Promise<PropertyDTO>;
-  deleteProperty(id: number, userId: number): Promise<void>;
+  deleteProperty(id: number, userId: number): Promise<boolean>;
 }

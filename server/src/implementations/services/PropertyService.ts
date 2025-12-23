@@ -36,11 +36,8 @@ export class PropertyService implements IPropertyService {
     return savedEntity.toDTO();
   }
 
-  async deleteProperty(id: number, _userId: number): Promise<void> {
-    const entity = await this.propertyRepository.findById(id);
-    if (!entity) {
-      throw new Error('Property not found');
-    }
-    await this.propertyRepository.delete(id);
+  async deleteProperty(id: number, _userId: number): Promise<boolean> {
+    const deleted = await this.propertyRepository.delete(id);
+    return deleted;
   }
 }

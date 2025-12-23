@@ -63,11 +63,21 @@ export class PropertyController {
   delete = async ({
     params: { id },
     userId,
+    set,
   }: {
     params: { id: number };
     userId: number;
+    set: any;
   }) => {
-    await this.propertyService.deleteProperty(id, userId);
+    const deleted = await this.propertyService.deleteProperty(id, userId);
+    if (!deleted) {
+      set.status = 404;
+      return {
+        success: false,
+        message: 'Property not found',
+      };
+    }
+
     return {
       success: true,
       message: 'Property deleted successfully',

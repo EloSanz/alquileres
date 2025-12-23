@@ -63,11 +63,21 @@ export class PaymentController {
   delete = async ({
     params: { id },
     userId,
+    set,
   }: {
     params: { id: number };
     userId: number;
+    set: any;
   }) => {
-    await this.paymentService.deletePayment(id, userId);
+    const deleted = await this.paymentService.deletePayment(id, userId);
+    if (!deleted) {
+      set.status = 404;
+      return {
+        success: false,
+        message: 'Payment not found',
+      };
+    }
+
     return {
       success: true,
       message: 'Payment deleted successfully',

@@ -5,5 +5,5 @@ export interface IPropertyRepository {
   findById(id: number): Promise<PropertyEntity | null>;
   create(entity: PropertyEntity): Promise<PropertyEntity>;
   update(entity: PropertyEntity): Promise<PropertyEntity>;
-  delete(id: number): Promise<void>;
+  delete(id: number): Promise<boolean>;
 }

@@ -101,12 +101,8 @@ export class TenantService implements ITenantService {
     return updated.toDTO();
   }
 
-  async deleteTenant(id: number, _userId: number): Promise<void> {
-    const entity = await this.tenantRepository.findById(id);
-    if (!entity) {
-      throw new Error('Tenant not found');
-    }
-
-    await this.tenantRepository.delete(id);
+  async deleteTenant(id: number, _userId: number): Promise<boolean> {
+    const deleted = await this.tenantRepository.delete(id);
+    return deleted;
   }
 }

@@ -439,9 +439,9 @@ const HomePage = () => {
           <Grid item xs={12} md={4}>
             <Button
               fullWidth
-              variant={activeSection === 'properties' ? 'contained' : 'outlined'}
+              variant="outlined"
               startIcon={<HomeIcon />}
-              onClick={() => setActiveSection('properties')}
+              onClick={() => navigate('/property')}
               sx={{ py: 2 }}
             >
               Propiedades
@@ -449,7 +449,7 @@ const HomePage = () => {
                 label={properties.length}
                 size="small"
                 sx={{ ml: 1 }}
-                color={activeSection === 'properties' ? 'default' : 'primary'}
+                color="primary"
               />
             </Button>
           </Grid>

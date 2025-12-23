@@ -5,6 +5,8 @@ import { PrismaRentalRepository } from '../implementations/repositories/PrismaRe
 import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
 import { PrismaPropertyRepository } from '../implementations/repositories/PrismaPropertyRepository';
 import { authPlugin } from '../plugins/auth.plugin';
+import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
+import { verify as jwtVerify } from 'jsonwebtoken';
 
 // Dependency injection
 const rentalRepository = new PrismaRentalRepository();
@@ -17,15 +19,25 @@ export const rentalRoutes = new Elysia({ prefix: '/rentals' })
   .use(authPlugin)
   .derive(async ({ jwt, headers }) => {
     const authHeader = headers.authorization
+    console.log('[Rental Routes] Checking auth header:', authHeader ? 'present' : 'missing')
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[Rental Routes] No token provided')
       throw new Error('No token provided')
     }
 
     const token = authHeader.substring(7)
-    const payload = await jwt.verify(token)
-    if (!payload) throw new Error('Invalid token')
+    console.log('[Rental Routes] Token extracted, verifying...')
 
-    return { userId: payload.userId as number }
+    try {
+      const payload = jwtVerify(token, JWT_SECRET) as JWTPayload
+      console.log('[Rental Routes] Token verified, userId:', payload.userId)
+
+      return { userId: payload.userId }
+    } catch (error: any) {
+      console.log('[Rental Routes] Token verification failed:', error.message)
+      throw new Error('Invalid token')
+    }
   })
   .get('/', rentalController.getAll, {
     detail: {

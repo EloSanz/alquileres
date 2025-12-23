@@ -3,14 +3,12 @@ import { AuthController } from '../controllers/auth.controller';
 import { AuthService } from '../implementations/services/AuthService';
 import { PrismaUserRepository } from '../implementations/repositories/PrismaUserRepository';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../types/jwt.types';
 
 // Dependency injection
 const userRepository = new PrismaUserRepository();
 const authService = new AuthService(userRepository);
 const authController = new AuthController(authService);
-
-// JWT secret
-const JWT_SECRET = process.env.JWT_SECRET || 'default-dev-secret-change-in-production';
 
 // Helper function to verify token
 const verifyToken = (token: string): number => {
@@ -46,7 +44,10 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
   })
   .get('/me', async ({ headers }) => {
     const authHeader = headers.authorization;
+    console.log('[Auth Routes /me] Checking auth header:', authHeader ? 'present' : 'missing') // Safe to log
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[Auth Routes /me] No token provided')
       return {
         success: false,
         message: 'No token provided',
@@ -59,8 +60,11 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
     let userId: number;
 
     try {
+      console.log('[Auth Routes /me] Verifying token...')
       userId = verifyToken(token);
-    } catch (error) {
+      console.log('[Auth Routes /me] Token verified, userId:', userId)
+    } catch (error: any) {
+      console.log('[Auth Routes /me] Token verification failed:', error.message)
       return {
         success: false,
         message: 'Invalid token',
@@ -69,6 +73,7 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
       };
     }
 
+    console.log('[Auth Routes /me] Getting user data for userId:', userId)
     return await authController.getCurrentUser(userId);
   }, {
     detail: {

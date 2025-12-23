@@ -5,5 +5,5 @@ export interface IPaymentRepository {
   findById(id: number): Promise<PaymentEntity | null>;
   create(entity: PaymentEntity): Promise<PaymentEntity>;
   update(entity: PaymentEntity): Promise<PaymentEntity>;
-  delete(id: number): Promise<void>;
+  delete(id: number): Promise<boolean>;
 }

@@ -63,11 +63,21 @@ export class RentalController {
   delete = async ({
     params: { id },
     userId,
+    set,
   }: {
     params: { id: number };
     userId: number;
+    set: any;
   }) => {
-    await this.rentalService.deleteRental(id, userId);
+    const deleted = await this.rentalService.deleteRental(id, userId);
+    if (!deleted) {
+      set.status = 404;
+      return {
+        success: false,
+        message: 'Rental not found',
+      };
+    }
+
     return {
       success: true,
       message: 'Rental deleted successfully',

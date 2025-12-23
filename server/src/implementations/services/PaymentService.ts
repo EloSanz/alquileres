@@ -36,11 +36,8 @@ export class PaymentService implements IPaymentService {
     return savedEntity.toDTO();
   }
 
-  async deletePayment(id: number, _userId: number): Promise<void> {
-    const entity = await this.paymentRepository.findById(id);
-    if (!entity) {
-      throw new Error('Payment not found');
-    }
-    await this.paymentRepository.delete(id);
+  async deletePayment(id: number, _userId: number): Promise<boolean> {
+    const deleted = await this.paymentRepository.delete(id);
+    return deleted;
   }
 }

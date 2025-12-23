@@ -32,9 +32,17 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     return PaymentEntity.fromPrisma(payment);
   }
 
-  async delete(id: number): Promise<void> {
-    await prisma.payment.delete({
-      where: { id }
-    });
+  async delete(id: number): Promise<boolean> {
+    try {
+      await prisma.payment.delete({
+        where: { id }
+      });
+      return true;
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        return false;
+      }
+      throw error;
+    }
   }
 }

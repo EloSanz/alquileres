@@ -5,5 +5,5 @@ export interface IPaymentService {
   getPaymentById(id: number, userId: number): Promise<PaymentDTO>;
   createPayment(data: CreatePaymentDTO, userId: number): Promise<PaymentDTO>;
   updatePayment(id: number, data: UpdatePaymentDTO, userId: number): Promise<PaymentDTO>;
-  deletePayment(id: number, userId: number): Promise<void>;
+  deletePayment(id: number, userId: number): Promise<boolean>;
 }

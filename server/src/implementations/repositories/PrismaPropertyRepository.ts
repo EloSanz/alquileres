@@ -32,9 +32,17 @@ export class PrismaPropertyRepository implements IPropertyRepository {
     return PropertyEntity.fromPrisma(property);
   }
 
-  async delete(id: number): Promise<void> {
-    await prisma.property.delete({
-      where: { id }
-    });
+  async delete(id: number): Promise<boolean> {
+    try {
+      await prisma.property.delete({
+        where: { id }
+      });
+      return true;
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        return false;
+      }
+      throw error;
+    }
   }
 }

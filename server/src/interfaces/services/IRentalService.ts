@@ -5,5 +5,5 @@ export interface IRentalService {
   getRentalById(id: number, userId: number): Promise<RentalDTO>;
   createRental(data: CreateRentalDTO, userId: number): Promise<RentalDTO>;
   updateRental(id: number, data: UpdateRentalDTO, userId: number): Promise<RentalDTO>;
-  deleteRental(id: number, userId: number): Promise<void>;
+  deleteRental(id: number, userId: number): Promise<boolean>;
 }

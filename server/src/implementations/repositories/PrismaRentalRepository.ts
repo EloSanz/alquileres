@@ -100,9 +100,17 @@ export class PrismaRentalRepository implements IRentalRepository {
     return RentalEntity.fromPrisma(rental);
   }
 
-  async delete(id: number): Promise<void> {
-    await prisma.rental.delete({
-      where: { id }
-    });
+  async delete(id: number): Promise<boolean> {
+    try {
+      await prisma.rental.delete({
+        where: { id }
+      });
+      return true;
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        return false;
+      }
+      throw error;
+    }
   }
 }

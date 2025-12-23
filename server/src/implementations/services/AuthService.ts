@@ -2,11 +2,12 @@ import { IAuthService } from '../../interfaces/services/IAuthService';
 import { IUserRepository } from '../../interfaces/repositories/IUserRepository';
 import { AuthUserDTO, CreateUserDTO, LoginDTO, UserDTO, UserEntity } from '../../entities/User.entity';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../../types/jwt.types';
 
 export class AuthService implements IAuthService {
   constructor(
     private userRepository: IUserRepository,
-    private jwtSecret: string = process.env.JWT_SECRET || 'default-dev-secret'
+    private jwtSecret: string = JWT_SECRET
   ) {}
 
   async register(data: CreateUserDTO): Promise<AuthUserDTO> {
