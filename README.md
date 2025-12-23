@@ -68,13 +68,23 @@ npm run dev  # Backend + Frontend
 
 ---
 
-# Sistema de Gestión de Alquileres
+# ✅ Sistema de Gestión de Alquileres
+
+**🚀 APLICACIÓN PROBADA Y FUNCIONANDO** - Backend y Frontend levantados exitosamente
 
 Aplicación Full Stack para administradores de propiedades que necesitan gestionar:
 
 - 👥 **Información de Inquilinos** (datos personales, contacto, historial)
 - 💰 **Pagos y Cobranzas** (registro de pagos, deudas, facturación)
 - 🏠 **Propiedades** (información de inmuebles, contratos de alquiler)
+
+### 🎯 Estado Actual
+
+- ✅ **Backend**: Elysia.js corriendo en `http://localhost:3000`
+- ✅ **Frontend**: React + Vite corriendo en `http://localhost:5173`
+- ✅ **API Endpoints**: Funcionando (`/api/tenants`, `/api/users`)
+- ✅ **Type Safety**: Eden Treaty configurado correctamente
+- ✅ **Base de Datos**: Prisma schema definido (requiere PostgreSQL)
 
 ## Arquitectura
 
