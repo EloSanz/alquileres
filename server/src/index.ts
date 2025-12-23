@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia'
 import { userRoutes } from './routes/user.routes'
+import { tenantRoutes } from './routes/tenant.routes'
 import { authPlugin } from './plugins/auth.plugin'
 import { errorPlugin } from './plugins/error.plugin'
 
@@ -8,7 +9,8 @@ const app = new Elysia()
   .use(errorPlugin)
   .use(authPlugin)
   .use(userRoutes)
-  .get('/', () => ({ message: 'API is running', timestamp: new Date().toISOString() }))
+  .use(tenantRoutes)
+  .get('/', () => ({ message: 'Rental Management API is running', timestamp: new Date().toISOString() }))
   .listen(3000)
 
 console.log(`🚀 Server running at http://localhost:${app.server?.port}`)

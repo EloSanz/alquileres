@@ -1,4 +1,4 @@
-// Prisma schema template
+// Prisma schema for Rental Management System
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,6 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User model for system administrators
 model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
@@ -19,7 +20,119 @@ model User {
   @@map("users")
 }
 
-// Add your models here
-// model Tenant { ... }
-// model Payment { ... }
-// model Property { ... }
+// Tenant (Inquilino) model
+model Tenant {
+  id          Int      @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  email       String   @unique
+  phone       String?
+  documentId  String   @unique // DNI, Cedula, etc.
+  address     String?
+  birthDate   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  rentals     Rental[]
+
+  @@map("tenants")
+}
+
+// Property (Propiedad/Inmueble) model
+model Property {
+  id          Int         @id @default(autoincrement())
+  name        String
+  address     String
+  city        String
+  state       String
+  zipCode     String?
+  propertyType PropertyType
+  bedrooms    Int?
+  bathrooms   Float?
+  areaSqm     Float?
+  monthlyRent Decimal
+  description String?
+  isAvailable Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  rentals     Rental[]
+
+  @@map("properties")
+}
+
+// Rental (Alquiler/Contrato) model
+model Rental {
+  id            Int            @id @default(autoincrement())
+  tenantId      Int
+  propertyId    Int
+  startDate     DateTime
+  endDate       DateTime?
+  monthlyRent   Decimal
+  depositAmount Decimal?
+  status        RentalStatus   @default(ACTIVE)
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Relations
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property      Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  payments      Payment[]
+
+  @@unique([tenantId, propertyId, startDate])
+  @@map("rentals")
+}
+
+// Payment (Pago) model
+model Payment {
+  id          Int          @id @default(autoincrement())
+  rentalId    Int
+  amount      Decimal
+  paymentDate DateTime     @default(now())
+  dueDate     DateTime
+  paymentType PaymentType
+  status      PaymentStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  rental      Rental       @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// Enums
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  STUDIO
+  OFFICE
+  COMMERCIAL
+  LAND
+}
+
+enum RentalStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  TERMINATED
+}
+
+enum PaymentType {
+  RENT
+  DEPOSIT
+  MAINTENANCE
+  LATE_FEE
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  OVERDUE
+  CANCELLED
+}
