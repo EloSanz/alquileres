@@ -113,6 +113,9 @@ Thumbs.db
 *.tmp
 *.temp
 
+# Shell scripts (setup scripts are meant to be run locally)
+*.sh
+
 # Database
 *.db
 *.sqlite
