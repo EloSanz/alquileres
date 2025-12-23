@@ -36,12 +36,12 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
   })
   .post('/login', authController.login, {
     body: t.Object({
-      email: t.String({ minLength: 5 }),
+      identifier: t.String({ minLength: 3 }),
       password: t.String({ minLength: 1 })
     }),
     detail: {
       tags: ['Authentication'],
-      summary: 'Login with email and password'
+      summary: 'Login with email or username and password'
     }
   })
   .get('/me', async ({ headers }) => {

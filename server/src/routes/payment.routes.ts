@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { PaymentController } from '../controllers/payment.controller';
 import { PaymentService } from '../implementations/services/PaymentService';
 import { PrismaPaymentRepository } from '../implementations/repositories/PrismaPaymentRepository';
+import { authPlugin } from '../plugins/auth.plugin';
 
 // Dependency injection
 const paymentRepository = new PrismaPaymentRepository();
@@ -9,6 +10,19 @@ const paymentService = new PaymentService(paymentRepository);
 const paymentController = new PaymentController(paymentService);
 
 export const paymentRoutes = new Elysia({ prefix: '/payments' })
+  .use(authPlugin)
+  .derive(async ({ jwt, headers }) => {
+    const authHeader = headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('No token provided')
+    }
+
+    const token = authHeader.substring(7)
+    const payload = await jwt.verify(token)
+    if (!payload) throw new Error('Invalid token')
+
+    return { userId: payload.userId as number }
+  })
   .get('/', paymentController.getAll, {
     detail: {
       tags: ['Payments'],

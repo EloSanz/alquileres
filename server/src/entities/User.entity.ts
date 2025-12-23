@@ -91,6 +91,6 @@ export interface CreateUserDTO {
 }
 
 export interface LoginDTO {
-  email: string;
+  identifier: string; // Can be either email or username
   password: string;
 }

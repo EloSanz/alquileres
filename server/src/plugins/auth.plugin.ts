@@ -6,17 +6,4 @@ export const authPlugin = new Elysia()
     name: 'jwt',
     secret: process.env.JWT_SECRET || 'default-dev-secret-change-in-production'
   }))
-  .derive(({ jwt, headers }) => ({
-    getCurrentUserId: async (): Promise<number> => {
-      const authHeader = headers.authorization
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        throw new Error('No token provided')
-      }
-
-      const token = authHeader.substring(7) // Remove 'Bearer ' prefix
-      const payload = await jwt.verify(token)
-      if (!payload) throw new Error('Invalid token')
-
-      return payload.userId as number
-    }
-  }))
+ 

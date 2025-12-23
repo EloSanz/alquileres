@@ -48,8 +48,14 @@ export class AuthService implements IAuthService {
   }
 
   async login(data: LoginDTO): Promise<AuthUserDTO> {
-    // Find user by email
-    const user = await this.userRepository.findByEmail(data.email);
+    // Find user by email first, then by username if not found
+    let user = await this.userRepository.findByEmail(data.identifier);
+
+    if (!user) {
+      // If not found by email, try by username
+      user = await this.userRepository.findByUsername(data.identifier);
+    }
+
     if (!user) {
       throw new Error('Invalid credentials');
     }

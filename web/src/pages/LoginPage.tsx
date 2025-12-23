@@ -21,7 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -44,21 +44,24 @@ const LoginPage = () => {
     setError('');
 
     try {
-      // TODO: Implement login API call when backend route is available
-      // For now, simulate login
-      if (formData.email && formData.password) {
-        const mockUser = {
-          id: 1,
-          username: formData.email.split('@')[0],
-          email: formData.email,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        const mockToken = 'mock-jwt-token';
-        login(mockToken, mockUser);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifier: formData.identifier,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        login(data.data.token, data.data.user);
         navigate('/');
       } else {
-        setError('Credenciales inválidas');
+        setError(data.message || 'Error al iniciar sesión');
       }
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión');
@@ -88,14 +91,14 @@ const LoginPage = () => {
         <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
           <TextField
             fullWidth
-            label="Correo electrónico"
-            name="email"
-            type="email"
-            value={formData.email}
+            label="Usuario o correo electrónico"
+            name="identifier"
+            type="text"
+            value={formData.identifier}
             onChange={handleChange}
             required
             sx={{ mb: 2 }}
-            autoComplete="email"
+            autoComplete="username email"
           />
 
           <TextField

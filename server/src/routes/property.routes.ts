@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { PropertyController } from '../controllers/property.controller';
 import { PropertyService } from '../implementations/services/PropertyService';
 import { PrismaPropertyRepository } from '../implementations/repositories/PrismaPropertyRepository';
+import { authPlugin } from '../plugins/auth.plugin';
 
 // Dependency injection
 const propertyRepository = new PrismaPropertyRepository();
@@ -9,6 +10,19 @@ const propertyService = new PropertyService(propertyRepository);
 const propertyController = new PropertyController(propertyService);
 
 export const propertyRoutes = new Elysia({ prefix: '/properties' })
+  .use(authPlugin)
+  .derive(async ({ jwt, headers }) => {
+    const authHeader = headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('No token provided')
+    }
+
+    const token = authHeader.substring(7)
+    const payload = await jwt.verify(token)
+    if (!payload) throw new Error('Invalid token')
+
+    return { userId: payload.userId as number }
+  })
   .get('/', propertyController.getAll, {
     detail: {
       tags: ['Properties'],

@@ -4,6 +4,7 @@ import { RentalService } from '../implementations/services/RentalService';
 import { PrismaRentalRepository } from '../implementations/repositories/PrismaRentalRepository';
 import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
 import { PrismaPropertyRepository } from '../implementations/repositories/PrismaPropertyRepository';
+import { authPlugin } from '../plugins/auth.plugin';
 
 // Dependency injection
 const rentalRepository = new PrismaRentalRepository();
@@ -13,6 +14,19 @@ const rentalService = new RentalService(rentalRepository, tenantRepository, prop
 const rentalController = new RentalController(rentalService);
 
 export const rentalRoutes = new Elysia({ prefix: '/rentals' })
+  .use(authPlugin)
+  .derive(async ({ jwt, headers }) => {
+    const authHeader = headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('No token provided')
+    }
+
+    const token = authHeader.substring(7)
+    const payload = await jwt.verify(token)
+    if (!payload) throw new Error('Invalid token')
+
+    return { userId: payload.userId as number }
+  })
   .get('/', rentalController.getAll, {
     detail: {
       tags: ['Rentals'],

@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { TenantController } from '../controllers/tenant.controller';
 import { TenantService } from '../implementations/services/TenantService';
 import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
+import { authPlugin } from '../plugins/auth.plugin';
 
 // Dependency injection
 const tenantRepository = new PrismaTenantRepository();
@@ -9,6 +10,19 @@ const tenantService = new TenantService(tenantRepository);
 const tenantController = new TenantController(tenantService);
 
 export const tenantRoutes = new Elysia({ prefix: '/tenants' })
+  .use(authPlugin)
+  .derive(async ({ jwt, headers }) => {
+    const authHeader = headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('No token provided')
+    }
+
+    const token = authHeader.substring(7)
+    const payload = await jwt.verify(token)
+    if (!payload) throw new Error('Invalid token')
+
+    return { userId: payload.userId as number }
+  })
   .get('/', tenantController.getAll, {
     detail: {
       tags: ['Tenants'],
