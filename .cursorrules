@@ -49,7 +49,7 @@ Este archivo es un resumen. Las reglas completas están en AGENT_RULES.md
 1. **AGENT_RULES.md** - Reglas completas con templates para copiar/pegar
 2. **QUICK_REFERENCE.md** - Referencia técnica y comandos
 3. **ARCHITECTURE_STANDARD.md** - Estándar completo
-4. **templates/** - Templates concretos listos para usar
+4. **Código real** - `server/` y `web/` como referencia de implementación
 
 ## 🚀 SETUP RÁPIDO
 
