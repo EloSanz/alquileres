@@ -2,6 +2,7 @@ import { Elysia } from 'elysia'
 import { createServer } from 'node:http'
 import { userRoutes } from './routes/user.routes'
 import { tenantRoutes } from './routes/tenant.routes'
+import { authRoutes } from './routes/auth.routes'
 import { authPlugin } from './plugins/auth.plugin'
 import { errorPlugin } from './plugins/error.plugin'
 
@@ -9,6 +10,7 @@ import { errorPlugin } from './plugins/error.plugin'
 const app = new Elysia()
   .use(errorPlugin)
   .use(authPlugin)
+  .use(authRoutes)
   .use(userRoutes)
   .use(tenantRoutes)
   .get('/', () => ({ message: 'Rental Management API is running', timestamp: new Date().toISOString() }))
@@ -16,11 +18,20 @@ const app = new Elysia()
 // Create HTTP server for Node.js
 const server = createServer(async (req, res) => {
   try {
+    // Read request body
+    let body = ''
+    if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+      for await (const chunk of req) {
+        body += chunk
+      }
+    }
+
     // Convert Node.js request to Web API Request
     const url = `http://localhost:3000${req.url}`
     const request = new Request(url, {
       method: req.method,
       headers: req.headers as any,
+      body: body || undefined,
     })
 
     const response = await app.fetch(request)
@@ -30,8 +41,8 @@ const server = createServer(async (req, res) => {
       res.setHeader(key, value)
     })
 
-    const body = await response.text()
-    res.end(body)
+    const responseBody = await response.text()
+    res.end(responseBody)
   } catch (err) {
     console.error('Server error:', err)
     res.statusCode = 500

@@ -51,7 +51,7 @@ export class TenantEntity {
       phone: this.phone,
       documentId: this.documentId,
       address: this.address,
-      birthDate: this.birthDate?.toISOString(),
+      birthDate: this.birthDate ? this.birthDate.toISOString() : null,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
     };
