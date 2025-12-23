@@ -1,0 +1,50 @@
+{
+  "name": "Alquileres App",
+  "description": "Sistema de Gestión de Alquileres - Full Stack Type-Safe",
+  "rules": {
+    "enforce-stack": {
+      "backend": ["elysia", "prisma", "postgresql", "typescript"],
+      "frontend": ["react", "vite", "eden-treaty", "material-ui", "typescript"],
+      "prohibited": {
+        "backend": ["express", "nestjs", "fastify", "typeorm", "mikroorm", "sequelize", "joi", "yup", "zod", "axios", "fetch"],
+        "frontend": ["axios", "fetch", "redux", "zustand", "jotai", "css-modules", "styled-components"]
+      }
+    },
+    "architecture": {
+      "pattern": "layered-architecture",
+      "layers": ["routes", "controllers", "services", "repositories", "entities"],
+      "interfaces": true,
+      "dependency-injection": true
+    },
+    "coding-standards": {
+      "typescript-strict": true,
+      "end-to-end-typesafety": true,
+      "no-any-types": "warn",
+      "interface-prefix": "I"
+    },
+    "before-commit": {
+      "backend-checks": [
+        "export type App = typeof app",
+        "interfaces exist for services/repositories",
+        "entities have toDTO()/fromPrisma()",
+        "dev:full works"
+      ],
+      "frontend-checks": [
+        "treaty<App> import",
+        "no src/types/ folder",
+        "dev:full works"
+      ]
+    }
+  },
+  "docs": {
+    "primary": "AGENT_RULES.md",
+    "reference": "QUICK_REFERENCE.md",
+    "architecture": "ARCHITECTURE_STANDARD.md"
+  },
+  "commands": {
+    "setup": "./setup.sh",
+    "dev": "npm run dev",
+    "dev:backend": "npm run dev:backend",
+    "dev:frontend": "npm run dev:frontend"
+  }
+}
