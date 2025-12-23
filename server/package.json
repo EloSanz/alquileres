@@ -7,6 +7,8 @@
     "dev:full": "concurrently \"npm run dev\" \"npm run type-check\"",
     "build": "tsc",
     "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
@@ -28,8 +30,11 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
     "@vitest/ui": "^4.0.15",
     "concurrently": "^8.0.0",
+    "eslint": "^8.45.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
     "vitest": "^4.0.15"
