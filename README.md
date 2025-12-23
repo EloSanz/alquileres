@@ -19,6 +19,9 @@ Este proyecto sigue un **estándar de arquitectura estrictamente definido** para
 **Nivel 4 - Templates Concretos**:
 - 📁 **[templates/](./templates/)** - Archivos listos para copiar
 
+**Nivel 5 - Base de Datos**:
+- 🗄️ **[docs/PRISMA_COMMANDS.md](./docs/PRISMA_COMMANDS.md)** - Guía completa de comandos Prisma
+
 ### 🚫 PROHIBICIONES ABSOLUTAS
 
 #### Backend - NUNCA uses:
@@ -85,6 +88,7 @@ Aplicación Full Stack para administradores de propiedades que necesitan gestion
 - ✅ **API Endpoints**: Funcionando (`/api/tenants`, `/api/users`)
 - ✅ **Type Safety**: Eden Treaty configurado correctamente
 - ✅ **Base de Datos**: Prisma schema definido (requiere PostgreSQL)
+- ✅ **Documentación**: Comandos Prisma completos en `docs/PRISMA_COMMANDS.md`
 
 ## Arquitectura
 
