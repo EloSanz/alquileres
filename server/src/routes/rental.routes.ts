@@ -12,10 +12,7 @@ const propertyRepository = new PrismaPropertyRepository();
 const rentalService = new RentalService(rentalRepository, tenantRepository, propertyRepository);
 const rentalController = new RentalController(rentalService);
 
-export const rentalRoutes = new Elysia({ prefix: '/api/rentals' })
-  .derive(async ({ getCurrentUserId }) => ({
-    userId: await getCurrentUserId()
-  }))
+export const rentalRoutes = new Elysia({ prefix: '/rentals' })
   .get('/', rentalController.getAll, {
     detail: {
       tags: ['Rentals'],

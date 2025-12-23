@@ -1,24 +1,18 @@
 import { Elysia } from 'elysia'
 import { createServer } from 'node:http'
 import { userRoutes } from './routes/user.routes'
-import { tenantRoutes } from './routes/tenant.routes'
-import { propertyRoutes } from './routes/property.routes'
-import { paymentRoutes } from './routes/payment.routes'
-import { rentalRoutes } from './routes/rental.routes'
+import { protectedRoutes } from './routes/protected.routes'
 import { authRoutes } from './routes/auth.routes'
-import { authPlugin } from './plugins/auth.plugin'
 import { errorPlugin } from './plugins/error.plugin'
 
 // Initialize app
 const app = new Elysia()
   .use(errorPlugin)
-  .use(authPlugin)
-  .use(authRoutes)
+  .use(authRoutes)  // Auth routes don't need auth plugin (register/login are public)
   .use(userRoutes)
-  .use(tenantRoutes)
-  .use(propertyRoutes)
-  .use(paymentRoutes)
-  .use(rentalRoutes)
+  .group('/api', app => app
+    .use(protectedRoutes)  // All protected routes under /api with auth
+  )
   .get('/', () => ({ message: 'Rental Management API is running', timestamp: new Date().toISOString() }))
 
 // Create HTTP server for Node.js

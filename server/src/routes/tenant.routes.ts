@@ -8,10 +8,7 @@ const tenantRepository = new PrismaTenantRepository();
 const tenantService = new TenantService(tenantRepository);
 const tenantController = new TenantController(tenantService);
 
-export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
-  .derive(async ({ getCurrentUserId }) => ({
-    userId: await getCurrentUserId()
-  }))
+export const tenantRoutes = new Elysia({ prefix: '/tenants' })
   .get('/', tenantController.getAll, {
     detail: {
       tags: ['Tenants'],

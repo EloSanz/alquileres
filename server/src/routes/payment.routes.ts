@@ -8,10 +8,7 @@ const paymentRepository = new PrismaPaymentRepository();
 const paymentService = new PaymentService(paymentRepository);
 const paymentController = new PaymentController(paymentService);
 
-export const paymentRoutes = new Elysia({ prefix: '/api/payments' })
-  .derive(async ({ getCurrentUserId }) => ({
-    userId: await getCurrentUserId()
-  }))
+export const paymentRoutes = new Elysia({ prefix: '/payments' })
   .get('/', paymentController.getAll, {
     detail: {
       tags: ['Payments'],
