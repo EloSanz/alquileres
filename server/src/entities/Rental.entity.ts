@@ -31,7 +31,7 @@ export class RentalEntity {
 
   toPrisma() {
     return {
-      id: this.id,
+      id: this.id || undefined,
       tenantId: this.tenantId,
       propertyId: this.propertyId,
       startDate: this.startDate,

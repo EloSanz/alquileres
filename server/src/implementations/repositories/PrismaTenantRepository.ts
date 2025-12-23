@@ -11,21 +11,21 @@ export class PrismaTenantRepository implements ITenantRepository {
     return [];
   }
 
-  async findById(id: number): Promise<TenantEntity | null> {
+  async findById(_id: number): Promise<TenantEntity | null> {
     // TODO: Implement with actual Prisma client
-    // const tenant = await prisma.tenant.findUnique({ where: { id } });
+    // const tenant = await prisma.tenant.findUnique({ where: { id: _id } });
     // return tenant ? TenantEntity.fromPrisma(tenant) : null;
     return null;
   }
 
-  async findByEmail(email: string): Promise<TenantEntity | null> {
+  async findByEmail(_email: string): Promise<TenantEntity | null> {
     // TODO: Implement with actual Prisma client
-    // const tenant = await prisma.tenant.findUnique({ where: { email } });
+    // const tenant = await prisma.tenant.findUnique({ where: { email: _email } });
     // return tenant ? TenantEntity.fromPrisma(tenant) : null;
     return null;
   }
 
-  async findByDocumentId(documentId: string): Promise<TenantEntity | null> {
+  async findByDocumentId(_documentId: string): Promise<TenantEntity | null> {
     // TODO: Implement with actual Prisma client
     // const tenant = await prisma.tenant.findUnique({ where: { documentId } });
     // return tenant ? TenantEntity.fromPrisma(tenant) : null;
@@ -79,8 +79,8 @@ export class PrismaTenantRepository implements ITenantRepository {
     return updatedTenant;
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(_id: number): Promise<void> {
     // TODO: Implement with actual Prisma client
-    // await prisma.tenant.delete({ where: { id } });
+    // await prisma.tenant.delete({ where: { id: _id } });
   }
 }

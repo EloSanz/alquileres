@@ -29,7 +29,7 @@ export class TenantEntity {
 
   toPrisma() {
     return {
-      id: this.id,
+      id: this.id || undefined,
       firstName: this.firstName,
       lastName: this.lastName,
       email: this.email,

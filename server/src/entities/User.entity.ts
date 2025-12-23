@@ -23,7 +23,7 @@ export class UserEntity {
 
   toPrisma() {
     return {
-      id: this.id,
+      id: this.id || undefined,
       username: this.username,
       email: this.email,
       password: this.password,

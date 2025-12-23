@@ -29,7 +29,7 @@ export class PaymentEntity {
 
   toPrisma() {
     return {
-      id: this.id,
+      id: this.id || undefined,
       rentalId: this.rentalId,
       amount: this.amount,
       paymentDate: this.paymentDate,

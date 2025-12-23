@@ -39,7 +39,7 @@ export class PropertyEntity {
 
   toPrisma() {
     return {
-      id: this.id,
+      id: this.id || undefined,
       name: this.name,
       address: this.address,
       city: this.city,

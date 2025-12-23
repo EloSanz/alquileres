@@ -2,7 +2,6 @@ import { Elysia, t } from 'elysia';
 import { AuthController } from '../controllers/auth.controller';
 import { AuthService } from '../implementations/services/AuthService';
 import { PrismaUserRepository } from '../implementations/repositories/PrismaUserRepository';
-import { authPlugin } from '../plugins/auth.plugin';
 import jwt from 'jsonwebtoken';
 
 // Dependency injection

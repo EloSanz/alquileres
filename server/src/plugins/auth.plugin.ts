@@ -1,11 +1,5 @@
 import { Elysia } from 'elysia'
 import { jwt } from '@elysiajs/jwt'
-import { AuthService } from '../implementations/services/AuthService'
-import { PrismaUserRepository } from '../implementations/repositories/PrismaUserRepository'
-
-// Initialize dependencies
-const userRepository = new PrismaUserRepository()
-const authService = new AuthService(userRepository)
 
 export const authPlugin = new Elysia()
   .use(jwt({
