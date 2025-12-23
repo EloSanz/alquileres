@@ -10,7 +10,51 @@ export class PaymentEntity {
     public notes: string | null,
     public createdAt: Date,
     public updatedAt: Date
-  ) {}
+  ) {  }
+
+  static create(data: {
+    rentalId: number;
+    amount: number;
+    paymentDate?: string;
+    dueDate: string;
+    paymentType: string;
+    status?: string;
+    notes?: string;
+  }): PaymentEntity {
+    return new PaymentEntity(
+      null, // id
+      data.rentalId,
+      data.amount,
+      data.paymentDate ? new Date(data.paymentDate) : new Date(),
+      new Date(data.dueDate),
+      data.paymentType as PaymentType,
+      (data.status as PaymentStatus) || 'PENDING',
+      data.notes || null,
+      new Date(), // createdAt
+      new Date()  // updatedAt
+    );
+  }
+
+  update(data: {
+    rentalId?: number;
+    amount?: number;
+    paymentDate?: string;
+    dueDate?: string;
+    paymentType?: string;
+    status?: string;
+    notes?: string;
+  }): PaymentEntity {
+    if (data.rentalId !== undefined) this.rentalId = data.rentalId;
+    if (data.amount !== undefined) this.amount = data.amount;
+    if (data.paymentDate !== undefined) this.paymentDate = new Date(data.paymentDate);
+    if (data.dueDate !== undefined) this.dueDate = new Date(data.dueDate);
+    if (data.paymentType !== undefined) this.paymentType = data.paymentType as PaymentType;
+    if (data.status !== undefined) this.status = data.status as PaymentStatus;
+    if (data.notes !== undefined) this.notes = data.notes;
+    this.updatedAt = new Date();
+    this.validate();
+    return this;
+  }
 
   static fromPrisma(prismaData: any): PaymentEntity {
     return new PaymentEntity(

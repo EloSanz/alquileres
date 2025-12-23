@@ -9,35 +9,8 @@ const paymentService = new PaymentService(paymentRepository);
 const paymentController = new PaymentController(paymentService);
 
 export const paymentRoutes = new Elysia({ prefix: '/api/payments' })
-  .guard({
-    beforeHandle: async ({ jwt, headers, set }) => {
-      const authHeader = headers.authorization
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        set.status = 401
-        return {
-          success: false,
-          message: 'No token provided',
-          statusCode: 401
-        }
-      }
-
-      const token = authHeader.substring(7)
-      const payload = await jwt.verify(token)
-      if (!payload) {
-        set.status = 401
-        return {
-          success: false,
-          message: 'Invalid token',
-          statusCode: 401
-        }
-      }
-
-      // Adjuntar userId al contexto
-      (set as any).userId = payload.userId as number
-    }
-  })
-  .derive((context) => ({
-    userId: (context.set as any).userId
+  .derive(async ({ getCurrentUserId }) => ({
+    userId: await getCurrentUserId()
   }))
   .get('/', paymentController.getAll, {
     detail: {

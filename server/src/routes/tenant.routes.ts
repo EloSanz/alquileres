@@ -2,7 +2,6 @@ import { Elysia, t } from 'elysia';
 import { TenantController } from '../controllers/tenant.controller';
 import { TenantService } from '../implementations/services/TenantService';
 import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
-import { authGuard } from '../plugins/auth.plugin';
 
 // Dependency injection
 const tenantRepository = new PrismaTenantRepository();
@@ -10,35 +9,8 @@ const tenantService = new TenantService(tenantRepository);
 const tenantController = new TenantController(tenantService);
 
 export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
-  .guard({
-    beforeHandle: async ({ jwt, headers, set }) => {
-      const authHeader = headers.authorization
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        set.status = 401
-        return {
-          success: false,
-          message: 'No token provided',
-          statusCode: 401
-        }
-      }
-
-      const token = authHeader.substring(7)
-      const payload = await jwt.verify(token)
-      if (!payload) {
-        set.status = 401
-        return {
-          success: false,
-          message: 'Invalid token',
-          statusCode: 401
-        }
-      }
-
-      // Adjuntar userId al contexto
-      (set as any).userId = payload.userId as number
-    }
-  })
-  .derive((context) => ({
-    userId: (context.set as any).userId
+  .derive(async ({ getCurrentUserId }) => ({
+    userId: await getCurrentUserId()
   }))
   .get('/', tenantController.getAll, {
     detail: {

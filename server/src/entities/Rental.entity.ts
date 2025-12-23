@@ -11,7 +11,55 @@ export class RentalEntity {
     public notes: string | null,
     public createdAt: Date,
     public updatedAt: Date
-  ) {}
+  ) {  }
+
+  static create(data: {
+    tenantId: number;
+    propertyId: number;
+    startDate: string;
+    endDate?: string;
+    monthlyRent: number;
+    depositAmount?: number;
+    status?: string;
+    notes?: string;
+  }): RentalEntity {
+    return new RentalEntity(
+      null, // id
+      data.tenantId,
+      data.propertyId,
+      new Date(data.startDate),
+      data.endDate ? new Date(data.endDate) : null,
+      data.monthlyRent,
+      data.depositAmount || null,
+      (data.status as RentalStatus) || 'ACTIVE',
+      data.notes || null,
+      new Date(), // createdAt
+      new Date()  // updatedAt
+    );
+  }
+
+  update(data: {
+    tenantId?: number;
+    propertyId?: number;
+    startDate?: string;
+    endDate?: string;
+    monthlyRent?: number;
+    depositAmount?: number;
+    status?: string;
+    notes?: string;
+  }): RentalEntity {
+    if (data.tenantId !== undefined) this.tenantId = data.tenantId;
+    if (data.propertyId !== undefined) this.propertyId = data.propertyId;
+    if (data.startDate !== undefined) this.startDate = new Date(data.startDate);
+    if (data.endDate !== undefined) this.endDate = data.endDate ? new Date(data.endDate) : null;
+    if (data.monthlyRent !== undefined) this.monthlyRent = data.monthlyRent;
+    if (data.depositAmount !== undefined) this.depositAmount = data.depositAmount;
+    if (data.status !== undefined) this.status = data.status as RentalStatus;
+    if (data.notes !== undefined) this.notes = data.notes;
+    this.updatedAt = new Date();
+    this.validate();
+    return this;
+  }
 
   static fromPrisma(prismaData: any): RentalEntity {
     return new RentalEntity(

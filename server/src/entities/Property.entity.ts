@@ -15,7 +15,71 @@ export class PropertyEntity {
     public isAvailable: boolean,
     public createdAt: Date,
     public updatedAt: Date
-  ) {}
+  ) {  }
+
+  static create(data: {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode?: string;
+    propertyType: string;
+    bedrooms?: number;
+    bathrooms?: number;
+    areaSqm?: number;
+    monthlyRent: number;
+    description?: string;
+    isAvailable?: boolean;
+  }): PropertyEntity {
+    return new PropertyEntity(
+      null, // id
+      data.name,
+      data.address,
+      data.city,
+      data.state,
+      data.zipCode || null,
+      data.propertyType as PropertyType,
+      data.bedrooms || null,
+      data.bathrooms || null,
+      data.areaSqm || null,
+      data.monthlyRent,
+      data.description || null,
+      data.isAvailable ?? true,
+      new Date(), // createdAt
+      new Date()  // updatedAt
+    );
+  }
+
+  update(data: {
+    name?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    propertyType?: string;
+    bedrooms?: number;
+    bathrooms?: number;
+    areaSqm?: number;
+    monthlyRent?: number;
+    description?: string;
+    isAvailable?: boolean;
+  }): PropertyEntity {
+    if (data.name !== undefined) this.name = data.name;
+    if (data.address !== undefined) this.address = data.address;
+    if (data.city !== undefined) this.city = data.city;
+    if (data.state !== undefined) this.state = data.state;
+    if (data.zipCode !== undefined) this.zipCode = data.zipCode;
+    if (data.propertyType !== undefined) this.propertyType = data.propertyType as PropertyType;
+    if (data.bedrooms !== undefined) this.bedrooms = data.bedrooms;
+    if (data.bathrooms !== undefined) this.bathrooms = data.bathrooms;
+    if (data.areaSqm !== undefined) this.areaSqm = data.areaSqm;
+    if (data.monthlyRent !== undefined) this.monthlyRent = data.monthlyRent;
+    if (data.description !== undefined) this.description = data.description;
+    if (data.isAvailable !== undefined) this.isAvailable = data.isAvailable;
+    this.updatedAt = new Date();
+    this.validate();
+    return this;
+  }
 
   static fromPrisma(prismaData: any): PropertyEntity {
     return new PropertyEntity(
