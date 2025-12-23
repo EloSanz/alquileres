@@ -18,8 +18,12 @@ export class PrismaPaymentRepository implements IPaymentRepository {
   }
 
   async create(entity: PaymentEntity): Promise<PaymentEntity> {
+    const data = entity.toPrisma();
+    // Remove id for creation since it's auto-generated
+    delete (data as any).id;
+
     const payment = await prisma.payment.create({
-      data: entity.toPrisma()
+      data
     });
     return PaymentEntity.fromPrisma(payment);
   }

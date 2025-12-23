@@ -1,6 +1,7 @@
 import { IUserRepository } from '../../interfaces/repositories/IUserRepository';
 import { UserEntity } from '../../entities/User.entity';
 import { prisma } from '../../lib/prisma';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 export class PrismaUserRepository implements IUserRepository {
   async findAll(): Promise<UserEntity[]> {
@@ -40,7 +41,15 @@ export class PrismaUserRepository implements IUserRepository {
     return UserEntity.fromPrisma(updated);
   }
 
-  async delete(id: number): Promise<void> {
-    await prisma.user.delete({ where: { id } });
+  async delete(id: number): Promise<boolean> {
+    try {
+      await prisma.user.delete({ where: { id } });
+      return true;
+    } catch (error: any) {
+      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+        return false;
+      }
+      throw error;
+    }
   }
 }

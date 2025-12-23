@@ -18,8 +18,12 @@ export class PrismaPropertyRepository implements IPropertyRepository {
   }
 
   async create(entity: PropertyEntity): Promise<PropertyEntity> {
+    const data = entity.toPrisma();
+    // Remove id for creation since it's auto-generated
+    delete (data as any).id;
+
     const property = await prisma.property.create({
-      data: entity.toPrisma()
+      data
     });
     return PropertyEntity.fromPrisma(property);
   }

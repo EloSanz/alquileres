@@ -1,6 +1,7 @@
 export interface PaymentDTO {
   id: number;
-  rentalId: number;
+  tenantId: number;
+  propertyId: number;
   amount: number;
   paymentDate: string;
   dueDate: string;
@@ -12,7 +13,8 @@ export interface PaymentDTO {
 }
 
 export interface CreatePaymentDTO {
-  rentalId: number;
+  tenantId: number;
+  propertyId: number;
   amount: number;
   paymentDate?: string;
   dueDate: string;
@@ -22,7 +24,8 @@ export interface CreatePaymentDTO {
 }
 
 export interface UpdatePaymentDTO {
-  rentalId?: number;
+  tenantId?: number;
+  propertyId?: number;
   amount?: number;
   paymentDate?: string;
   dueDate?: string;

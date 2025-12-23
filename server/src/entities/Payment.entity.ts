@@ -1,7 +1,8 @@
 export class PaymentEntity {
   constructor(
     public id: number | null,
-    public rentalId: number,
+    public tenantId: number,
+    public propertyId: number,
     public amount: number,
     public paymentDate: Date,
     public dueDate: Date,
@@ -13,7 +14,8 @@ export class PaymentEntity {
   ) {  }
 
   static create(data: {
-    rentalId: number;
+    tenantId: number;
+    propertyId: number;
     amount: number;
     paymentDate?: string;
     dueDate: string;
@@ -23,12 +25,13 @@ export class PaymentEntity {
   }): PaymentEntity {
     return new PaymentEntity(
       null, // id
-      data.rentalId,
+      data.tenantId,
+      data.propertyId,
       data.amount,
       data.paymentDate ? new Date(data.paymentDate) : new Date(),
       new Date(data.dueDate),
       data.paymentType as PaymentType,
-      (data.status as PaymentStatus) || 'PENDING',
+      (data.status as PaymentStatus) || PaymentStatus.PENDING,
       data.notes || null,
       new Date(), // createdAt
       new Date()  // updatedAt
@@ -36,7 +39,8 @@ export class PaymentEntity {
   }
 
   update(data: {
-    rentalId?: number;
+    tenantId?: number;
+    propertyId?: number;
     amount?: number;
     paymentDate?: string;
     dueDate?: string;
@@ -44,7 +48,8 @@ export class PaymentEntity {
     status?: string;
     notes?: string;
   }): PaymentEntity {
-    if (data.rentalId !== undefined) this.rentalId = data.rentalId;
+    if (data.tenantId !== undefined) this.tenantId = data.tenantId;
+    if (data.propertyId !== undefined) this.propertyId = data.propertyId;
     if (data.amount !== undefined) this.amount = data.amount;
     if (data.paymentDate !== undefined) this.paymentDate = new Date(data.paymentDate);
     if (data.dueDate !== undefined) this.dueDate = new Date(data.dueDate);
@@ -59,7 +64,8 @@ export class PaymentEntity {
   static fromPrisma(prismaData: any): PaymentEntity {
     return new PaymentEntity(
       prismaData.id,
-      prismaData.rentalId,
+      prismaData.tenantId,
+      prismaData.propertyId,
       Number(prismaData.amount),
       prismaData.paymentDate,
       prismaData.dueDate,
@@ -74,7 +80,8 @@ export class PaymentEntity {
   toPrisma() {
     return {
       id: this.id || undefined,
-      rentalId: this.rentalId,
+      tenantId: this.tenantId,
+      propertyId: this.propertyId,
       amount: this.amount,
       paymentDate: this.paymentDate,
       dueDate: this.dueDate,
@@ -89,10 +96,11 @@ export class PaymentEntity {
   toDTO(): PaymentDTO {
     return {
       id: this.id!,
-      rentalId: this.rentalId,
+      tenantId: this.tenantId,
+      propertyId: this.propertyId,
       amount: this.amount,
-      paymentDate: this.paymentDate.toISOString(),
-      dueDate: this.dueDate.toISOString(),
+      paymentDate: this.paymentDate.toISOString().split('T')[0],
+      dueDate: this.dueDate.toISOString().split('T')[0],
       paymentType: this.paymentType,
       status: this.status,
       notes: this.notes,
@@ -130,7 +138,8 @@ export enum PaymentStatus {
 // DTO types
 export interface PaymentDTO {
   id: number;
-  rentalId: number;
+  tenantId: number;
+  propertyId: number;
   amount: number;
   paymentDate: string;
   dueDate: string;

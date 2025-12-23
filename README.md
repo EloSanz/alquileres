@@ -42,6 +42,15 @@ Este proyecto sigue un **estándar de arquitectura estrictamente definido** para
 - **Frontend**: React + Vite + Eden Treaty + Material UI + TypeScript
 - **Type-Safety**: Eden Treaty (inferencia automática end-to-end)
 
+### 👑 USUARIO ADMIN PRINCIPAL
+
+**Credenciales del usuario administrador principal:**
+- **Usuario**: `admin`
+- **Email**: `admin@alquileres.com`
+- **Contraseña**: `admin123`
+
+**Nota**: Este usuario tiene acceso completo a todos los recursos del sistema y se crea automáticamente en cada seed.
+
 ### 📋 CHECKLIST DE CUMPLIMIENTO
 
 ```bash

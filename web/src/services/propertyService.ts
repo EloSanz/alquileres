@@ -12,6 +12,13 @@ interface Property {
   description?: string;
   zipCode?: string;
   isAvailable?: boolean;
+  tenantId: number;
+  tenant?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -29,6 +36,7 @@ interface CreatePropertyData {
   description?: string;
   zipCode?: string;
   isAvailable?: boolean;
+  tenantId: number;
 }
 
 interface UpdatePropertyData extends Partial<CreatePropertyData> {

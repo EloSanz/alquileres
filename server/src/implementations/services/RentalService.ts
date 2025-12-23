@@ -14,7 +14,42 @@ export class RentalService implements IRentalService {
 
   async getAllRentals(_userId: number): Promise<RentalDTO[]> {
     const entities = await this.rentalRepository.findAll();
-    return entities.map(entity => entity.toDTO());
+
+    // Get all rentals with tenant and property info
+    const rentalsWithDetails = await Promise.all(
+      entities.map(async (entity) => {
+        const dto = entity.toDTO() as RentalDTO & { tenant?: any; property?: any };
+
+        // Add tenant info
+        if (entity.tenantId) {
+          const tenant = await this.tenantRepository.findById(entity.tenantId);
+          if (tenant) {
+            dto.tenant = {
+              id: tenant.id,
+              firstName: tenant.firstName,
+              lastName: tenant.lastName,
+              email: tenant.email,
+            };
+          }
+        }
+
+        // Add property info
+        if (entity.propertyId) {
+          const property = await this.propertyRepository.findById(entity.propertyId);
+          if (property) {
+            dto.property = {
+              id: property.id,
+              name: property.name,
+              address: property.address,
+            };
+          }
+        }
+
+        return dto;
+      })
+    );
+
+    return rentalsWithDetails;
   }
 
   async getRentalById(id: number, _userId: number): Promise<RentalDTO> {
@@ -22,7 +57,35 @@ export class RentalService implements IRentalService {
     if (!entity) {
       throw new Error('Rental not found');
     }
-    return entity.toDTO();
+
+    const dto = entity.toDTO() as RentalDTO & { tenant?: any; property?: any };
+
+    // Add tenant info
+    if (entity.tenantId) {
+      const tenant = await this.tenantRepository.findById(entity.tenantId);
+      if (tenant) {
+        dto.tenant = {
+          id: tenant.id,
+          firstName: tenant.firstName,
+          lastName: tenant.lastName,
+          email: tenant.email,
+        };
+      }
+    }
+
+    // Add property info
+    if (entity.propertyId) {
+      const property = await this.propertyRepository.findById(entity.propertyId);
+      if (property) {
+        dto.property = {
+          id: property.id,
+          name: property.name,
+          address: property.address,
+        };
+      }
+    }
+
+    return dto;
   }
 
   async createRental(data: CreateRentalDTO, _userId: number): Promise<RentalDTO> {

@@ -2,13 +2,15 @@ import { Elysia, t } from 'elysia';
 import { PropertyController } from '../controllers/property.controller';
 import { PropertyService } from '../implementations/services/PropertyService';
 import { PrismaPropertyRepository } from '../implementations/repositories/PrismaPropertyRepository';
+import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
 import { authPlugin } from '../plugins/auth.plugin';
 import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
 import { verify as jwtVerify } from 'jsonwebtoken';
 
 // Dependency injection
 const propertyRepository = new PrismaPropertyRepository();
-const propertyService = new PropertyService(propertyRepository);
+const tenantRepository = new PrismaTenantRepository();
+const propertyService = new PropertyService(propertyRepository, tenantRepository);
 const propertyController = new PropertyController(propertyService);
 
 export const propertyRoutes = new Elysia({ prefix: '/properties' })
@@ -63,7 +65,8 @@ export const propertyRoutes = new Elysia({ prefix: '/properties' })
       areaSqm: t.Optional(t.Number()),
       monthlyRent: t.Number({ minimum: 0 }),
       description: t.Optional(t.String()),
-      isAvailable: t.Optional(t.Boolean())
+      isAvailable: t.Optional(t.Boolean()),
+      tenantId: t.Number({ minimum: 1 })
     }),
     detail: {
       tags: ['Properties'],

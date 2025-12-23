@@ -1,3 +1,6 @@
+// Import the enum
+import { PropertyStatus } from '@prisma/client';
+
 export class PropertyEntity {
   constructor(
     public id: number | null,
@@ -13,6 +16,8 @@ export class PropertyEntity {
     public monthlyRent: number,
     public description: string | null,
     public isAvailable: boolean,
+    public status: PropertyStatus,
+    public tenantId: number,
     public createdAt: Date,
     public updatedAt: Date
   ) {  }
@@ -30,6 +35,7 @@ export class PropertyEntity {
     monthlyRent: number;
     description?: string;
     isAvailable?: boolean;
+    tenantId: number;
   }): PropertyEntity {
     return new PropertyEntity(
       null, // id
@@ -45,6 +51,8 @@ export class PropertyEntity {
       data.monthlyRent,
       data.description || null,
       data.isAvailable ?? true,
+      PropertyStatus.ACTIVE, // status
+      data.tenantId,
       new Date(), // createdAt
       new Date()  // updatedAt
     );
@@ -63,6 +71,8 @@ export class PropertyEntity {
     monthlyRent?: number;
     description?: string;
     isAvailable?: boolean;
+    status?: PropertyStatus;
+    tenantId?: number;
   }): PropertyEntity {
     if (data.name !== undefined) this.name = data.name;
     if (data.address !== undefined) this.address = data.address;
@@ -76,6 +86,8 @@ export class PropertyEntity {
     if (data.monthlyRent !== undefined) this.monthlyRent = data.monthlyRent;
     if (data.description !== undefined) this.description = data.description;
     if (data.isAvailable !== undefined) this.isAvailable = data.isAvailable;
+    if (data.status !== undefined) this.status = data.status;
+    if (data.tenantId !== undefined) this.tenantId = data.tenantId;
     this.updatedAt = new Date();
     this.validate();
     return this;
@@ -96,6 +108,8 @@ export class PropertyEntity {
       Number(prismaData.monthlyRent),
       prismaData.description,
       prismaData.isAvailable,
+      prismaData.status as PropertyStatus || PropertyStatus.ACTIVE,
+      prismaData.tenantId,
       prismaData.createdAt,
       prismaData.updatedAt
     );
@@ -116,6 +130,8 @@ export class PropertyEntity {
       monthlyRent: this.monthlyRent,
       description: this.description,
       isAvailable: this.isAvailable,
+      status: this.status,
+      tenantId: this.tenantId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };
@@ -136,6 +152,8 @@ export class PropertyEntity {
       monthlyRent: this.monthlyRent,
       description: this.description,
       isAvailable: this.isAvailable,
+      status: this.status.toString(),
+      tenantId: this.tenantId,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
     };
@@ -185,6 +203,8 @@ export interface PropertyDTO {
   monthlyRent: number;
   description: string | null;
   isAvailable: boolean;
+  status: string;
+  tenantId: number;
   createdAt: string;
   updatedAt: string;
 }

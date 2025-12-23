@@ -12,6 +12,14 @@ export interface PropertyDTO {
   monthlyRent: number;
   description: string | null;
   isAvailable: boolean;
+  status: string;
+  tenantId: number;
+  tenant?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -29,6 +37,7 @@ export interface CreatePropertyDTO {
   monthlyRent: number;
   description?: string;
   isAvailable?: boolean;
+  tenantId: number;
 }
 
 export interface UpdatePropertyDTO {

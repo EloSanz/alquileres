@@ -30,11 +30,15 @@ model Tenant {
   documentId  String   @unique // DNI, Cedula, etc.
   address     String?
   birthDate   DateTime?
+  status      TenantStatus @default(ACTIVE) // Soft delete/status
+  deletedAt   DateTime?    // Soft delete timestamp
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
-  rentals     Rental[]
+  properties  Property[]
+  payments    Payment[]
+  rentals     Rental[] // Legacy relation
 
   @@map("tenants")
 }
@@ -54,16 +58,22 @@ model Property {
   monthlyRent Decimal
   description String?
   isAvailable Boolean     @default(true)
+  status      PropertyStatus @default(ACTIVE) // Property status
+  deletedAt   DateTime?    // Soft delete timestamp
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   // Relations
-  rentals     Rental[]
+  tenantId    Int
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  payments    Payment[]
+  rentals     Rental[] // Legacy relation
 
   @@map("properties")
 }
 
-// Rental (Alquiler/Contrato) model
+// Rental (Alquiler/Contrato) model - DEPRECATED
+// Mantained for backwards compatibility but not used in new relationships
 model Rental {
   id            Int            @id @default(autoincrement())
   tenantId      Int
@@ -77,10 +87,9 @@ model Rental {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
-  // Relations
+  // Relations (legacy)
   tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   property      Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  payments      Payment[]
 
   @@unique([tenantId, propertyId, startDate])
   @@map("rentals")
@@ -89,18 +98,21 @@ model Rental {
 // Payment (Pago) model
 model Payment {
   id          Int          @id @default(autoincrement())
-  rentalId    Int
+  tenantId    Int
+  propertyId  Int
   amount      Decimal
   paymentDate DateTime     @default(now())
   dueDate     DateTime
   paymentType PaymentType
   status      PaymentStatus @default(PENDING)
   notes       String?
+  deletedAt   DateTime?    // Soft delete timestamp
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  // Relations
-  rental      Rental       @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  // Relations - NO CASCADE: Los pagos históricos se mantienen
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  property    Property     @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
   @@map("payments")
 }
@@ -113,6 +125,18 @@ enum PropertyType {
   OFFICE
   COMMERCIAL
   LAND
+}
+
+enum PropertyStatus {
+  ACTIVE      // Propiedad activa y alquilable
+  INACTIVE    // Propiedad temporalmente inactiva
+  ARCHIVED    // Propiedad archivada (soft delete)
+}
+
+enum TenantStatus {
+  ACTIVE      // Inquilino activo
+  INACTIVE    // Inquilino inactivo
+  ARCHIVED    // Inquilino archivado (soft delete)
 }
 
 enum RentalStatus {

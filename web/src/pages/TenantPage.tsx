@@ -23,6 +23,8 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
+import SearchBar from '../components/SearchBar';
+import FilterBar, { type FilterConfig } from '../components/FilterBar';
 
 interface Tenant {
   id: number;
@@ -144,8 +146,26 @@ const tenantService = new TenantService();
 
 const TenantPage = () => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [filteredTenants, setFilteredTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({
+    sortBy: 'firstName'
+  });
+
+  const tenantFilters: FilterConfig[] = [
+    {
+      key: 'sortBy',
+      label: 'Ordenar por',
+      options: [
+        { value: 'firstName', label: 'Nombre (A-Z)' },
+        { value: 'lastName', label: 'Apellido (A-Z)' },
+        { value: 'firstName_desc', label: 'Nombre (Z-A)' },
+        { value: 'lastName_desc', label: 'Apellido (Z-A)' }
+      ]
+    }
+  ];
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     firstName: '',
@@ -172,6 +192,8 @@ const TenantPage = () => {
       setError(''); // Limpiar error anterior
       const data = await tenantService.getAllTenants();
       setTenants(data);
+      const filtered = filterAndSortTenants(searchQuery, filterValues, data);
+      setFilteredTenants(filtered);
     } catch (err: any) {
       // Solo mostrar error si es un error real de red/API, no si es array vacío
       if (err.message && !err.message.includes('fetch')) {
@@ -179,9 +201,85 @@ const TenantPage = () => {
       }
       // Si es array vacío, no es error - simplemente no hay datos
       setTenants([]);
+      setFilteredTenants([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterAndSortTenants = (query: string, filters: Record<string, string | string[]>, tenantsList: Tenant[]) => {
+    let filtered = tenantsList;
+
+    // Aplicar filtro de búsqueda
+    if (query.trim()) {
+      const lowerQuery = query.toLowerCase();
+      filtered = filtered.filter(tenant =>
+        tenant.firstName.toLowerCase().includes(lowerQuery) ||
+        tenant.lastName.toLowerCase().includes(lowerQuery) ||
+        tenant.email.toLowerCase().includes(lowerQuery) ||
+        tenant.documentId.toLowerCase().includes(lowerQuery) ||
+        tenant.phone?.toLowerCase().includes(lowerQuery)
+      );
+    }
+
+    // Aplicar ordenamiento
+    const sortBy = filters.sortBy as string;
+    filtered.sort((a, b) => {
+      let aValue: string, bValue: string;
+
+      switch (sortBy) {
+        case 'firstName':
+          aValue = a.firstName;
+          bValue = b.firstName;
+          break;
+        case 'lastName':
+          aValue = a.lastName;
+          bValue = b.lastName;
+          break;
+        case 'firstName_desc':
+          aValue = b.firstName;
+          bValue = a.firstName;
+          break;
+        case 'lastName_desc':
+          aValue = b.lastName;
+          bValue = a.lastName;
+          break;
+        default:
+          aValue = a.firstName;
+          bValue = b.firstName;
+      }
+
+      return aValue.localeCompare(bValue);
+    });
+
+    return filtered;
+  };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+    const filtered = filterAndSortTenants(query, filterValues, tenants);
+    setFilteredTenants(filtered);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    const filtered = filterAndSortTenants('', filterValues, tenants);
+    setFilteredTenants(filtered);
+  };
+
+  const handleFilterChange = (key: string, value: string | string[]) => {
+    const newFilters = { ...filterValues, [key]: value };
+    setFilterValues(newFilters);
+    const filtered = filterAndSortTenants(searchQuery, newFilters, tenants);
+    setFilteredTenants(filtered);
+  };
+
+  const handleClearFilters = () => {
+    const newFilters = { sortBy: 'firstName' };
+    setFilterValues(newFilters);
+    const filtered = filterAndSortTenants(searchQuery, newFilters, tenants);
+    setFilteredTenants(filtered);
   };
 
   const handleCreateTenant = async () => {
@@ -213,6 +311,12 @@ const TenantPage = () => {
   useEffect(() => {
     fetchTenants();
   }, []);
+
+  // Aplicar filtros y ordenamiento cuando cambien los criterios
+  useEffect(() => {
+    const filtered = filterAndSortTenants(searchQuery, filterValues, tenants);
+    setFilteredTenants(filtered);
+  }, [searchQuery, filterValues, tenants]);
 
   const handleViewDetails = (tenant: Tenant) => {
     // TODO: Navigate to tenant details page
@@ -284,10 +388,29 @@ const TenantPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Inquilinos
-        </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Inquilinos
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ flex: 1, maxWidth: 400 }}>
+            <SearchBar
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+              onClearSearch={handleClearSearch}
+              placeholder="Buscar por nombre, apellido, email..."
+              label="Buscar inquilinos"
+            />
+          </Box>
+          <FilterBar
+            filters={tenantFilters}
+            filterValues={filterValues}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+          />
+        </Box>
       </Box>
 
       {/* Navigation Menu - Siempre visible */}
@@ -317,7 +440,7 @@ const TenantPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tenants.map((tenant) => (
+              {filteredTenants.map((tenant) => (
                 <TableRow key={tenant.id} hover>
                   <TableCell>
                     {tenant.firstName} {tenant.lastName}

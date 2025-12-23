@@ -13,7 +13,9 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
-    "db:studio": "prisma studio"
+    "db:migrate:dev": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@elysiajs/jwt": "^1.0.0",

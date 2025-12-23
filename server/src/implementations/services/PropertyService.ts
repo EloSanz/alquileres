@@ -1,14 +1,41 @@
 import { IPropertyService } from '../../interfaces/services/IPropertyService';
 import { IPropertyRepository } from '../../interfaces/repositories/IPropertyRepository';
+import { ITenantRepository } from '../../interfaces/repositories/ITenantRepository';
 import { PropertyDTO, CreatePropertyDTO, UpdatePropertyDTO } from '../../dtos/property.dto';
 import { PropertyEntity } from '../../entities/Property.entity';
 
 export class PropertyService implements IPropertyService {
-  constructor(private propertyRepository: IPropertyRepository) {}
+  constructor(
+    private propertyRepository: IPropertyRepository,
+    private tenantRepository: ITenantRepository
+  ) {}
 
   async getAllProperties(_userId: number): Promise<PropertyDTO[]> {
     const entities = await this.propertyRepository.findAll();
-    return entities.map(entity => entity.toDTO());
+
+    // Get tenant information for each property
+    const propertiesWithTenants = await Promise.all(
+      entities.map(async (entity) => {
+        const dto = entity.toDTO() as PropertyDTO & { tenant?: any };
+
+        // Get tenant info if tenantId exists
+        if (entity.tenantId) {
+          const tenant = await this.tenantRepository.findById(entity.tenantId);
+          if (tenant) {
+            dto.tenant = {
+              id: tenant.id,
+              firstName: tenant.firstName,
+              lastName: tenant.lastName,
+              email: tenant.email,
+            };
+          }
+        }
+
+        return dto;
+      })
+    );
+
+    return propertiesWithTenants;
   }
 
   async getPropertyById(id: number, _userId: number): Promise<PropertyDTO> {
@@ -16,7 +43,23 @@ export class PropertyService implements IPropertyService {
     if (!entity) {
       throw new Error('Property not found');
     }
-    return entity.toDTO();
+
+    const dto = entity.toDTO() as PropertyDTO & { tenant?: any };
+
+    // Get tenant info if tenantId exists
+    if (entity.tenantId) {
+      const tenant = await this.tenantRepository.findById(entity.tenantId);
+      if (tenant) {
+        dto.tenant = {
+          id: tenant.id,
+          firstName: tenant.firstName,
+          lastName: tenant.lastName,
+          email: tenant.email,
+        };
+      }
+    }
+
+    return dto;
   }
 
   async createProperty(data: CreatePropertyDTO, _userId: number): Promise<PropertyDTO> {

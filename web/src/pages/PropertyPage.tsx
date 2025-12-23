@@ -27,11 +27,42 @@ import {
 import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { propertyService, Property, CreatePropertyData, UpdatePropertyData } from '../services/propertyService';
 import NavigationTabs from '../components/NavigationTabs';
+import SearchBar from '../components/SearchBar';
+import FilterBar, { type FilterConfig } from '../components/FilterBar';
 
 const PropertyPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({
+    isAvailable: '',
+    propertyType: ''
+  });
+
+  const propertyFilters: FilterConfig[] = [
+    {
+      key: 'isAvailable',
+      label: 'Disponibilidad',
+      options: [
+        { value: 'true', label: 'Disponible' },
+        { value: 'false', label: 'Ocupada' }
+      ]
+    },
+    {
+      key: 'propertyType',
+      label: 'Tipo',
+      options: [
+        { value: 'APARTMENT', label: 'Apartamento' },
+        { value: 'HOUSE', label: 'Casa' },
+        { value: 'STUDIO', label: 'Estudio' },
+        { value: 'OFFICE', label: 'Oficina' },
+        { value: 'COMMERCIAL', label: 'Comercial' },
+        { value: 'LAND', label: 'Terreno' }
+      ]
+    }
+  ];
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     name: '',
@@ -46,6 +77,7 @@ const PropertyPage = () => {
     description: '',
     zipCode: '',
     isAvailable: true,
+    tenantId: '',
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
@@ -72,6 +104,8 @@ const PropertyPage = () => {
       setError(''); // Limpiar error anterior
       const data = await propertyService.getAllProperties();
       setProperties(data);
+      const filtered = filterProperties(searchQuery, filterValues, data);
+      setFilteredProperties(filtered);
     } catch (err: any) {
       // Solo mostrar error si es un error real de red/API, no si es array vacío
       if (err.message && !err.message.includes('fetch')) {
@@ -79,9 +113,69 @@ const PropertyPage = () => {
       }
       // Si es array vacío, no es error - simplemente no hay datos
       setProperties([]);
+      setFilteredProperties([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterProperties = (query: string, filters: Record<string, string | string[]>, propertiesList: Property[]) => {
+    return propertiesList.filter(property => {
+      // Filtro de búsqueda por texto
+      if (query.trim()) {
+        const lowerQuery = query.toLowerCase();
+        const matchesQuery =
+          property.name.toLowerCase().includes(lowerQuery) ||
+          property.address.toLowerCase().includes(lowerQuery) ||
+          property.city.toLowerCase().includes(lowerQuery) ||
+          property.state.toLowerCase().includes(lowerQuery) ||
+          property.description?.toLowerCase().includes(lowerQuery) ||
+          property.propertyType.toLowerCase().includes(lowerQuery) ||
+          property.tenant?.firstName.toLowerCase().includes(lowerQuery) ||
+          property.tenant?.lastName.toLowerCase().includes(lowerQuery);
+
+        if (!matchesQuery) return false;
+      }
+
+      // Filtro por disponibilidad
+      if (filters.isAvailable && property.isAvailable?.toString() !== filters.isAvailable) {
+        return false;
+      }
+
+      // Filtro por tipo de propiedad
+      if (filters.propertyType && property.propertyType !== filters.propertyType) {
+        return false;
+      }
+
+      return true;
+    });
+  };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+    const filtered = filterProperties(query, filterValues, properties);
+    setFilteredProperties(filtered);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    const filtered = filterProperties('', filterValues, properties);
+    setFilteredProperties(filtered);
+  };
+
+  const handleFilterChange = (key: string, value: string | string[]) => {
+    const newFilters = { ...filterValues, [key]: value };
+    setFilterValues(newFilters);
+    const filtered = filterProperties(searchQuery, newFilters, properties);
+    setFilteredProperties(filtered);
+  };
+
+  const handleClearFilters = () => {
+    const newFilters = { isAvailable: '', propertyType: '' };
+    setFilterValues(newFilters);
+    const filtered = filterProperties(searchQuery, newFilters, properties);
+    setFilteredProperties(filtered);
   };
 
   const handleCreateProperty = async () => {
@@ -99,6 +193,7 @@ const PropertyPage = () => {
         description: createForm.description || undefined,
         zipCode: createForm.zipCode || undefined,
         isAvailable: createForm.isAvailable,
+        tenantId: parseInt(createForm.tenantId),
       };
 
       await propertyService.createProperty(propertyData);
@@ -117,6 +212,7 @@ const PropertyPage = () => {
         description: '',
         zipCode: '',
         isAvailable: true,
+        tenantId: '',
       });
       fetchProperties(); // Refresh the list
     } catch (err: any) {
@@ -127,6 +223,12 @@ const PropertyPage = () => {
   useEffect(() => {
     fetchProperties();
   }, []);
+
+  // Aplicar filtros cuando cambien los criterios
+  useEffect(() => {
+    const filtered = filterProperties(searchQuery, filterValues, properties);
+    setFilteredProperties(filtered);
+  }, [searchQuery, filterValues, properties]);
 
   const handleViewDetails = (property: Property) => {
     // TODO: Navigate to property details page
@@ -215,10 +317,29 @@ const PropertyPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Propiedades
-        </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Propiedades
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ flex: 1, maxWidth: 400 }}>
+            <SearchBar
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+              onClearSearch={handleClearSearch}
+              placeholder="Buscar por nombre, dirección, ciudad..."
+              label="Buscar propiedades"
+            />
+          </Box>
+          <FilterBar
+            filters={propertyFilters}
+            filterValues={filterValues}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+          />
+        </Box>
       </Box>
 
       {/* Navigation Menu - Siempre visible */}
@@ -249,7 +370,7 @@ const PropertyPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {properties.map((property) => (
+              {filteredProperties.map((property) => (
                 <TableRow key={property.id} hover>
                   <TableCell>{property.name}</TableCell>
                   <TableCell>{property.address}</TableCell>
@@ -345,6 +466,17 @@ const PropertyPage = () => {
                 value={createForm.address}
                 onChange={(e) => setCreateForm({ ...createForm, address: e.target.value })}
                 placeholder="Ej: Av. Larco 123, Miraflores"
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="ID del Inquilino"
+                type="number"
+                value={createForm.tenantId}
+                onChange={(e) => setCreateForm({ ...createForm, tenantId: e.target.value })}
+                placeholder="ID del inquilino propietario"
                 required
               />
             </Grid>
