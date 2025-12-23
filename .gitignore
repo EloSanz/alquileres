@@ -155,5 +155,3 @@ coverage/
 # package-lock.json
 # yarn.lock
 
-# Keep templates (important!)
-!templates/
