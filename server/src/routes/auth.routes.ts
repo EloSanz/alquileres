@@ -61,7 +61,6 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
 
     try {
       userId = verifyToken(token);
-      console.log('Extracted userId from token:', userId);
     } catch (error) {
       return {
         success: false,

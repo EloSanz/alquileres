@@ -18,15 +18,12 @@ export class AuthController {
     timestamp: new Date().toISOString()
   });
 
-  getCurrentUser = async (userId: number) => {
-    console.log('Controller getCurrentUser called with userId:', userId);
-    return {
-      success: true,
-      message: 'Current user retrieved successfully',
-      data: await this.authService.getCurrentUser(userId),
-      timestamp: new Date().toISOString()
-    };
-  };
+  getCurrentUser = async (userId: number) => ({
+    success: true,
+    message: 'Current user retrieved successfully',
+    data: await this.authService.getCurrentUser(userId),
+    timestamp: new Date().toISOString()
+  });
 
   getAllUsers = async () => ({
     success: true,
