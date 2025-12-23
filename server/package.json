@@ -12,17 +12,18 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
-    "elysia": "^1.0.0",
     "@elysiajs/jwt": "^1.0.0",
-    "prisma": "^5.0.0",
+    "@elysiajs/node": "^1.4.2",
     "@prisma/client": "^5.0.0",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "elysia": "^1.0.0",
+    "prisma": "^5.0.0"
   },
   "devDependencies": {
-    "tsx": "^4.0.0",
-    "typescript": "^5.0.0",
-    "concurrently": "^8.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.0.0",
-    "@types/bcryptjs": "^2.4.6"
+    "concurrently": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
   }
 }
