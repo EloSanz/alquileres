@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { TenantController } from '../controllers/tenant.controller';
 import { TenantService } from '../implementations/services/TenantService';
 import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
+import { authGuard } from '../plugins/auth.plugin';
 
 // Dependency injection
 const tenantRepository = new PrismaTenantRepository();
@@ -9,6 +10,7 @@ const tenantService = new TenantService(tenantRepository);
 const tenantController = new TenantController(tenantService);
 
 export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
+  .use(authGuard)
   .get('/', tenantController.getAll, {
     detail: {
       tags: ['Tenants'],

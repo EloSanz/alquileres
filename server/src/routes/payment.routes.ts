@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { PaymentController } from '../controllers/payment.controller';
 import { PaymentService } from '../implementations/services/PaymentService';
 import { PrismaPaymentRepository } from '../implementations/repositories/PrismaPaymentRepository';
+import { authGuard } from '../plugins/auth.plugin';
 
 // Dependency injection
 const paymentRepository = new PrismaPaymentRepository();
@@ -9,6 +10,7 @@ const paymentService = new PaymentService(paymentRepository);
 const paymentController = new PaymentController(paymentService);
 
 export const paymentRoutes = new Elysia({ prefix: '/api/payments' })
+  .use(authGuard)
   .get('/', paymentController.getAll, {
     detail: {
       tags: ['Payments'],

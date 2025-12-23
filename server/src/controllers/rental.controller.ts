@@ -4,8 +4,7 @@ import { CreateRentalDTO, UpdateRentalDTO } from '../dtos/rental.dto';
 export class RentalController {
   constructor(private rentalService: IRentalService) {}
 
-  getAll = async ({ getCurrentUserId }: { getCurrentUserId: () => Promise<number> }) => {
-    const userId = await getCurrentUserId();
+  getAll = async ({ userId }: { userId: number }) => {
     const rentals = await this.rentalService.getAllRentals(userId);
     return {
       success: true,
@@ -16,12 +15,11 @@ export class RentalController {
 
   getById = async ({
     params: { id },
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const rental = await this.rentalService.getRentalById(id, userId);
     return {
       success: true,
@@ -32,12 +30,11 @@ export class RentalController {
 
   create = async ({
     body,
-    getCurrentUserId,
+    userId,
   }: {
     body: CreateRentalDTO;
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const rental = await this.rentalService.createRental(body, userId);
     return {
       success: true,
@@ -49,13 +46,12 @@ export class RentalController {
   update = async ({
     params: { id },
     body,
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
     body: UpdateRentalDTO;
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const rental = await this.rentalService.updateRental(id, body, userId);
     return {
       success: true,
@@ -66,12 +62,11 @@ export class RentalController {
 
   delete = async ({
     params: { id },
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     await this.rentalService.deleteRental(id, userId);
     return {
       success: true,

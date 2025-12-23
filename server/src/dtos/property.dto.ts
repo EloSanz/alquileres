@@ -4,13 +4,13 @@ export interface PropertyDTO {
   address: string;
   city: string;
   state: string;
-  zipCode?: string;
+  zipCode: string | null;
   propertyType: string;
-  bedrooms?: number;
-  bathrooms?: number;
-  areaSqm?: number;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  areaSqm: number | null;
   monthlyRent: number;
-  description?: string;
+  description: string | null;
   isAvailable: boolean;
   createdAt: string;
   updatedAt: string;

@@ -20,3 +20,9 @@ export const authPlugin = new Elysia()
       return payload.userId as number
     }
   }))
+
+// Middleware para rutas protegidas
+export const authGuard = new Elysia()
+  .derive(async ({ getCurrentUserId }) => ({
+    userId: await getCurrentUserId()
+  }))

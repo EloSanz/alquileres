@@ -3,10 +3,10 @@ export interface TenantDTO {
   firstName: string;
   lastName: string;
   email: string;
-  phone?: string;
+  phone: string | null;
   documentId: string;
-  address?: string;
-  birthDate?: string;
+  address: string | null;
+  birthDate: string | null;
   createdAt: string;
   updatedAt: string;
 }

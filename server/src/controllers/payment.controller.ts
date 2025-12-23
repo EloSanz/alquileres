@@ -4,8 +4,7 @@ import { CreatePaymentDTO, UpdatePaymentDTO } from '../dtos/payment.dto';
 export class PaymentController {
   constructor(private paymentService: IPaymentService) {}
 
-  getAll = async ({ getCurrentUserId }: { getCurrentUserId: () => Promise<number> }) => {
-    const userId = await getCurrentUserId();
+  getAll = async ({ userId }: { userId: number }) => {
     const payments = await this.paymentService.getAllPayments(userId);
     return {
       success: true,
@@ -16,12 +15,11 @@ export class PaymentController {
 
   getById = async ({
     params: { id },
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const payment = await this.paymentService.getPaymentById(id, userId);
     return {
       success: true,
@@ -32,12 +30,11 @@ export class PaymentController {
 
   create = async ({
     body,
-    getCurrentUserId,
+    userId,
   }: {
     body: CreatePaymentDTO;
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const payment = await this.paymentService.createPayment(body, userId);
     return {
       success: true,
@@ -49,13 +46,12 @@ export class PaymentController {
   update = async ({
     params: { id },
     body,
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
     body: UpdatePaymentDTO;
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const payment = await this.paymentService.updatePayment(id, body, userId);
     return {
       success: true,
@@ -66,12 +62,11 @@ export class PaymentController {
 
   delete = async ({
     params: { id },
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     await this.paymentService.deletePayment(id, userId);
     return {
       success: true,

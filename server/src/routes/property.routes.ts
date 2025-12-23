@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { PropertyController } from '../controllers/property.controller';
 import { PropertyService } from '../implementations/services/PropertyService';
 import { PrismaPropertyRepository } from '../implementations/repositories/PrismaPropertyRepository';
+import { authGuard } from '../plugins/auth.plugin';
 
 // Dependency injection
 const propertyRepository = new PrismaPropertyRepository();
@@ -9,6 +10,7 @@ const propertyService = new PropertyService(propertyRepository);
 const propertyController = new PropertyController(propertyService);
 
 export const propertyRoutes = new Elysia({ prefix: '/api/properties' })
+  .use(authGuard)
   .get('/', propertyController.getAll, {
     detail: {
       tags: ['Properties'],

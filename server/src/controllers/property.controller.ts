@@ -4,8 +4,7 @@ import { CreatePropertyDTO, UpdatePropertyDTO } from '../dtos/property.dto';
 export class PropertyController {
   constructor(private propertyService: IPropertyService) {}
 
-  getAll = async ({ getCurrentUserId }: { getCurrentUserId: () => Promise<number> }) => {
-    const userId = await getCurrentUserId();
+  getAll = async ({ userId }: { userId: number }) => {
     const properties = await this.propertyService.getAllProperties(userId);
     return {
       success: true,
@@ -16,12 +15,11 @@ export class PropertyController {
 
   getById = async ({
     params: { id },
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const property = await this.propertyService.getPropertyById(id, userId);
     return {
       success: true,
@@ -32,12 +30,11 @@ export class PropertyController {
 
   create = async ({
     body,
-    getCurrentUserId,
+    userId,
   }: {
     body: CreatePropertyDTO;
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const property = await this.propertyService.createProperty(body, userId);
     return {
       success: true,
@@ -49,13 +46,12 @@ export class PropertyController {
   update = async ({
     params: { id },
     body,
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
     body: UpdatePropertyDTO;
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const property = await this.propertyService.updateProperty(id, body, userId);
     return {
       success: true,
@@ -66,12 +62,11 @@ export class PropertyController {
 
   delete = async ({
     params: { id },
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     await this.propertyService.deleteProperty(id, userId);
     return {
       success: true,

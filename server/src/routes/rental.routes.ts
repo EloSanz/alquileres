@@ -4,6 +4,7 @@ import { RentalService } from '../implementations/services/RentalService';
 import { PrismaRentalRepository } from '../implementations/repositories/PrismaRentalRepository';
 import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
 import { PrismaPropertyRepository } from '../implementations/repositories/PrismaPropertyRepository';
+import { authGuard } from '../plugins/auth.plugin';
 
 // Dependency injection
 const rentalRepository = new PrismaRentalRepository();
@@ -13,6 +14,7 @@ const rentalService = new RentalService(rentalRepository, tenantRepository, prop
 const rentalController = new RentalController(rentalService);
 
 export const rentalRoutes = new Elysia({ prefix: '/api/rentals' })
+  .use(authGuard)
   .get('/', rentalController.getAll, {
     detail: {
       tags: ['Rentals'],

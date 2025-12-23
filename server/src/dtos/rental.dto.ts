@@ -3,11 +3,11 @@ export interface RentalDTO {
   tenantId: number;
   propertyId: number;
   startDate: string;
-  endDate?: string;
+  endDate: string | null;
   monthlyRent: number;
-  depositAmount?: number;
+  depositAmount: number | null;
   status: string;
-  notes?: string;
+  notes: string | null;
   createdAt: string;
   updatedAt: string;
   tenant?: {

@@ -4,8 +4,7 @@ import { CreateTenantDTO, UpdateTenantDTO } from '../dtos/tenant.dto';
 export class TenantController {
   constructor(private tenantService: ITenantService) {}
 
-  getAll = async ({ getCurrentUserId }: { getCurrentUserId: () => Promise<number> }) => {
-    const userId = await getCurrentUserId();
+  getAll = async ({ userId }: { userId: number }) => {
     const tenants = await this.tenantService.getAllTenants(userId);
     return {
       success: true,
@@ -16,12 +15,11 @@ export class TenantController {
 
   getById = async ({
     params: { id },
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const tenant = await this.tenantService.getTenantById(id, userId);
     return {
       success: true,
@@ -32,12 +30,11 @@ export class TenantController {
 
   getByEmail = async ({
     params: { email },
-    getCurrentUserId,
+    userId,
   }: {
     params: { email: string };
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const tenant = await this.tenantService.getTenantByEmail(email, userId);
     return {
       success: true,
@@ -48,12 +45,11 @@ export class TenantController {
 
   getByDocumentId = async ({
     params: { documentId },
-    getCurrentUserId,
+    userId,
   }: {
     params: { documentId: string };
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const tenant = await this.tenantService.getTenantByDocumentId(documentId, userId);
     return {
       success: true,
@@ -64,12 +60,11 @@ export class TenantController {
 
   create = async ({
     body,
-    getCurrentUserId,
+    userId,
   }: {
     body: CreateTenantDTO;
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const tenant = await this.tenantService.createTenant(body, userId);
     return {
       success: true,
@@ -81,13 +76,12 @@ export class TenantController {
   update = async ({
     params: { id },
     body,
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
     body: UpdateTenantDTO;
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     const tenant = await this.tenantService.updateTenant(id, body, userId);
     return {
       success: true,
@@ -98,12 +92,11 @@ export class TenantController {
 
   delete = async ({
     params: { id },
-    getCurrentUserId,
+    userId,
   }: {
     params: { id: number };
-    getCurrentUserId: () => Promise<number>;
+    userId: number;
   }) => {
-    const userId = await getCurrentUserId();
     await this.tenantService.deleteTenant(id, userId);
     return {
       success: true,

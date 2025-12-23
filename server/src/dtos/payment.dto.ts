@@ -6,7 +6,7 @@ export interface PaymentDTO {
   dueDate: string;
   paymentType: string;
   status: string;
-  notes?: string;
+  notes: string | null;
   createdAt: string;
   updatedAt: string;
 }
