@@ -9,6 +9,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
 import PropertyPage from './pages/PropertyPage';
+import TenantPage from './pages/TenantPage';
+import PaymentPage from './pages/PaymentPage';
 
 // Component to protect authenticated routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -69,6 +71,22 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <PropertyPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tenants"
+            element={
+              <ProtectedRoute>
+                <TenantPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payments"
+            element={
+              <ProtectedRoute>
+                <PaymentPage />
               </ProtectedRoute>
             }
           />
