@@ -61,13 +61,17 @@ Este proyecto sigue un **estándar de arquitectura estrictamente definido** para
 
 ### 🚀 SETUP AUTOMÁTICO
 
+Los scripts de setup están disponibles localmente (no incluidos en el repositorio):
+
 ```bash
-# Setup completo
+# Setup completo (ejecutar después de clonar)
 ./setup.sh
 
 # Desarrollo simultáneo
 npm run dev  # Backend + Frontend
 ```
+
+**Nota**: Los archivos `setup.sh`, `setup-backend.sh` y `setup-frontend.sh` están excluidos del repositorio por seguridad. Se generan automáticamente durante el desarrollo inicial.
 
 ---
 
