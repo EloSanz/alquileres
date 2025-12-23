@@ -25,14 +25,18 @@ const PropertyPage = () => {
   const [error, setError] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
-    title: '',
-    description: '',
+    name: '',
     address: '',
-    price: '',
+    city: '',
+    state: '',
+    propertyType: 'HOUSE',
+    monthlyRent: '',
     bedrooms: '',
     bathrooms: '',
-    area: '',
-    type: 'HOUSE',
+    areaSqm: '',
+    description: '',
+    zipCode: '',
+    isAvailable: true,
   });
 
   const fetchProperties = async () => {
@@ -50,28 +54,36 @@ const PropertyPage = () => {
   const handleCreateProperty = async () => {
     try {
       const propertyData: CreatePropertyData = {
-        title: createForm.title,
-        description: createForm.description,
+        name: createForm.name,
         address: createForm.address,
-        price: parseFloat(createForm.price),
-        bedrooms: parseInt(createForm.bedrooms),
-        bathrooms: parseInt(createForm.bathrooms),
-        area: parseFloat(createForm.area),
-        type: createForm.type,
+        city: createForm.city,
+        state: createForm.state,
+        propertyType: createForm.propertyType,
+        monthlyRent: parseFloat(createForm.monthlyRent),
+        bedrooms: createForm.bedrooms ? parseInt(createForm.bedrooms) : undefined,
+        bathrooms: createForm.bathrooms ? parseInt(createForm.bathrooms) : undefined,
+        areaSqm: createForm.areaSqm ? parseFloat(createForm.areaSqm) : undefined,
+        description: createForm.description || undefined,
+        zipCode: createForm.zipCode || undefined,
+        isAvailable: createForm.isAvailable,
       };
 
       await propertyService.createProperty(propertyData);
 
       setCreateDialogOpen(false);
       setCreateForm({
-        title: '',
-        description: '',
+        name: '',
         address: '',
-        price: '',
+        city: '',
+        state: '',
+        propertyType: 'HOUSE',
+        monthlyRent: '',
         bedrooms: '',
         bathrooms: '',
-        area: '',
-        type: 'HOUSE',
+        areaSqm: '',
+        description: '',
+        zipCode: '',
+        isAvailable: true,
       });
       fetchProperties(); // Refresh the list
     } catch (err: any) {
@@ -143,20 +155,10 @@ const PropertyPage = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Título"
-                value={createForm.title}
-                onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
+                label="Nombre de la Propiedad"
+                value={createForm.name}
+                onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
                 required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Descripción"
-                value={createForm.description}
-                onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-                multiline
-                rows={3}
               />
             </Grid>
             <Grid item xs={12}>
@@ -171,20 +173,36 @@ const PropertyPage = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Precio (mensual)"
-                type="number"
-                value={createForm.price}
-                onChange={(e) => setCreateForm({ ...createForm, price: e.target.value })}
+                label="Ciudad"
+                value={createForm.city}
+                onChange={(e) => setCreateForm({ ...createForm, city: e.target.value })}
                 required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Estado/Provincia"
+                value={createForm.state}
+                onChange={(e) => setCreateForm({ ...createForm, state: e.target.value })}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Código Postal"
+                value={createForm.zipCode}
+                onChange={(e) => setCreateForm({ ...createForm, zipCode: e.target.value })}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 select
                 fullWidth
-                label="Tipo"
-                value={createForm.type}
-                onChange={(e) => setCreateForm({ ...createForm, type: e.target.value })}
+                label="Tipo de Propiedad"
+                value={createForm.propertyType}
+                onChange={(e) => setCreateForm({ ...createForm, propertyType: e.target.value })}
                 required
               >
                 <MenuItem value="HOUSE">Casa</MenuItem>
@@ -193,6 +211,25 @@ const PropertyPage = () => {
                 <MenuItem value="TOWNHOUSE">Townhouse</MenuItem>
               </TextField>
             </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Renta Mensual"
+                type="number"
+                value={createForm.monthlyRent}
+                onChange={(e) => setCreateForm({ ...createForm, monthlyRent: e.target.value })}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Área (m²)"
+                type="number"
+                value={createForm.areaSqm}
+                onChange={(e) => setCreateForm({ ...createForm, areaSqm: e.target.value })}
+              />
+            </Grid>
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
@@ -200,7 +237,6 @@ const PropertyPage = () => {
                 type="number"
                 value={createForm.bedrooms}
                 onChange={(e) => setCreateForm({ ...createForm, bedrooms: e.target.value })}
-                required
               />
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -210,17 +246,28 @@ const PropertyPage = () => {
                 type="number"
                 value={createForm.bathrooms}
                 onChange={(e) => setCreateForm({ ...createForm, bathrooms: e.target.value })}
-                required
               />
             </Grid>
             <Grid item xs={12} sm={4}>
               <TextField
+                select
                 fullWidth
-                label="Área (m²)"
-                type="number"
-                value={createForm.area}
-                onChange={(e) => setCreateForm({ ...createForm, area: e.target.value })}
-                required
+                label="Disponible"
+                value={createForm.isAvailable ? 'true' : 'false'}
+                onChange={(e) => setCreateForm({ ...createForm, isAvailable: e.target.value === 'true' })}
+              >
+                <MenuItem value="true">Sí</MenuItem>
+                <MenuItem value="false">No</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Descripción"
+                value={createForm.description}
+                onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                multiline
+                rows={3}
               />
             </Grid>
           </Grid>

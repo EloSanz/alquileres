@@ -13,7 +13,7 @@ const paymentController = new PaymentController(paymentService);
 
 export const paymentRoutes = new Elysia({ prefix: '/payments' })
   .use(authPlugin)
-  .derive(async ({ jwt, headers }) => {
+  .derive(async ({ headers }) => {
     const authHeader: string | undefined = headers.authorization
     console.log('[Payment Routes] Checking auth header:', authHeader ? 'present' : 'missing')
 

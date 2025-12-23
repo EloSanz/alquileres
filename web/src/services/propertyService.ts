@@ -1,27 +1,34 @@
 interface Property {
   id: number;
-  title: string;
-  description: string;
+  name: string;
   address: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  area: number;
-  type: string;
-  status: string;
+  city: string;
+  state: string;
+  propertyType: string;
+  monthlyRent: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  areaSqm?: number;
+  description?: string;
+  zipCode?: string;
+  isAvailable?: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 interface CreatePropertyData {
-  title: string;
-  description: string;
+  name: string;
   address: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  area: number;
-  type: string;
+  city: string;
+  state: string;
+  propertyType: string;
+  monthlyRent: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  areaSqm?: number;
+  description?: string;
+  zipCode?: string;
+  isAvailable?: boolean;
 }
 
 interface UpdatePropertyData extends Partial<CreatePropertyData> {

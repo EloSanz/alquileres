@@ -17,7 +17,7 @@ const rentalController = new RentalController(rentalService);
 
 export const rentalRoutes = new Elysia({ prefix: '/rentals' })
   .use(authPlugin)
-  .derive(async ({ jwt, headers }) => {
+  .derive(async ({ headers }) => {
     const authHeader = headers.authorization
     console.log('[Rental Routes] Checking auth header:', authHeader ? 'present' : 'missing')
 

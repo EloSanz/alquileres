@@ -13,7 +13,7 @@ const propertyController = new PropertyController(propertyService);
 
 export const propertyRoutes = new Elysia({ prefix: '/properties' })
   .use(authPlugin)
-  .derive(async ({ jwt, headers }) => {
+  .derive(async ({ headers }) => {
     const authHeader: string | undefined = headers.authorization
     console.log('[Property Routes] Checking auth header:', authHeader ? 'present' : 'missing')
 

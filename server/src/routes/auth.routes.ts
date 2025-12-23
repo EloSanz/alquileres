@@ -2,8 +2,8 @@ import { Elysia, t } from 'elysia';
 import { AuthController } from '../controllers/auth.controller';
 import { AuthService } from '../implementations/services/AuthService';
 import { PrismaUserRepository } from '../implementations/repositories/PrismaUserRepository';
-import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../types/jwt.types';
+import { verify as jwtVerify } from 'jsonwebtoken';
 
 // Dependency injection
 const userRepository = new PrismaUserRepository();
@@ -13,7 +13,7 @@ const authController = new AuthController(authService);
 // Helper function to verify token
 const verifyToken = (token: string): number => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwtVerify(token, JWT_SECRET) as any;
     return decoded.userId;
   } catch (error) {
     throw new Error('Invalid token');

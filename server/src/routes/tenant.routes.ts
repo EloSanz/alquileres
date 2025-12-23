@@ -13,7 +13,7 @@ const tenantController = new TenantController(tenantService);
 
 export const tenantRoutes = new Elysia({ prefix: '/tenants' })
   .use(authPlugin)
-  .derive(async ({ jwt, headers }) => {
+  .derive(async ({ headers }) => {
     const authHeader: string | undefined = headers.authorization
     console.log('[Tenant Routes] Checking auth header:', authHeader ? 'present' : 'missing')
 
