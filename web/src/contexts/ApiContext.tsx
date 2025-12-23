@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useMemo } from 'react'
 import { treaty } from '@elysiajs/eden'
+
+// Import the App type from the server
 import type { App } from '../../../server/src/index'
 
 const ApiContext = createContext<ReturnType<typeof treaty<App>> | null>(null)
