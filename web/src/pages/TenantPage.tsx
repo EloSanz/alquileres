@@ -33,7 +33,7 @@ interface Tenant {
   lastName: string;
   phone?: string;
   documentId: string;
-  numeroLocal?: string;
+  numeroLocal?: number;
   rubro?: string;
   fechaInicioContrato?: string;
   estadoPago: string;
@@ -45,7 +45,7 @@ interface CreateTenantData {
   lastName: string;
   phone?: string;
   documentId: string;
-  numeroLocal?: string;
+  numeroLocal?: number;
   rubro?: string;
   fechaInicioContrato?: string;
 }

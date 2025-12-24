@@ -1,3 +1,5 @@
+import { Rubro } from "@prisma/client";
+
 export interface TenantDTO {
   id: number;
   firstName: string;
@@ -6,8 +8,8 @@ export interface TenantDTO {
   documentId: string;
   address: string | null;
   birthDate: string | null;
-  numeroLocal: string | null;
-  rubro: string | null;
+  numeroLocal: number | null;
+  rubro: Rubro | null; // Se mantiene como string en DTO para compatibilidad con frontend
   fechaInicioContrato: string | null;
   estadoPago: string;
   createdAt: string;
@@ -21,7 +23,7 @@ export interface CreateTenantDTO {
   documentId: string;
   address?: string;
   birthDate?: string;
-  numeroLocal?: string;
+  numeroLocal?: number;
   rubro?: string;
   fechaInicioContrato?: string;
 }
@@ -32,7 +34,7 @@ export interface UpdateTenantDTO {
   phone?: string;
   address?: string;
   birthDate?: string;
-  numeroLocal?: string;
+  numeroLocal?: number;
   rubro?: string;
   fechaInicioContrato?: string;
 }

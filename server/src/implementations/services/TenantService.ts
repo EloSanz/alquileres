@@ -3,7 +3,17 @@ import { ITenantRepository } from '../../interfaces/repositories/ITenantReposito
 import { IPaymentRepository } from '../../interfaces/repositories/IPaymentRepository';
 import { TenantDTO, CreateTenantDTO, UpdateTenantDTO } from '../../dtos/tenant.dto';
 import { TenantEntity } from '../../entities/Tenant.entity';
-import { EstadoPago } from '@prisma/client';
+import { EstadoPago, Rubro } from '@prisma/client';
+
+// Helper function to convert string to Rubro enum
+function stringToRubro(value: string | null): Rubro | null {
+  if (!value) return null;
+  switch (value.toUpperCase()) {
+    case 'TIPEO': return Rubro.TIPEO;
+    case 'PEDICURE': return Rubro.PEDICURE;
+    default: return null;
+  }
+}
 
 export class TenantService implements ITenantService {
   constructor(
@@ -122,8 +132,8 @@ export class TenantService implements ITenantService {
       data.documentId,
       data.address || null,
       data.birthDate ? new Date(data.birthDate) : null,
-      data.numeroLocal || null,
-      data.rubro || null,
+      data.numeroLocal !== undefined ? data.numeroLocal : null,
+      stringToRubro(data.rubro !== undefined ? data.rubro : null),
       data.fechaInicioContrato ? new Date(data.fechaInicioContrato) : null,
       'AL_DIA', // Estado inicial: al día
       new Date(),
@@ -153,7 +163,7 @@ export class TenantService implements ITenantService {
       entity.birthDate = data.birthDate ? new Date(data.birthDate) : null;
     }
     if (data.numeroLocal !== undefined) entity.numeroLocal = data.numeroLocal;
-    if (data.rubro !== undefined) entity.rubro = data.rubro;
+    if (data.rubro !== undefined) entity.rubro = stringToRubro(data.rubro);
     if (data.fechaInicioContrato !== undefined) {
       entity.fechaInicioContrato = data.fechaInicioContrato ? new Date(data.fechaInicioContrato) : null;
     }

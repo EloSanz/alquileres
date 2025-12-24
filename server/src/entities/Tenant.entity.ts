@@ -1,5 +1,15 @@
-// Import the enum
-import { EstadoPago } from '@prisma/client';
+// Import the enums
+import { EstadoPago, Rubro } from '@prisma/client';
+
+// Helper function to convert string to Rubro enum
+function stringToRubro(value: string | null): Rubro | null {
+  if (!value) return null;
+  switch (value.toUpperCase()) {
+    case 'TIPEO': return Rubro.TIPEO;
+    case 'PEDICURE': return Rubro.PEDICURE;
+    default: return null;
+  }
+}
 
 export class TenantEntity {
   constructor(
@@ -10,8 +20,8 @@ export class TenantEntity {
     public documentId: string,
     public address: string | null,
     public birthDate: Date | null,
-    public numeroLocal: string | null,
-    public rubro: string | null,
+    public numeroLocal: number | null | undefined,
+    public rubro: Rubro | null,
     public fechaInicioContrato: Date | null,
     public estadoPago: EstadoPago,
     public createdAt: Date,
@@ -28,7 +38,7 @@ export class TenantEntity {
       prismaData.address,
       prismaData.birthDate,
       prismaData.numeroLocal,
-      prismaData.rubro,
+      stringToRubro(prismaData.rubro),
       prismaData.fechaInicioContrato,
       prismaData.estadoPago || EstadoPago.AL_DIA,
       prismaData.createdAt,
@@ -45,7 +55,7 @@ export class TenantEntity {
       documentId: this.documentId,
       address: this.address,
       birthDate: this.birthDate,
-      numeroLocal: this.numeroLocal,
+      numeroLocal: this.numeroLocal ?? null,
       rubro: this.rubro,
       fechaInicioContrato: this.fechaInicioContrato,
       estadoPago: this.estadoPago,
@@ -63,7 +73,7 @@ export class TenantEntity {
       documentId: this.documentId,
       address: this.address,
       birthDate: this.birthDate ? this.birthDate.toISOString() : null,
-      numeroLocal: this.numeroLocal,
+      numeroLocal: this.numeroLocal ?? null,
       rubro: this.rubro,
       fechaInicioContrato: this.fechaInicioContrato ? this.fechaInicioContrato.toISOString() : null,
       estadoPago: this.estadoPago.toString(),
@@ -97,8 +107,8 @@ export interface TenantDTO {
   documentId: string;
   address: string | null;
   birthDate: string | null;
-  numeroLocal: string | null;
-  rubro: string | null;
+  numeroLocal: number | null;
+  rubro: Rubro | null;
   fechaInicioContrato: string | null;
   estadoPago: string;
   createdAt: string;

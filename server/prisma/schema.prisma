@@ -29,8 +29,8 @@ model Tenant {
   documentId            String       @unique // DNI, Cedula, etc.
   address               String?
   birthDate             DateTime?
-  numeroLocal           String?      // Número de local comercial
-  rubro                 String?      // Rubro del negocio (pedicure, etc.)
+  numeroLocal           Int?         // Número de local comercial
+  rubro                 Rubro?       // Rubro del negocio
   fechaInicioContrato   DateTime?    // Fecha de inicio del contrato de alquiler
   estadoPago            EstadoPago   @default(AL_DIA) // Estado de pagos del inquilino
   status                TenantStatus @default(ACTIVE) // Soft delete/status
@@ -145,6 +145,11 @@ enum TenantStatus {
 enum EstadoPago {
   AL_DIA      // Sin deudas pendientes
   CON_DEUDA   // Tiene meses con deuda
+}
+
+enum Rubro {
+  TIPEO
+  PEDICURE
 }
 
 enum RentalStatus {

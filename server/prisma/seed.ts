@@ -1,4 +1,4 @@
-import { PrismaClient, PropertyType, RentalStatus, PaymentType, PaymentStatus, EstadoPago } from '@prisma/client';
+import { PrismaClient, PropertyType, RentalStatus, PaymentType, PaymentStatus, EstadoPago, Rubro } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -44,11 +44,7 @@ const propertyNames = [
 ];
 
 const businessRubros = [
-  'Pedicure', 'Manicure', 'Belleza', 'Peluquería', 'Estética', 'Spa', 'Masajes',
-  'Ropa', 'Zapatos', 'Accesorios', 'Joyería', 'Óptica', 'Farmacia', 'Supermercado',
-  'Restaurante', 'Cafetería', 'Panadería', 'Heladería', 'Comida Rápida', 'Bar',
-  'Ferretería', 'Electrodomésticos', 'Tecnología', 'Librería', 'Papelería',
-  'Veterinaria', 'Consultorio Médico', 'Dentista', 'Gimnasio', 'Academia'
+  Rubro.TIPEO, Rubro.PEDICURE
 ];
 
 const propertyDescriptions = [
@@ -144,8 +140,8 @@ async function main() {
     documentId: string;
     address: string | null;
     birthDate: Date | null;
-    numeroLocal: string | null;
-    rubro: string | null;
+    numeroLocal: number | null;
+    rubro: Rubro | null;
     fechaInicioContrato: Date | null;
     estadoPago: EstadoPago;
     createdAt: Date;
@@ -160,7 +156,7 @@ async function main() {
 
     // Generar datos comerciales aleatorios
     const hasBusiness = Math.random() > 0.3; // 70% de tenants tienen negocio
-    const numeroLocal = hasBusiness ? `Local ${getRandomNumber(1, 999).toString().padStart(3, '0')}` : null;
+    const numeroLocal = hasBusiness ? getRandomNumber(1, 999) : null;
     const rubro = hasBusiness ? getRandomElement(businessRubros) : null;
 
     // Fecha de inicio de contrato (últimos 2 años)
