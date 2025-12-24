@@ -90,14 +90,14 @@ export class PropertyService implements IPropertyService {
     }
 
     // Liberar la propiedad cambiando tenantId a null
-    const updateData: Partial<PropertyEntity> = {
-      id: property.id,
-      tenantId: null,
+    const updateData = {
+      tenantId: null as number | null,
       updatedAt: new Date()
     };
 
-    const updated = await this.propertyRepository.update(updateData as PropertyEntity);
-    return updated.toDTO();
+    const updatedEntity = property.update(updateData);
+    const savedEntity = await this.propertyRepository.update(updatedEntity);
+    return savedEntity.toDTO();
   }
 
   async deleteProperty(id: number, _userId: number): Promise<boolean> {

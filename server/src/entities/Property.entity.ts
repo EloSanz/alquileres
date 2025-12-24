@@ -72,7 +72,7 @@ export class PropertyEntity {
     description?: string;
     isAvailable?: boolean;
     status?: PropertyStatus;
-    tenantId?: number;
+    tenantId?: number | null;
   }): PropertyEntity {
     if (data.name !== undefined) this.name = data.name;
     if (data.address !== undefined) this.address = data.address;
