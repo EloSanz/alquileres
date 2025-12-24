@@ -363,7 +363,7 @@ const TenantPage = () => {
       documentId: tenant.documentId,
       numeroLocal: tenant.numeroLocal?.toString() || '',
       rubro: tenant.rubro || '',
-      fechaInicioContrato: tenant.fechaInicioContrato || '',
+      fechaInicioContrato: formatDateForInput(tenant.fechaInicioContrato || ''),
     });
     setEditDialogOpen(true);
   };
@@ -421,6 +421,12 @@ const TenantPage = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES');
+  };
+
+  const formatDateForInput = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
   };
 
   return (
