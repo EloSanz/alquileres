@@ -1,4 +1,4 @@
-import { PrismaClient, PropertyType, RentalStatus, PaymentType, PaymentStatus } from '@prisma/client';
+import { PrismaClient, PropertyType, RentalStatus, PaymentType, PaymentStatus, EstadoPago } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -41,6 +41,14 @@ const propertyNames = [
   'Edificio Residencial', 'Condominio', 'Casa Familiar', 'Apartamento Moderno', 'Estudio Ejecutivo',
   'Casa de Playa', 'Penthouse', 'Loft Industrial', 'Casa Colonial', 'Apartamento Vista Mar',
   'Casa Jardín', 'Departamento Ejecutivo', 'Casa Campestre', 'Apartamento Premium', 'Estudio Minimalista'
+];
+
+const businessRubros = [
+  'Pedicure', 'Manicure', 'Belleza', 'Peluquería', 'Estética', 'Spa', 'Masajes',
+  'Ropa', 'Zapatos', 'Accesorios', 'Joyería', 'Óptica', 'Farmacia', 'Supermercado',
+  'Restaurante', 'Cafetería', 'Panadería', 'Heladería', 'Comida Rápida', 'Bar',
+  'Ferretería', 'Electrodomésticos', 'Tecnología', 'Librería', 'Papelería',
+  'Veterinaria', 'Consultorio Médico', 'Dentista', 'Gimnasio', 'Academia'
 ];
 
 const propertyDescriptions = [
@@ -147,15 +155,27 @@ async function main() {
     const district = getRandomElement(limaDistricts);
     const street = getRandomElement(streets);
 
+    // Generar datos comerciales aleatorios
+    const hasBusiness = Math.random() > 0.3; // 70% de tenants tienen negocio
+    const numeroLocal = hasBusiness ? `Local ${getRandomNumber(1, 999).toString().padStart(3, '0')}` : null;
+    const rubro = hasBusiness ? getRandomElement(businessRubros) : null;
+
+    // Fecha de inicio de contrato (últimos 2 años)
+    const fechaInicioContrato = Math.random() > 0.2 ?
+      getRandomDate(new Date(2022, 0, 1), new Date()) : null;
+
     tenants.push(await prisma.tenant.create({
       data: {
         firstName,
         lastName: `${lastName1} ${lastName2}`,
-        email: `${firstName.toLowerCase()}.${lastName1.toLowerCase()}.${Math.floor(Math.random() * 1000)}@gmail.com`,
         phone: generatePhone(),
         documentId: generateDNI(),
         address: `${street} ${getRandomNumber(100, 999)}, ${district}, Lima`,
         birthDate: getRandomDate(new Date(1950, 0, 1), new Date(2000, 11, 31)),
+        numeroLocal,
+        rubro,
+        fechaInicioContrato,
+        estadoPago: EstadoPago.AL_DIA, // Inicialmente todos al día
       }
     }));
   }
