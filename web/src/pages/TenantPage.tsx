@@ -142,7 +142,10 @@ class TenantService {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to delete tenant');
+      const errorData = await response.json();
+      const error = new Error(errorData.message || 'Failed to delete tenant');
+      (error as any).response = { data: errorData };
+      throw error;
     }
 
     const data = await response.json();
