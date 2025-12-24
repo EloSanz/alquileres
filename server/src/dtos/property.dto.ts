@@ -13,7 +13,7 @@ export interface PropertyDTO {
   description: string | null;
   isAvailable: boolean;
   status: string;
-  tenantId: number;
+  tenantId: number | null;
   tenant?: {
     id: number;
     firstName: string;
@@ -37,7 +37,7 @@ export interface CreatePropertyDTO {
   monthlyRent: number;
   description?: string;
   isAvailable?: boolean;
-  tenantId: number;
+  tenantId: number | null;
 }
 
 export interface UpdatePropertyDTO {

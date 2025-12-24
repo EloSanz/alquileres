@@ -79,6 +79,27 @@ export class PropertyService implements IPropertyService {
     return savedEntity.toDTO();
   }
 
+  async releaseProperty(id: number, _userId: number): Promise<PropertyDTO> {
+    const property = await this.propertyRepository.findById(id);
+    if (!property) {
+      throw new Error('Property not found');
+    }
+
+    if (!property.tenantId) {
+      throw new Error('Property is already available (no tenant assigned)');
+    }
+
+    // Liberar la propiedad cambiando tenantId a null
+    const updateData: Partial<PropertyEntity> = {
+      id: property.id,
+      tenantId: null,
+      updatedAt: new Date()
+    };
+
+    const updated = await this.propertyRepository.update(updateData as PropertyEntity);
+    return updated.toDTO();
+  }
+
   async deleteProperty(id: number, _userId: number): Promise<boolean> {
     const deleted = await this.propertyRepository.delete(id);
     return deleted;

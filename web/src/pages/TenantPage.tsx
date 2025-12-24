@@ -30,6 +30,7 @@ import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete 
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
+import TenantDeletionModal from '../components/TenantDeletionModal';
 
 interface Tenant {
   id: number;
@@ -155,6 +156,8 @@ class TenantService {
   }
 }
 
+import { propertyService } from '../services/propertyService';
+
 const tenantService = new TenantService();
 
 const TenantPage = () => {
@@ -220,7 +223,7 @@ const TenantPage = () => {
   const [tenantToDelete, setTenantToDelete] = useState<Tenant | null>(null);
 
   // Modal para mostrar propiedades asociadas
-  const [propertiesDialogOpen, setPropertiesDialogOpen] = useState(false);
+  const [tenantDeletionModalOpen, setTenantDeletionModalOpen] = useState(false);
   const [associatedProperties, setAssociatedProperties] = useState<Array<{
     id: number;
     name: string;
@@ -401,12 +404,18 @@ const TenantPage = () => {
       // Verificar si es respuesta estructurada del backend
       if (err.response?.data?.code === 'TENANT_HAS_PROPERTIES' && err.response?.data?.properties) {
         setAssociatedProperties(err.response.data.properties);
-        setPropertiesDialogOpen(true);
+        setTenantDeletionModalOpen(true);
         setDeleteDialogOpen(false);
       } else {
         setError(err.message || err.response?.data?.message || 'Failed to delete tenant');
       }
     }
+  };
+
+  const handlePropertyRelease = async (propertyId: number) => {
+    await propertyService.releaseProperty(propertyId);
+    // Refresh tenants data to reflect changes
+    await fetchTenants();
   };
 
   const handleUpdateTenant = async () => {
@@ -747,58 +756,15 @@ const TenantPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Properties Associated Dialog */}
-      <Dialog
-        open={propertiesDialogOpen}
-        onClose={() => setPropertiesDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          No se puede eliminar el inquilino
-        </DialogTitle>
-        <DialogContent>
-          <Typography sx={{ mb: 2 }}>
-            El inquilino{' '}
-            <strong>
-              {tenantToDelete?.firstName} {tenantToDelete?.lastName}
-            </strong>{' '}
-            tiene las siguientes propiedades asociadas que quedarían disponibles:
-          </Typography>
-
-          <TableContainer component={Paper} sx={{ mt: 2 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell><strong>ID</strong></TableCell>
-                  <TableCell><strong>Nombre</strong></TableCell>
-                  <TableCell><strong>Dirección</strong></TableCell>
-                  <TableCell><strong>Ciudad</strong></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {associatedProperties.map((property) => (
-                  <TableRow key={property.id}>
-                    <TableCell>{property.id}</TableCell>
-                    <TableCell>{property.name}</TableCell>
-                    <TableCell>{property.address}</TableCell>
-                    <TableCell>{property.city}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          <Typography variant="body2" color="warning.main" sx={{ mt: 2 }}>
-            ⚠️ Para eliminar este inquilino, primero debes eliminar o reasignar estas propiedades.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPropertiesDialogOpen(false)} variant="contained">
-            Entendido
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Tenant Deletion Modal */}
+      <TenantDeletionModal
+        open={tenantDeletionModalOpen}
+        tenant={tenantToDelete}
+        properties={associatedProperties}
+        onPropertyRelease={handlePropertyRelease}
+        onClose={() => setTenantDeletionModalOpen(false)}
+        onRefresh={fetchTenants}
+      />
     </Container>
   );
 };

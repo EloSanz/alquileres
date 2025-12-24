@@ -67,8 +67,8 @@ model Property {
   updatedAt   DateTime    @updatedAt
 
   // Relations
-  tenantId    Int
-  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenantId    Int?        // Nullable to allow "available" properties
+  tenant      Tenant?     @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   payments    Payment[]
   rentals     Rental[] // Legacy relation
 

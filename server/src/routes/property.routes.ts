@@ -96,6 +96,15 @@ export const propertyRoutes = new Elysia({ prefix: '/properties' })
       summary: 'Update property'
     }
   })
+  .put('/:id/release', propertyController.release, {
+    params: t.Object({
+      id: t.Numeric({ minimum: 1 })
+    }),
+    detail: {
+      tags: ['Properties'],
+      summary: 'Release property (make it available by removing tenant assignment)'
+    }
+  })
   .delete('/:id', propertyController.delete, {
     params: t.Object({
       id: t.Numeric({ minimum: 1 })

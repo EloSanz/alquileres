@@ -32,7 +32,7 @@ import FilterBar, { FilterConfig } from '../components/FilterBar';
 
 interface Payment {
   id: number;
-  tenantId: number;
+  tenantId?: number;
   propertyId: number;
   amount: number;
   paymentDate: string;
@@ -44,7 +44,7 @@ interface Payment {
 }
 
 interface CreatePaymentData {
-  tenantId: number;
+  tenantId?: number;
   propertyId: number;
   amount: number;
   paymentDate?: string;
@@ -431,7 +431,7 @@ const PaymentPage = () => {
   const handleEdit = (payment: Payment) => {
     setEditingPayment(payment);
     setEditForm({
-      tenantId: payment.tenantId.toString(),
+      tenantId: payment.tenantId?.toString() || '',
       propertyId: payment.propertyId.toString(),
       amount: payment.amount.toString(),
       paymentDate: new Date(payment.paymentDate).toISOString().split('T')[0],
@@ -659,7 +659,7 @@ const PaymentPage = () => {
                 if (newValue) {
                   setCreateForm({
                     ...createForm,
-                    tenantId: newValue.tenantId.toString(),
+                    tenantId: newValue.tenantId?.toString() || '',
                     propertyId: newValue.id.toString()
                   });
                 } else {
