@@ -100,22 +100,25 @@ model Rental {
 
 // Payment (Pago) model
 model Payment {
-  id          Int          @id @default(autoincrement())
-  tenantId    Int
-  propertyId  Int
-  amount      Decimal
-  paymentDate DateTime     @default(now())
-  dueDate     DateTime
-  paymentType PaymentType
-  status      PaymentStatus @default(PENDING)
-  notes       String?
-  deletedAt   DateTime?    // Soft delete timestamp
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id             Int          @id @default(autoincrement())
+  tenantId       Int?         // Nullable para permitir eliminación de tenants
+  propertyId     Int
+  // Campos históricos para trazabilidad cuando se elimina el tenant
+  tenantFullName String?      // Nombre completo del inquilino que realizó el pago
+  tenantPhone    String?      // Teléfono del inquilino que realizó el pago
+  amount         Decimal
+  paymentDate    DateTime     @default(now())
+  dueDate        DateTime
+  paymentType    PaymentType
+  status         PaymentStatus @default(PENDING)
+  notes          String?
+  deletedAt      DateTime?    // Soft delete timestamp
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  // Relations - NO CASCADE: Los pagos históricos se mantienen
-  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  property    Property     @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  // Relations - Permite eliminación de tenants manteniendo pagos históricos
+  tenant         Tenant?      @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  property       Property     @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
   @@map("payments")
 }

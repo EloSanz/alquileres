@@ -172,7 +172,6 @@ class TenantService {
   }
 }
 
-import { propertyService } from '../services/propertyService';
 
 const tenantService = new TenantService();
 
@@ -240,20 +239,6 @@ const TenantPage = () => {
 
   // Modal para mostrar propiedades y pagos asociados
   const [tenantDeletionModalOpen, setTenantDeletionModalOpen] = useState(false);
-  const [associatedProperties, setAssociatedProperties] = useState<Array<{
-    id: number;
-    name: string;
-    address: string;
-    city: string;
-  }>>([]);
-  const [associatedPayments, setAssociatedPayments] = useState<Array<{
-    id: number;
-    amount: number;
-    paymentDate: string;
-    dueDate: string;
-    status: string;
-    paymentType: string;
-  }>>([]);
 
   const fetchTenants = async () => {
     try {
@@ -425,51 +410,10 @@ const TenantPage = () => {
       setTenantToDelete(null);
       fetchTenants(); // Refresh the list
     } catch (err: any) {
-      // Verificar si es respuesta estructurada del backend
-      if (err.response?.data?.code === 'TENANT_HAS_PROPERTIES' && err.response?.data?.properties) {
-        setAssociatedProperties(err.response.data.properties);
-        setAssociatedPayments([]);
-        setTenantDeletionModalOpen(true);
-        setDeleteDialogOpen(false);
-      } else if (err.response?.data?.code === 'TENANT_HAS_PAYMENTS' && err.response?.data?.payments) {
-        setAssociatedPayments(err.response.data.payments);
-        setAssociatedProperties([]);
-        setTenantDeletionModalOpen(true);
-        setDeleteDialogOpen(false);
-      } else {
-        setError(err.message || err.response?.data?.message || 'Failed to delete tenant');
-      }
+      setError(err.message || err.response?.data?.message || 'Failed to delete tenant');
     }
   };
 
-  const handlePropertyRelease = async (propertyId: number) => {
-    await propertyService.releaseProperty(propertyId);
-    // Refresh tenants data to reflect changes
-    await fetchTenants();
-  };
-
-  const handlePaymentCancellation = async (paymentId: number) => {
-    // For now, we'll implement a simple cancellation by updating the payment status
-    // In a real implementation, you might want to create a separate endpoint for this
-    const token = localStorage.getItem('token');
-    const response = await fetch(`/api/payments/${paymentId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({
-        status: 'CANCELLED',
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to cancel payment');
-    }
-
-    // Refresh tenants data to reflect changes
-    await fetchTenants();
-  };
 
   const handleUpdateTenant = async () => {
     if (!editingTenant) return;
@@ -813,12 +757,13 @@ const TenantPage = () => {
       <TenantDeletionModal
         open={tenantDeletionModalOpen}
         tenant={tenantToDelete}
-        properties={associatedProperties}
-        payments={associatedPayments}
-        onPropertyRelease={handlePropertyRelease}
-        onPaymentCancellation={handlePaymentCancellation}
+        onConfirmDelete={async () => {
+          await tenantService.deleteTenant(tenantToDelete!.id);
+          setTenantDeletionModalOpen(false);
+          setTenantToDelete(null);
+          fetchTenants();
+        }}
         onClose={() => setTenantDeletionModalOpen(false)}
-        onRefresh={fetchTenants}
       />
     </Container>
   );

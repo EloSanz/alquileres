@@ -178,38 +178,33 @@ export class TenantService implements ITenantService {
   }
 
   async deleteTenant(id: number, _userId: number): Promise<boolean> {
-    // Verificar si el tenant tiene propiedades activas
+    // Obtener el tenant para acceder a sus datos
+    const tenant = await this.tenantRepository.findById(id);
+    if (!tenant) {
+      throw new Error('Tenant not found');
+    }
+
+    // Actualizar pagos históricos con datos del tenant antes de eliminarlo
+    const fullName = `${tenant.firstName} ${tenant.lastName}`;
+
+    // Usar Prisma directamente para actualizar los campos históricos sin validación
+    const { prisma } = await import('../../lib/prisma');
+    await prisma.payment.updateMany({
+      where: { tenantId: id },
+      data: {
+        tenantFullName: fullName,
+        tenantPhone: tenant.phone
+      }
+    });
+
+    // Liberar todas las propiedades asociadas (poner tenantId = null)
     const properties = await this.propertyRepository.findByTenantId(id);
-    if (properties.length > 0) {
-      const propertyDetails = properties.map(p => ({
-        id: p.id,
-        name: p.name,
-        address: p.address,
-        city: p.city
-      }));
-      const error = new Error(`No se puede eliminar el inquilino porque tiene ${properties.length} propiedades asociadas.`);
-      (error as any).properties = propertyDetails;
-      (error as any).code = 'TENANT_HAS_PROPERTIES';
-      throw error;
+    for (const property of properties) {
+      property.tenantId = null;
+      await this.propertyRepository.update(property);
     }
 
-    // Verificar si el tenant tiene pagos asociados
-    const payments = await this.paymentRepository.findByTenantId(id);
-    if (payments.length > 0) {
-      const paymentDetails = payments.map(p => ({
-        id: p.id,
-        amount: p.amount,
-        paymentDate: p.paymentDate,
-        dueDate: p.dueDate,
-        status: p.status,
-        paymentType: p.paymentType
-      }));
-      const error = new Error(`No se puede eliminar el inquilino porque tiene ${payments.length} pagos asociados.`);
-      (error as any).payments = paymentDetails;
-      (error as any).code = 'TENANT_HAS_PAYMENTS';
-      throw error;
-    }
-
+    // Eliminar el tenant
     const deleted = await this.tenantRepository.delete(id);
     return deleted;
   }
