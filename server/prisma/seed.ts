@@ -140,11 +140,14 @@ async function main() {
     id: number;
     firstName: string;
     lastName: string;
-    email: string;
     phone: string | null;
     documentId: string;
     address: string | null;
     birthDate: Date | null;
+    numeroLocal: string | null;
+    rubro: string | null;
+    fechaInicioContrato: Date | null;
+    estadoPago: EstadoPago;
     createdAt: Date;
     updatedAt: Date;
   }[] = [];
