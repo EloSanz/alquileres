@@ -85,18 +85,31 @@ export class TenantController {
     userId: number;
     set: any;
   }) => {
-    const deleted = await this.tenantService.deleteTenant(id, userId);
-    if (!deleted) {
-      set.status = 404;
-      return {
-        success: false,
-        message: 'Tenant not found',
-      };
-    }
+    try {
+      const deleted = await this.tenantService.deleteTenant(id, userId);
+      if (!deleted) {
+        set.status = 404;
+        return {
+          success: false,
+          message: 'Tenant not found',
+        };
+      }
 
-    return {
-      success: true,
-      message: 'Tenant deleted successfully',
-    };
+      return {
+        success: true,
+        message: 'Tenant deleted successfully',
+      };
+    } catch (error: any) {
+      if (error.code === 'TENANT_HAS_PROPERTIES') {
+        set.status = 400;
+        return {
+          success: false,
+          message: error.message,
+          code: error.code,
+          properties: error.properties,
+        };
+      }
+      throw error;
+    }
   };
 }

@@ -395,13 +395,13 @@ const TenantPage = () => {
       setTenantToDelete(null);
       fetchTenants(); // Refresh the list
     } catch (err: any) {
-      if (err.code === 'TENANT_HAS_PROPERTIES' && err.properties) {
-        // Mostrar modal con propiedades asociadas
-        setAssociatedProperties(err.properties);
+      // Verificar si es respuesta estructurada del backend
+      if (err.response?.data?.code === 'TENANT_HAS_PROPERTIES' && err.response?.data?.properties) {
+        setAssociatedProperties(err.response.data.properties);
         setPropertiesDialogOpen(true);
         setDeleteDialogOpen(false);
       } else {
-        setError(err.message || 'Failed to delete tenant');
+        setError(err.message || err.response?.data?.message || 'Failed to delete tenant');
       }
     }
   };
