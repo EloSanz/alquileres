@@ -17,7 +17,7 @@ export class PropertyEntity {
     public description: string | null,
     public isAvailable: boolean,
     public status: PropertyStatus,
-    public tenantId: number,
+    public tenantId: number | null,
     public createdAt: Date,
     public updatedAt: Date
   ) {  }
@@ -35,7 +35,7 @@ export class PropertyEntity {
     monthlyRent: number;
     description?: string;
     isAvailable?: boolean;
-    tenantId: number;
+    tenantId: number | null;
   }): PropertyEntity {
     return new PropertyEntity(
       null, // id
@@ -72,7 +72,7 @@ export class PropertyEntity {
     description?: string;
     isAvailable?: boolean;
     status?: PropertyStatus;
-    tenantId?: number;
+    tenantId?: number | null;
   }): PropertyEntity {
     if (data.name !== undefined) this.name = data.name;
     if (data.address !== undefined) this.address = data.address;
@@ -204,7 +204,7 @@ export interface PropertyDTO {
   description: string | null;
   isAvailable: boolean;
   status: string;
-  tenantId: number;
+  tenantId: number | null;
   createdAt: string;
   updatedAt: string;
 }

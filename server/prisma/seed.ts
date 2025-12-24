@@ -1,4 +1,4 @@
-import { PrismaClient, PropertyType, RentalStatus, PaymentType, PaymentStatus } from '@prisma/client';
+import { PrismaClient, PropertyType, RentalStatus, PaymentType, PaymentStatus, EstadoPago, Rubro } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -41,6 +41,10 @@ const propertyNames = [
   'Edificio Residencial', 'Condominio', 'Casa Familiar', 'Apartamento Moderno', 'Estudio Ejecutivo',
   'Casa de Playa', 'Penthouse', 'Loft Industrial', 'Casa Colonial', 'Apartamento Vista Mar',
   'Casa Jardín', 'Departamento Ejecutivo', 'Casa Campestre', 'Apartamento Premium', 'Estudio Minimalista'
+];
+
+const businessRubros = [
+  Rubro.TIPEO, Rubro.PEDICURE
 ];
 
 const propertyDescriptions = [
@@ -86,11 +90,31 @@ async function main() {
 
   // Limpiar datos existentes (orden importa por las foreign keys)
   console.log('🧹 Limpiando datos existentes...');
-  await prisma.payment.deleteMany();
-  await prisma.rental.deleteMany();
-  await prisma.property.deleteMany();
-  await prisma.tenant.deleteMany();
-  await prisma.user.deleteMany();
+  try {
+    await prisma.payment.deleteMany();
+  } catch (e) {
+    console.log('Tabla payments no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.rental.deleteMany();
+  } catch (e) {
+    console.log('Tabla rentals no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.property.deleteMany();
+  } catch (e) {
+    console.log('Tabla properties no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.tenant.deleteMany();
+  } catch (e) {
+    console.log('Tabla tenants no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.user.deleteMany();
+  } catch (e) {
+    console.log('Tabla users no existe o está vacía, continuando...');
+  }
 
   // Crear usuarios administradores
   console.log('👤 Creando usuarios...');
@@ -132,11 +156,14 @@ async function main() {
     id: number;
     firstName: string;
     lastName: string;
-    email: string;
     phone: string | null;
     documentId: string;
     address: string | null;
     birthDate: Date | null;
+    numeroLocal: string | null;
+    rubro: Rubro | null;
+    fechaInicioContrato: Date | null;
+    estadoPago: EstadoPago;
     createdAt: Date;
     updatedAt: Date;
   }[] = [];
@@ -147,15 +174,25 @@ async function main() {
     const district = getRandomElement(limaDistricts);
     const street = getRandomElement(streets);
 
+    // Generar datos comerciales aleatorios - TODOS los tenants tienen negocio
+    const numeroLocal = getRandomNumber(1, 999).toString();
+    const rubro = getRandomElement(businessRubros);
+
+    // Fecha de inicio de contrato (últimos 2 años) - TODOS los tenants tienen contrato
+    const fechaInicioContrato = getRandomDate(new Date(2022, 0, 1), new Date());
+
     tenants.push(await prisma.tenant.create({
       data: {
         firstName,
         lastName: `${lastName1} ${lastName2}`,
-        email: `${firstName.toLowerCase()}.${lastName1.toLowerCase()}.${Math.floor(Math.random() * 1000)}@gmail.com`,
         phone: generatePhone(),
         documentId: generateDNI(),
         address: `${street} ${getRandomNumber(100, 999)}, ${district}, Lima`,
         birthDate: getRandomDate(new Date(1950, 0, 1), new Date(2000, 11, 31)),
+        numeroLocal,
+        rubro,
+        fechaInicioContrato,
+        estadoPago: EstadoPago.AL_DIA, // Inicialmente todos al día
       }
     }));
   }

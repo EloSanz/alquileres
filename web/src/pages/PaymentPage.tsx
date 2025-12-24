@@ -32,7 +32,7 @@ import FilterBar, { FilterConfig } from '../components/FilterBar';
 
 interface Payment {
   id: number;
-  tenantId: number;
+  tenantId?: number;
   propertyId: number;
   amount: number;
   paymentDate: string;
@@ -44,7 +44,7 @@ interface Payment {
 }
 
 interface CreatePaymentData {
-  tenantId: number;
+  tenantId?: number;
   propertyId: number;
   amount: number;
   paymentDate?: string;
@@ -431,7 +431,7 @@ const PaymentPage = () => {
   const handleEdit = (payment: Payment) => {
     setEditingPayment(payment);
     setEditForm({
-      tenantId: payment.tenantId.toString(),
+      tenantId: payment.tenantId?.toString() || '',
       propertyId: payment.propertyId.toString(),
       amount: payment.amount.toString(),
       paymentDate: new Date(payment.paymentDate).toISOString().split('T')[0],
@@ -567,6 +567,7 @@ const PaymentPage = () => {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell><strong>ID</strong></TableCell>
                 <TableCell><strong>Inquilino - Propiedad</strong></TableCell>
                 <TableCell><strong>Monto</strong></TableCell>
                 <TableCell><strong>Fecha Pago</strong></TableCell>
@@ -578,6 +579,7 @@ const PaymentPage = () => {
             <TableBody>
               {filteredPayments.map((payment) => (
                 <TableRow key={payment.id} hover>
+                  <TableCell>{payment.id}</TableCell>
                   <TableCell>Inq: {payment.tenantId} - Prop: {payment.propertyId}</TableCell>
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
                   <TableCell>{formatDate(payment.paymentDate)}</TableCell>
@@ -657,7 +659,7 @@ const PaymentPage = () => {
                 if (newValue) {
                   setCreateForm({
                     ...createForm,
-                    tenantId: newValue.tenantId.toString(),
+                    tenantId: newValue.tenantId?.toString() || '',
                     propertyId: newValue.id.toString()
                   });
                 } else {

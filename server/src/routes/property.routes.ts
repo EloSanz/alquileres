@@ -6,6 +6,7 @@ import { PrismaTenantRepository } from '../implementations/repositories/PrismaTe
 import { authPlugin } from '../plugins/auth.plugin';
 import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
 import { verify as jwtVerify } from 'jsonwebtoken';
+import { logError } from '../utils/logger';
 
 // Dependency injection
 const propertyRepository = new PrismaPropertyRepository();
@@ -15,25 +16,21 @@ const propertyController = new PropertyController(propertyService);
 
 export const propertyRoutes = new Elysia({ prefix: '/properties' })
   .use(authPlugin)
-  .derive(async ({ headers }) => {
+  .derive(async ({ headers, request }) => {
     const authHeader: string | undefined = headers.authorization
-    console.log('[Property Routes] Checking auth header:', authHeader ? 'present' : 'missing')
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('[Property Routes] No token provided')
+      logError('No token provided', undefined, { route: 'properties', method: request.method, url: request.url })
       throw new Error('No token provided')
     }
 
     const token: string = authHeader.substring(7)
-    console.log('[Property Routes] Token extracted, verifying...')
 
     try {
       const payload = jwtVerify(token, JWT_SECRET) as JWTPayload
-      console.log('[Property Routes] Token verified, userId:', payload.userId)
-
       return { userId: payload.userId }
     } catch (error: any) {
-      console.log('[Property Routes] Token verification failed:', error.message)
+      logError('Token verification failed', error, { route: 'properties', method: request.method, url: request.url })
       throw new Error('Invalid token')
     }
   })
@@ -94,6 +91,15 @@ export const propertyRoutes = new Elysia({ prefix: '/properties' })
     detail: {
       tags: ['Properties'],
       summary: 'Update property'
+    }
+  })
+  .put('/:id/release', propertyController.release, {
+    params: t.Object({
+      id: t.Numeric({ minimum: 1 })
+    }),
+    detail: {
+      tags: ['Properties'],
+      summary: 'Release property (make it available by removing tenant assignment)'
     }
   })
   .delete('/:id', propertyController.delete, {

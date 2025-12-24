@@ -60,6 +60,22 @@ export class PropertyController {
     };
   };
 
+  release = async ({
+    params: { id },
+    userId,
+  }: {
+    params: { id: number };
+    userId: number;
+  }) => {
+    const property = await this.propertyService.releaseProperty(id, userId);
+
+    return {
+      success: true,
+      message: 'Property released successfully',
+      data: property,
+    };
+  };
+
   delete = async ({
     params: { id },
     userId,

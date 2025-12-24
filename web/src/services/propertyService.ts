@@ -12,7 +12,7 @@ interface Property {
   description?: string;
   zipCode?: string;
   isAvailable?: boolean;
-  tenantId: number;
+  tenantId?: number; // Ahora opcional
   tenant?: {
     id: number;
     firstName: string;
@@ -36,7 +36,7 @@ interface CreatePropertyData {
   description?: string;
   zipCode?: string;
   isAvailable?: boolean;
-  tenantId: number;
+  tenantId?: number; // Ahora opcional
 }
 
 interface UpdatePropertyData extends Partial<CreatePropertyData> {
@@ -140,6 +140,25 @@ class PropertyService {
     if (!data.success) {
       throw new Error(data.message || 'Failed to delete property');
     }
+  }
+
+  async releaseProperty(id: number): Promise<Property> {
+    const response = await fetch(`${this.baseUrl}/properties/${id}/release`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to release property');
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to release property');
+    }
+
+    return data.data;
   }
 }
 

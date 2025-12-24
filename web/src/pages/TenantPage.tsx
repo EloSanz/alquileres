@@ -20,28 +20,39 @@ import {
   TableRow,
   Paper,
   IconButton,
+  Chip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
+import TenantDeletionModal from '../components/TenantDeletionModal';
 
 interface Tenant {
   id: number;
   firstName: string;
   lastName: string;
-  email: string;
   phone?: string;
   documentId: string;
+  numeroLocal?: string;
+  rubro?: string;
+  fechaInicioContrato?: string;
+  estadoPago: string;
   createdAt: string;
 }
 
 interface CreateTenantData {
   firstName: string;
   lastName: string;
-  email: string;
   phone?: string;
   documentId: string;
+  numeroLocal?: string;
+  rubro?: string;
+  fechaInicioContrato?: string;
 }
 
 class TenantService {
@@ -132,7 +143,26 @@ class TenantService {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to delete tenant');
+      let errorData: any;
+      const contentType = response.headers.get('content-type');
+
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          // If JSON parsing fails, use text response
+          const textResponse = await response.text();
+          errorData = { message: textResponse || 'Unknown error' };
+        }
+      } else {
+        // Response is not JSON, use text
+        const textResponse = await response.text();
+        errorData = { message: textResponse || 'Unknown error' };
+      }
+
+      const error = new Error(errorData.message || 'Failed to delete tenant');
+      (error as any).response = { data: errorData };
+      throw error;
     }
 
     const data = await response.json();
@@ -141,6 +171,7 @@ class TenantService {
     }
   }
 }
+
 
 const tenantService = new TenantService();
 
@@ -167,24 +198,47 @@ const TenantPage = () => {
     }
   ];
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({
+  const [createForm, setCreateForm] = useState<{
+    firstName: string;
+    lastName: string;
+    phone: string;
+    documentId: string;
+    numeroLocal: string;
+    rubro: string;
+    fechaInicioContrato: string;
+  }>({
     firstName: '',
     lastName: '',
-    email: '',
     phone: '',
     documentId: '',
+    numeroLocal: '',
+    rubro: '',
+    fechaInicioContrato: '',
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<{
+    firstName: string;
+    lastName: string;
+    phone: string;
+    documentId: string;
+    numeroLocal: string;
+    rubro: string;
+    fechaInicioContrato: string;
+  }>({
     firstName: '',
     lastName: '',
-    email: '',
     phone: '',
     documentId: '',
+    numeroLocal: '',
+    rubro: '',
+    fechaInicioContrato: '',
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tenantToDelete, setTenantToDelete] = useState<Tenant | null>(null);
+
+  // Modal para mostrar propiedades y pagos asociados
+  const [tenantDeletionModalOpen, setTenantDeletionModalOpen] = useState(false);
 
   const fetchTenants = async () => {
     try {
@@ -216,9 +270,10 @@ const TenantPage = () => {
       filtered = filtered.filter(tenant =>
         tenant.firstName.toLowerCase().includes(lowerQuery) ||
         tenant.lastName.toLowerCase().includes(lowerQuery) ||
-        tenant.email.toLowerCase().includes(lowerQuery) ||
         tenant.documentId.toLowerCase().includes(lowerQuery) ||
-        tenant.phone?.toLowerCase().includes(lowerQuery)
+        tenant.phone?.toLowerCase().includes(lowerQuery) ||
+        tenant.numeroLocal?.toString().toLowerCase().includes(lowerQuery) ||
+        tenant.rubro?.toLowerCase().includes(lowerQuery)
       );
     }
 
@@ -287,9 +342,11 @@ const TenantPage = () => {
       const tenantData: CreateTenantData = {
         firstName: createForm.firstName,
         lastName: createForm.lastName,
-        email: createForm.email,
         phone: createForm.phone || undefined,
         documentId: createForm.documentId,
+        numeroLocal: createForm.numeroLocal || undefined,
+        rubro: createForm.rubro || undefined,
+        fechaInicioContrato: createForm.fechaInicioContrato || undefined,
       };
 
       await tenantService.createTenant(tenantData);
@@ -298,9 +355,11 @@ const TenantPage = () => {
       setCreateForm({
         firstName: '',
         lastName: '',
-        email: '',
         phone: '',
         documentId: '',
+        numeroLocal: '',
+        rubro: '',
+        fechaInicioContrato: '',
       });
       fetchTenants(); // Refresh the list
     } catch (err: any) {
@@ -328,9 +387,11 @@ const TenantPage = () => {
     setEditForm({
       firstName: tenant.firstName,
       lastName: tenant.lastName,
-      email: tenant.email,
       phone: tenant.phone || '',
       documentId: tenant.documentId,
+      numeroLocal: tenant.numeroLocal?.toString() || '',
+      rubro: tenant.rubro || '',
+      fechaInicioContrato: formatDateForInput(tenant.fechaInicioContrato || ''),
     });
     setEditDialogOpen(true);
   };
@@ -349,9 +410,10 @@ const TenantPage = () => {
       setTenantToDelete(null);
       fetchTenants(); // Refresh the list
     } catch (err: any) {
-      setError(err.message || 'Failed to delete tenant');
+      setError(err.message || err.response?.data?.message || 'Failed to delete tenant');
     }
   };
+
 
   const handleUpdateTenant = async () => {
     if (!editingTenant) return;
@@ -360,9 +422,11 @@ const TenantPage = () => {
       const tenantData: Partial<CreateTenantData> = {
         firstName: editForm.firstName,
         lastName: editForm.lastName,
-        email: editForm.email,
         phone: editForm.phone || undefined,
         documentId: editForm.documentId,
+        numeroLocal: editForm.numeroLocal || undefined,
+        rubro: editForm.rubro || undefined,
+        fechaInicioContrato: editForm.fechaInicioContrato || undefined,
       };
 
       await tenantService.updateTenant(editingTenant.id, tenantData);
@@ -372,9 +436,11 @@ const TenantPage = () => {
       setEditForm({
         firstName: '',
         lastName: '',
-        email: '',
         phone: '',
         documentId: '',
+        numeroLocal: '',
+        rubro: '',
+        fechaInicioContrato: '',
       });
       fetchTenants(); // Refresh the list
     } catch (err: any) {
@@ -384,6 +450,12 @@ const TenantPage = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES');
+  };
+
+  const formatDateForInput = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
   };
 
   return (
@@ -431,24 +503,36 @@ const TenantPage = () => {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell><strong>ID</strong></TableCell>
                 <TableCell><strong>Nombre</strong></TableCell>
-                <TableCell><strong>Email</strong></TableCell>
                 <TableCell><strong>Teléfono</strong></TableCell>
                 <TableCell><strong>DNI</strong></TableCell>
-                <TableCell><strong>Fecha Registro</strong></TableCell>
+                <TableCell><strong>N° Local</strong></TableCell>
+                <TableCell><strong>Rubro</strong></TableCell>
+                <TableCell><strong>Estado Pago</strong></TableCell>
+                <TableCell><strong>Fecha Inicio</strong></TableCell>
                 <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredTenants.map((tenant) => (
                 <TableRow key={tenant.id} hover>
+                  <TableCell>{tenant.id}</TableCell>
                   <TableCell>
                     {tenant.firstName} {tenant.lastName}
                   </TableCell>
-                  <TableCell>{tenant.email}</TableCell>
                   <TableCell>{tenant.phone || '-'}</TableCell>
                   <TableCell>{tenant.documentId}</TableCell>
-                  <TableCell>{formatDate(tenant.createdAt)}</TableCell>
+                  <TableCell>{tenant.numeroLocal ?? '-'}</TableCell>
+                  <TableCell>{tenant.rubro || '-'}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={tenant.estadoPago === 'AL_DIA' ? 'Al día' : 'Con deuda'}
+                      color={tenant.estadoPago === 'AL_DIA' ? 'success' : 'error'}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>{tenant.fechaInicioContrato ? formatDate(tenant.fechaInicioContrato) : '-'}</TableCell>
                   <TableCell align="center">
                     <IconButton
                       size="small"
@@ -523,15 +607,6 @@ const TenantPage = () => {
             />
             <TextField
               fullWidth
-              label="Email"
-              type="email"
-              value={createForm.email}
-              onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
               label="Teléfono"
               value={createForm.phone}
               onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })}
@@ -543,6 +618,33 @@ const TenantPage = () => {
               value={createForm.documentId}
               onChange={(e) => setCreateForm({ ...createForm, documentId: e.target.value })}
               required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Número de Local"
+              value={createForm.numeroLocal}
+              onChange={(e) => setCreateForm({ ...createForm, numeroLocal: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Rubro</InputLabel>
+              <Select
+                value={createForm.rubro}
+                label="Rubro"
+                onChange={(e) => setCreateForm({ ...createForm, rubro: e.target.value })}
+              >
+                <MenuItem value="TIPEO">Tipeo</MenuItem>
+                <MenuItem value="PEDICURE">Pedicure</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              label="Fecha de Inicio del Contrato"
+              type="date"
+              value={createForm.fechaInicioContrato}
+              onChange={(e) => setCreateForm({ ...createForm, fechaInicioContrato: e.target.value })}
+              InputLabelProps={{ shrink: true }}
               sx={{ mb: 2 }}
             />
           </Box>
@@ -578,15 +680,6 @@ const TenantPage = () => {
             />
             <TextField
               fullWidth
-              label="Email"
-              type="email"
-              value={editForm.email}
-              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
               label="Teléfono"
               value={editForm.phone}
               onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
@@ -598,6 +691,33 @@ const TenantPage = () => {
               value={editForm.documentId}
               onChange={(e) => setEditForm({ ...editForm, documentId: e.target.value })}
               required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Número de Local"
+              value={editForm.numeroLocal}
+              onChange={(e) => setEditForm({ ...editForm, numeroLocal: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Rubro</InputLabel>
+              <Select
+                value={editForm.rubro}
+                label="Rubro"
+                onChange={(e) => setEditForm({ ...editForm, rubro: e.target.value })}
+              >
+                <MenuItem value="TIPEO">Tipeo</MenuItem>
+                <MenuItem value="PEDICURE">Pedicure</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              label="Fecha de Inicio del Contrato"
+              type="date"
+              value={editForm.fechaInicioContrato}
+              onChange={(e) => setEditForm({ ...editForm, fechaInicioContrato: e.target.value })}
+              InputLabelProps={{ shrink: true }}
               sx={{ mb: 2 }}
             />
           </Box>
@@ -632,6 +752,19 @@ const TenantPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Tenant Deletion Modal */}
+      <TenantDeletionModal
+        open={tenantDeletionModalOpen}
+        tenant={tenantToDelete}
+        onConfirmDelete={async () => {
+          await tenantService.deleteTenant(tenantToDelete!.id);
+          setTenantDeletionModalOpen(false);
+          setTenantToDelete(null);
+          fetchTenants();
+        }}
+        onClose={() => setTenantDeletionModalOpen(false)}
+      />
     </Container>
   );
 };

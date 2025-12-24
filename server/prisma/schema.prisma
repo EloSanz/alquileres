@@ -22,23 +22,26 @@ model User {
 
 // Tenant (Inquilino) model
 model Tenant {
-  id          Int      @id @default(autoincrement())
-  firstName   String
-  lastName    String
-  email       String   @unique
-  phone       String?
-  documentId  String   @unique // DNI, Cedula, etc.
-  address     String?
-  birthDate   DateTime?
-  status      TenantStatus @default(ACTIVE) // Soft delete/status
-  deletedAt   DateTime?    // Soft delete timestamp
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                    Int          @id @default(autoincrement())
+  firstName             String
+  lastName              String
+  phone                 String?
+  documentId            String       @unique // DNI, Cedula, etc.
+  address               String?
+  birthDate             DateTime?
+  numeroLocal           String?      // Número de local comercial
+  rubro                 Rubro?       // Rubro del negocio
+  fechaInicioContrato   DateTime?    // Fecha de inicio del contrato de alquiler
+  estadoPago            EstadoPago   @default(AL_DIA) // Estado de pagos del inquilino
+  status                TenantStatus @default(ACTIVE) // Soft delete/status
+  deletedAt             DateTime?    // Soft delete timestamp
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
 
   // Relations
-  properties  Property[]
-  payments    Payment[]
-  rentals     Rental[] // Legacy relation
+  properties            Property[]
+  payments              Payment[]
+  rentals               Rental[] // Legacy relation
 
   @@map("tenants")
 }
@@ -64,8 +67,8 @@ model Property {
   updatedAt   DateTime    @updatedAt
 
   // Relations
-  tenantId    Int
-  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenantId    Int?        // Nullable to allow "available" properties
+  tenant      Tenant?     @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   payments    Payment[]
   rentals     Rental[] // Legacy relation
 
@@ -97,22 +100,25 @@ model Rental {
 
 // Payment (Pago) model
 model Payment {
-  id          Int          @id @default(autoincrement())
-  tenantId    Int
-  propertyId  Int
-  amount      Decimal
-  paymentDate DateTime     @default(now())
-  dueDate     DateTime
-  paymentType PaymentType
-  status      PaymentStatus @default(PENDING)
-  notes       String?
-  deletedAt   DateTime?    // Soft delete timestamp
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id             Int          @id @default(autoincrement())
+  tenantId       Int?         // Nullable para permitir eliminación de tenants
+  propertyId     Int
+  // Campos históricos para trazabilidad cuando se elimina el tenant
+  tenantFullName String?      // Nombre completo del inquilino que realizó el pago
+  tenantPhone    String?      // Teléfono del inquilino que realizó el pago
+  amount         Decimal
+  paymentDate    DateTime     @default(now())
+  dueDate        DateTime
+  paymentType    PaymentType
+  status         PaymentStatus @default(PENDING)
+  notes          String?
+  deletedAt      DateTime?    // Soft delete timestamp
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  // Relations - NO CASCADE: Los pagos históricos se mantienen
-  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  property    Property     @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  // Relations - Permite eliminación de tenants manteniendo pagos históricos
+  tenant         Tenant?      @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  property       Property     @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
   @@map("payments")
 }
@@ -137,6 +143,16 @@ enum TenantStatus {
   ACTIVE      // Inquilino activo
   INACTIVE    // Inquilino inactivo
   ARCHIVED    // Inquilino archivado (soft delete)
+}
+
+enum EstadoPago {
+  AL_DIA      // Sin deudas pendientes
+  CON_DEUDA   // Tiene meses con deuda
+}
+
+enum Rubro {
+  TIPEO
+  PEDICURE
 }
 
 enum RentalStatus {

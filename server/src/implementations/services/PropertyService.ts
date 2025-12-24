@@ -26,7 +26,7 @@ export class PropertyService implements IPropertyService {
               id: tenant.id,
               firstName: tenant.firstName,
               lastName: tenant.lastName,
-              email: tenant.email,
+              documentId: tenant.documentId,
             };
           }
         }
@@ -54,7 +54,7 @@ export class PropertyService implements IPropertyService {
           id: tenant.id,
           firstName: tenant.firstName,
           lastName: tenant.lastName,
-          email: tenant.email,
+          documentId: tenant.documentId,
         };
       }
     }
@@ -75,6 +75,27 @@ export class PropertyService implements IPropertyService {
     }
 
     const updatedEntity = existingEntity.update(data);
+    const savedEntity = await this.propertyRepository.update(updatedEntity);
+    return savedEntity.toDTO();
+  }
+
+  async releaseProperty(id: number, _userId: number): Promise<PropertyDTO> {
+    const property = await this.propertyRepository.findById(id);
+    if (!property) {
+      throw new Error('Property not found');
+    }
+
+    if (!property.tenantId) {
+      throw new Error('Property is already available (no tenant assigned)');
+    }
+
+    // Liberar la propiedad cambiando tenantId a null
+    const updateData = {
+      tenantId: null as number | null,
+      updatedAt: new Date()
+    };
+
+    const updatedEntity = property.update(updateData);
     const savedEntity = await this.propertyRepository.update(updatedEntity);
     return savedEntity.toDTO();
   }

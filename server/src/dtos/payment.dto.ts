@@ -1,7 +1,9 @@
 export interface PaymentDTO {
   id: number;
-  tenantId: number;
+  tenantId: number | null;
   propertyId: number;
+  tenantFullName: string | null;
+  tenantPhone: string | null;
   amount: number;
   paymentDate: string;
   dueDate: string;
@@ -24,8 +26,10 @@ export interface CreatePaymentDTO {
 }
 
 export interface UpdatePaymentDTO {
-  tenantId?: number;
+  tenantId?: number | null;
   propertyId?: number;
+  tenantFullName?: string | null;
+  tenantPhone?: string | null;
   amount?: number;
   paymentDate?: string;
   dueDate?: string;

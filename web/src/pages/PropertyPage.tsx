@@ -360,6 +360,7 @@ const PropertyPage = () => {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell><strong>ID</strong></TableCell>
                 <TableCell><strong>Nombre</strong></TableCell>
                 <TableCell><strong>Dirección</strong></TableCell>
                 <TableCell><strong>Ciudad</strong></TableCell>
@@ -372,6 +373,7 @@ const PropertyPage = () => {
             <TableBody>
               {filteredProperties.map((property) => (
                 <TableRow key={property.id} hover>
+                  <TableCell>{property.id}</TableCell>
                   <TableCell>{property.name}</TableCell>
                   <TableCell>{property.address}</TableCell>
                   <TableCell>{property.city}, {property.state}</TableCell>
