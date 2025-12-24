@@ -1,6 +1,7 @@
 import { ITenantService } from '../../interfaces/services/ITenantService';
 import { ITenantRepository } from '../../interfaces/repositories/ITenantRepository';
 import { IPaymentRepository } from '../../interfaces/repositories/IPaymentRepository';
+import { IPropertyRepository } from '../../interfaces/repositories/IPropertyRepository';
 import { TenantDTO, CreateTenantDTO, UpdateTenantDTO } from '../../dtos/tenant.dto';
 import { TenantEntity } from '../../entities/Tenant.entity';
 import { EstadoPago, Rubro } from '@prisma/client';
@@ -18,7 +19,8 @@ function stringToRubro(value: string | null): Rubro | null {
 export class TenantService implements ITenantService {
   constructor(
     private tenantRepository: ITenantRepository,
-    private paymentRepository: IPaymentRepository
+    private paymentRepository: IPaymentRepository,
+    private propertyRepository: IPropertyRepository
   ) {}
 
   /**
@@ -176,6 +178,12 @@ export class TenantService implements ITenantService {
   }
 
   async deleteTenant(id: number, _userId: number): Promise<boolean> {
+    // Verificar si el tenant tiene propiedades activas
+    const properties = await this.propertyRepository.findByTenantId(id);
+    if (properties.length > 0) {
+      throw new Error('No se puede eliminar el inquilino porque tiene propiedades asociadas. Primero debe eliminar o reasignar las propiedades.');
+    }
+
     const deleted = await this.tenantRepository.delete(id);
     return deleted;
   }

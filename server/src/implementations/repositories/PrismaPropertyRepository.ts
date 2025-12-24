@@ -17,6 +17,14 @@ export class PrismaPropertyRepository implements IPropertyRepository {
     return property ? PropertyEntity.fromPrisma(property) : null;
   }
 
+  async findByTenantId(tenantId: number): Promise<PropertyEntity[]> {
+    const properties = await prisma.property.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' }
+    });
+    return properties.map(property => PropertyEntity.fromPrisma(property));
+  }
+
   async create(entity: PropertyEntity): Promise<PropertyEntity> {
     const data = entity.toPrisma();
     // Remove id for creation since it's auto-generated

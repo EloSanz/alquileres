@@ -3,6 +3,7 @@ import { TenantController } from '../controllers/tenant.controller';
 import { TenantService } from '../implementations/services/TenantService';
 import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
 import { PrismaPaymentRepository } from '../implementations/repositories/PrismaPaymentRepository';
+import { PrismaPropertyRepository } from '../implementations/repositories/PrismaPropertyRepository';
 import { authPlugin } from '../plugins/auth.plugin';
 import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
 import { verify as jwtVerify } from 'jsonwebtoken';
@@ -10,7 +11,8 @@ import { verify as jwtVerify } from 'jsonwebtoken';
 // Dependency injection
 const tenantRepository = new PrismaTenantRepository();
 const paymentRepository = new PrismaPaymentRepository();
-const tenantService = new TenantService(tenantRepository, paymentRepository);
+const propertyRepository = new PrismaPropertyRepository();
+const tenantService = new TenantService(tenantRepository, paymentRepository, propertyRepository);
 const tenantController = new TenantController(tenantService);
 
 export const tenantRoutes = new Elysia({ prefix: '/tenants' })
