@@ -21,6 +21,10 @@ import {
   Paper,
   IconButton,
   Chip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
@@ -598,13 +602,17 @@ const TenantPage = () => {
               onChange={(e) => setCreateForm({ ...createForm, numeroLocal: e.target.value })}
               sx={{ mb: 2 }}
             />
-            <TextField
-              fullWidth
-              label="Rubro"
-              value={createForm.rubro}
-              onChange={(e) => setCreateForm({ ...createForm, rubro: e.target.value })}
-              sx={{ mb: 2 }}
-            />
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Rubro</InputLabel>
+              <Select
+                value={createForm.rubro}
+                label="Rubro"
+                onChange={(e) => setCreateForm({ ...createForm, rubro: e.target.value })}
+              >
+                <MenuItem value="TIPEO">Tipeo</MenuItem>
+                <MenuItem value="PEDICURE">Pedicure</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               fullWidth
               label="Fecha de Inicio del Contrato"
@@ -667,13 +675,17 @@ const TenantPage = () => {
               onChange={(e) => setEditForm({ ...editForm, numeroLocal: e.target.value })}
               sx={{ mb: 2 }}
             />
-            <TextField
-              fullWidth
-              label="Rubro"
-              value={editForm.rubro}
-              onChange={(e) => setEditForm({ ...editForm, rubro: e.target.value })}
-              sx={{ mb: 2 }}
-            />
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Rubro</InputLabel>
+              <Select
+                value={editForm.rubro}
+                label="Rubro"
+                onChange={(e) => setEditForm({ ...editForm, rubro: e.target.value })}
+              >
+                <MenuItem value="TIPEO">Tipeo</MenuItem>
+                <MenuItem value="PEDICURE">Pedicure</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               fullWidth
               label="Fecha de Inicio del Contrato"
