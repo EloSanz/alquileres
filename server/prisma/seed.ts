@@ -160,7 +160,7 @@ async function main() {
     documentId: string;
     address: string | null;
     birthDate: Date | null;
-    numeroLocal: number | null;
+    numeroLocal: string | null;
     rubro: Rubro | null;
     fechaInicioContrato: Date | null;
     estadoPago: EstadoPago;
