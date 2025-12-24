@@ -193,6 +193,23 @@ export class TenantService implements ITenantService {
       throw error;
     }
 
+    // Verificar si el tenant tiene pagos asociados
+    const payments = await this.paymentRepository.findByTenantId(id);
+    if (payments.length > 0) {
+      const paymentDetails = payments.map(p => ({
+        id: p.id,
+        amount: p.amount,
+        paymentDate: p.paymentDate,
+        dueDate: p.dueDate,
+        status: p.status,
+        paymentType: p.paymentType
+      }));
+      const error = new Error(`No se puede eliminar el inquilino porque tiene ${payments.length} pagos asociados.`);
+      (error as any).payments = paymentDetails;
+      (error as any).code = 'TENANT_HAS_PAYMENTS';
+      throw error;
+    }
+
     const deleted = await this.tenantRepository.delete(id);
     return deleted;
   }
