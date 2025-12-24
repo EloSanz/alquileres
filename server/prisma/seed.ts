@@ -90,11 +90,31 @@ async function main() {
 
   // Limpiar datos existentes (orden importa por las foreign keys)
   console.log('🧹 Limpiando datos existentes...');
-  await prisma.payment.deleteMany();
-  await prisma.rental.deleteMany();
-  await prisma.property.deleteMany();
-  await prisma.tenant.deleteMany();
-  await prisma.user.deleteMany();
+  try {
+    await prisma.payment.deleteMany();
+  } catch (e) {
+    console.log('Tabla payments no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.rental.deleteMany();
+  } catch (e) {
+    console.log('Tabla rentals no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.property.deleteMany();
+  } catch (e) {
+    console.log('Tabla properties no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.tenant.deleteMany();
+  } catch (e) {
+    console.log('Tabla tenants no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.user.deleteMany();
+  } catch (e) {
+    console.log('Tabla users no existe o está vacía, continuando...');
+  }
 
   // Crear usuarios administradores
   console.log('👤 Creando usuarios...');
@@ -154,14 +174,12 @@ async function main() {
     const district = getRandomElement(limaDistricts);
     const street = getRandomElement(streets);
 
-    // Generar datos comerciales aleatorios
-    const hasBusiness = Math.random() > 0.3; // 70% de tenants tienen negocio
-    const numeroLocal = hasBusiness ? getRandomNumber(1, 999) : null;
-    const rubro = hasBusiness ? getRandomElement(businessRubros) : null;
+    // Generar datos comerciales aleatorios - TODOS los tenants tienen negocio
+    const numeroLocal = getRandomNumber(1, 999).toString();
+    const rubro = getRandomElement(businessRubros);
 
-    // Fecha de inicio de contrato (últimos 2 años)
-    const fechaInicioContrato = Math.random() > 0.2 ?
-      getRandomDate(new Date(2022, 0, 1), new Date()) : null;
+    // Fecha de inicio de contrato (últimos 2 años) - TODOS los tenants tienen contrato
+    const fechaInicioContrato = getRandomDate(new Date(2022, 0, 1), new Date());
 
     tenants.push(await prisma.tenant.create({
       data: {
