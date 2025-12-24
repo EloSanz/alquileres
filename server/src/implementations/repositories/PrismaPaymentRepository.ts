@@ -25,6 +25,14 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     return payments.map(payment => PaymentEntity.fromPrisma(payment));
   }
 
+  async findByContractId(contractId: number): Promise<PaymentEntity[]> {
+    const payments = await prisma.payment.findMany({
+      where: { contractId },
+      orderBy: { monthNumber: 'asc' }
+    });
+    return payments.map(payment => PaymentEntity.fromPrisma(payment));
+  }
+
   async create(entity: PaymentEntity): Promise<PaymentEntity> {
     const data = entity.toPrisma();
     // Remove id for creation since it's auto-generated

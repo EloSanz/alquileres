@@ -42,6 +42,7 @@ model Tenant {
   properties            Property[]
   payments              Payment[]
   rentals               Rental[] // Legacy relation
+  contracts             Contract[]
 
   @@map("tenants")
 }
@@ -71,6 +72,7 @@ model Property {
   tenant      Tenant?     @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   payments    Payment[]
   rentals     Rental[] // Legacy relation
+  contracts   Contract[]
 
   @@map("properties")
 }
@@ -98,19 +100,39 @@ model Rental {
   @@map("rentals")
 }
 
+// Contract (Contrato) model
+model Contract {
+  id           Int            @id @default(autoincrement())
+  tenantId     Int
+  propertyId   Int
+  startDate    DateTime
+  endDate      DateTime       // startDate + 1 año
+  monthlyRent  Decimal
+  status       ContractStatus @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  // Relations
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  property     Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  payments     Payment[]
+
+  @@map("contracts")
+}
+
 // Payment (Pago) model
 model Payment {
   id             Int          @id @default(autoincrement())
   tenantId       Int?         // Nullable para permitir eliminación de tenants
   propertyId     Int
+  contractId     Int?         // Nuevo: nullable para compatibilidad con pagos antiguos
+  monthNumber    Int?         // Nuevo: 1-12, nullable para compatibilidad
   // Campos históricos para trazabilidad cuando se elimina el tenant
   tenantFullName String?      // Nombre completo del inquilino que realizó el pago
   tenantPhone    String?      // Teléfono del inquilino que realizó el pago
   amount         Decimal
   paymentDate    DateTime     @default(now())
   dueDate        DateTime
-  paymentType    PaymentType
-  status         PaymentStatus @default(PENDING)
   notes          String?
   deletedAt      DateTime?    // Soft delete timestamp
   createdAt      DateTime     @default(now())
@@ -119,18 +141,16 @@ model Payment {
   // Relations - Permite eliminación de tenants manteniendo pagos históricos
   tenant         Tenant?      @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   property       Property     @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  contract       Contract?    @relation(fields: [contractId], references: [id], onDelete: SetNull)
 
+  @@unique([contractId, monthNumber]) // Una cuota por mes por contrato
   @@map("payments")
 }
 
 // Enums
 enum PropertyType {
-  APARTMENT
-  HOUSE
-  STUDIO
-  OFFICE
-  COMMERCIAL
-  LAND
+  INSIDE  // Local adentro
+  OUTSIDE // Local afuera
 }
 
 enum PropertyStatus {
@@ -162,17 +182,9 @@ enum RentalStatus {
   TERMINATED
 }
 
-enum PaymentType {
-  RENT
-  DEPOSIT
-  MAINTENANCE
-  LATE_FEE
-  OTHER
-}
-
-enum PaymentStatus {
-  PENDING
+enum ContractStatus {
+  ACTIVE
   COMPLETED
-  OVERDUE
   CANCELLED
+  TERMINATED
 }

@@ -42,20 +42,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, on
     return isAvailable ? 'Disponible' : 'No Disponible';
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type.toUpperCase()) {
-      case 'HOUSE':
-        return 'Casa';
-      case 'APARTMENT':
-        return 'Apartamento';
-      case 'CONDO':
-        return 'Condominio';
-      case 'TOWNHOUSE':
-        return 'Townhouse';
-      default:
-        return type;
-    }
-  };
 
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -76,7 +62,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, on
           {property.areaSqm && <Chip label={`${property.areaSqm}m²`} size="small" />}
         </Box>
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-          <Chip label={getTypeLabel(property.propertyType)} size="small" variant="outlined" />
+          <Chip label={property.propertyType === 'INSIDE' ? 'Adentro' : 'Afuera'} size="small" variant="outlined" />
           <Chip
             label={getAvailabilityLabel(property.isAvailable)}
             size="small"

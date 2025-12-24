@@ -1,4 +1,4 @@
-import { PrismaClient, PropertyType, RentalStatus, PaymentType, PaymentStatus, EstadoPago, Rubro } from '@prisma/client';
+import { PrismaClient, PropertyType, RentalStatus, EstadoPago, Rubro, ContractStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -96,6 +96,11 @@ async function main() {
     console.log('Tabla payments no existe o está vacía, continuando...');
   }
   try {
+    await prisma.contract.deleteMany();
+  } catch (e) {
+    console.log('Tabla contracts no existe o está vacía, continuando...');
+  }
+  try {
     await prisma.rental.deleteMany();
   } catch (e) {
     console.log('Tabla rentals no existe o está vacía, continuando...');
@@ -167,7 +172,7 @@ async function main() {
     createdAt: Date;
     updatedAt: Date;
   }[] = [];
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < 5; i++) {
     const firstName = getRandomElement(peruvianNames);
     const lastName1 = getRandomElement(peruvianLastNames);
     const lastName2 = getRandomElement(peruvianLastNames);
@@ -226,9 +231,9 @@ async function main() {
       const district = getRandomElement(limaDistricts);
       const street = getRandomElement(streets);
       const monthlyRent = getRandomNumber(700, 2500);
-      const propertyType = getRandomElement([PropertyType.APARTMENT, PropertyType.HOUSE, PropertyType.STUDIO]);
-      const bedrooms = propertyType === PropertyType.STUDIO ? null : getRandomNumber(1, 4);
-      const bathrooms = propertyType === PropertyType.STUDIO ? 1 : getRandomNumber(1, 3);
+      const propertyType = getRandomElement([PropertyType.INSIDE, PropertyType.OUTSIDE]);
+      const bedrooms = null; // Los locales comerciales no tienen dormitorios
+      const bathrooms = 1; // Los locales comerciales tienen 1 baño
       const areaSqm = getRandomNumber(45, 180);
 
       // Calculate bathrooms as number (some have .5 for half bathrooms)
@@ -260,10 +265,66 @@ async function main() {
   // Las propiedades ahora pertenecen directamente a los inquilinos
   // Los pagos se crearán directamente referenciando tenantId y propertyId
 
-  // Crear pagos (referencian directamente tenantId y propertyId)
-  console.log('💰 Creando pagos...');
-  for (const property of properties) {
-    const numPayments = getRandomNumber(1, 6); // 1-6 pagos por propiedad
+  // Crear un contrato para el primer inquilino y propiedad
+  console.log('📄 Creando contrato...');
+  if (tenants.length > 0 && properties.length > 0) {
+    const firstTenant = tenants[0];
+    const firstProperty = properties.find(p => p.tenantId === firstTenant.id) || properties[0];
+    
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 2); // Contrato iniciado hace 2 meses
+    const endDate = new Date(startDate);
+    endDate.setFullYear(endDate.getFullYear() + 1); // Duración de 1 año
+
+    const contract = await prisma.contract.create({
+      data: {
+        tenantId: firstTenant.id,
+        propertyId: firstProperty.id,
+        startDate,
+        endDate,
+        monthlyRent: firstProperty.monthlyRent,
+        status: ContractStatus.ACTIVE,
+      }
+    });
+
+    console.log(`✅ Contrato creado: ID ${contract.id} para ${firstTenant.firstName} ${firstTenant.lastName}`);
+
+    // Crear los 12 pagos mensuales para el contrato
+    console.log('💰 Creando 12 pagos mensuales para el contrato...');
+    for (let month = 1; month <= 12; month++) {
+      const dueDate = new Date(startDate);
+      dueDate.setMonth(dueDate.getMonth() + month - 1);
+      dueDate.setDate(5); // Vencimiento el día 5 de cada mes
+
+      // Los primeros 2 meses ya están pagados (contrato inició hace 2 meses)
+      let paymentDate: Date | null = null;
+      
+      if (month <= 2) {
+        paymentDate = new Date(dueDate);
+        paymentDate.setDate(paymentDate.getDate() + getRandomNumber(-5, 0)); // Pagado antes o en la fecha de vencimiento
+      }
+
+      await prisma.payment.create({
+        data: {
+          tenantId: firstTenant.id,
+          propertyId: firstProperty.id,
+          contractId: contract.id,
+          monthNumber: month,
+          tenantFullName: `${firstTenant.firstName} ${firstTenant.lastName}`,
+          tenantPhone: firstTenant.phone,
+          amount: firstProperty.monthlyRent,
+          paymentDate: paymentDate || new Date(),
+          dueDate,
+        }
+      });
+    }
+    console.log('✅ 12 pagos mensuales creados para el contrato');
+  }
+
+  // Crear algunos pagos adicionales para otras propiedades (sin contrato)
+  console.log('💰 Creando pagos adicionales...');
+  for (const property of properties.slice(1)) { // Saltar la primera propiedad que ya tiene contrato
+    const numPayments = getRandomNumber(1, 3); // 1-3 pagos por propiedad
 
     for (let i = 0; i < numPayments; i++) {
       // Crear fechas de pago basadas en la fecha de creación de la propiedad
@@ -273,42 +334,44 @@ async function main() {
       const dueDate = new Date(paymentDate);
       dueDate.setDate(5); // Vencimiento el día 5 de cada mes
 
-      const paymentType = i === 0 && Math.random() > 0.7 ? PaymentType.DEPOSIT : PaymentType.RENT;
 
-      let status: PaymentStatus;
       const random = Math.random();
-      if (random < 0.7) status = PaymentStatus.COMPLETED;
-      else if (random < 0.85) status = PaymentStatus.PENDING;
-      else if (random < 0.95) status = PaymentStatus.OVERDUE;
-      else status = PaymentStatus.CANCELLED;
+      let paymentDateValue: Date | null = null;
+      let notes: string | null = null;
+      
+      // Si el pago está completado (70% probabilidad), asignar fecha de pago
+      if (random < 0.7) {
+        paymentDateValue = new Date(paymentDate);
+        paymentDateValue.setDate(paymentDateValue.getDate() + getRandomNumber(-5, 5)); // Pagado alrededor de la fecha
+      } else if (random < 0.95) {
+        // 25% probabilidad de pago retrasado (con nota)
+        notes = 'Pago retrasado';
+      }
 
-      const amount = paymentType === PaymentType.DEPOSIT ?
-        (property.monthlyRent * 2) : // Depósito = 2 meses de alquiler
-        property.monthlyRent;
 
       await prisma.payment.create({
         data: {
           tenantId: property.tenantId,
           propertyId: property.id,
-          amount,
-          paymentDate,
+          amount: property.monthlyRent,
+          paymentDate: paymentDateValue || paymentDate,
           dueDate,
-          paymentType,
-          status,
-          notes: status === PaymentStatus.OVERDUE ? 'Pago retrasado' :
-                 status === PaymentStatus.CANCELLED ? 'Pago cancelado por solicitud del inquilino' :
-                 null,
+          notes,
         }
       });
     }
   }
+
+  const contractsCount = await prisma.contract.count();
+  const paymentsCount = await prisma.payment.count();
 
   console.log('✅ Seed completado exitosamente!');
   console.log(`📊 Resumen:`);
   console.log(`   👤 Usuarios: ${users.length}`);
   console.log(`   👥 Inquilinos: ${tenants.length}`);
   console.log(`   🏠 Propiedades: ${properties.length}`);
-  console.log(`   💰 Pagos: ${properties.reduce((sum, p) => sum + getRandomNumber(1, 6), 0)}`);
+  console.log(`   📄 Contratos: ${contractsCount}`);
+  console.log(`   💰 Pagos: ${paymentsCount}`);
 
   console.log('\n🔐 Credenciales de acceso:');
   console.log('   👑 ADMIN PRINCIPAL (acceso completo):');

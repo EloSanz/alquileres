@@ -12,7 +12,7 @@ import {
   People as PeopleIcon,
   Home as HomeIcon,
   Payment as PaymentIcon,
-  Business as BusinessIcon,
+  Description as ContractIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
@@ -63,20 +63,26 @@ const HomePage = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <Card
             sx={{
               cursor: 'pointer',
               transition: 'transform 0.2s',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 200,
               '&:hover': { transform: 'translateY(-4px)' }
             }}
             onClick={() => navigate('/tenants')}
           >
-            <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <PeopleIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>
-                Inquilinos
-              </Typography>
+            <CardContent sx={{ textAlign: 'center', py: 4, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 2 }}>
+                <PeopleIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                <Typography variant="h6">
+                  Inquilinos
+                </Typography>
+              </Box>
               <Typography variant="body2" color="text.secondary">
                 Gestiona los inquilinos del sistema
               </Typography>
@@ -84,20 +90,26 @@ const HomePage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <Card
             sx={{
               cursor: 'pointer',
               transition: 'transform 0.2s',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 200,
               '&:hover': { transform: 'translateY(-4px)' }
             }}
             onClick={() => navigate('/property')}
           >
-            <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <HomeIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>
-                Propiedades
-              </Typography>
+            <CardContent sx={{ textAlign: 'center', py: 4, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 2 }}>
+                <HomeIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                <Typography variant="h6">
+                  Locales
+                </Typography>
+              </Box>
               <Typography variant="body2" color="text.secondary">
                 Administra las propiedades disponibles
               </Typography>
@@ -105,22 +117,55 @@ const HomePage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <Card
             sx={{
               cursor: 'pointer',
               transition: 'transform 0.2s',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 200,
               '&:hover': { transform: 'translateY(-4px)' }
             }}
             onClick={() => navigate('/payments')}
           >
-            <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <PaymentIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>
-                Pagos
-              </Typography>
+            <CardContent sx={{ textAlign: 'center', py: 4, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 2 }}>
+                <PaymentIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                <Typography variant="h6">
+                  Pagos
+                </Typography>
+              </Box>
               <Typography variant="body2" color="text.secondary">
                 Controla los pagos y facturación
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card
+            sx={{
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 200,
+              '&:hover': { transform: 'translateY(-4px)' }
+            }}
+            onClick={() => navigate('/contracts')}
+          >
+            <CardContent sx={{ textAlign: 'center', py: 4, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 2 }}>
+                <ContractIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                <Typography variant="h6">
+                  Contratos
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Gestiona los contratos de alquiler
               </Typography>
             </CardContent>
           </Card>
@@ -152,7 +197,7 @@ const HomePage = () => {
               onClick={() => navigate('/property')}
               sx={{ py: 2 }}
             >
-              Nueva Propiedad
+              Nuevo Local
             </Button>
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
@@ -170,8 +215,8 @@ const HomePage = () => {
             <Button
               fullWidth
               variant="outlined"
-              startIcon={<BusinessIcon />}
-              onClick={() => navigate('/property')}
+              startIcon={<ContractIcon />}
+              onClick={() => navigate('/contracts')}
               sx={{ py: 2 }}
             >
               Ver Contratos

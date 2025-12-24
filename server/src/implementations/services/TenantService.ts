@@ -53,11 +53,12 @@ export class TenantService implements ITenantService {
     // Obtener todos los pagos del inquilino
     const payments = await this.paymentRepository.findByTenantId(tenantId);
 
-    // Contar pagos completados por mes
+    // Contar pagos completados por mes (si tiene paymentDate, está pagado)
     const completedPaymentsByMonth = new Set<number>();
 
     for (const payment of payments) {
-      if (payment.status === 'COMPLETED') {
+      // Si tiene paymentDate, significa que fue pagado
+      if (payment.paymentDate) {
         const paymentDate = new Date(payment.paymentDate);
         const monthsSinceContract = Math.floor(
           (paymentDate.getTime() - contractStart.getTime()) / (1000 * 60 * 60 * 24 * 30.44)

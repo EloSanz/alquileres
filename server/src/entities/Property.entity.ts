@@ -180,12 +180,8 @@ export class PropertyEntity {
 
 // Enums
 export enum PropertyType {
-  APARTMENT = 'APARTMENT',
-  HOUSE = 'HOUSE',
-  STUDIO = 'STUDIO',
-  OFFICE = 'OFFICE',
-  COMMERCIAL = 'COMMERCIAL',
-  LAND = 'LAND'
+  INSIDE = 'INSIDE',  // Local adentro
+  OUTSIDE = 'OUTSIDE' // Local afuera
 }
 
 // DTO types

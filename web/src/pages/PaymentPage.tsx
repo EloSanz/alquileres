@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  MenuItem,
   Button,
   Table,
   TableBody,
@@ -20,7 +19,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip,
   IconButton,
   Autocomplete,
 } from '@mui/material';
@@ -37,8 +35,6 @@ interface Payment {
   amount: number;
   paymentDate: string;
   dueDate: string;
-  paymentType: string;
-  status: string;
   notes?: string;
   createdAt: string;
 }
@@ -49,8 +45,6 @@ interface CreatePaymentData {
   amount: number;
   paymentDate?: string;
   dueDate: string;
-  paymentType: string;
-  status?: string;
   notes?: string;
 }
 
@@ -160,66 +154,9 @@ const PaymentPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({
-    status: '',
-    paymentType: ''
-  });
+  const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({});
 
-  const paymentFilters: FilterConfig[] = [
-    {
-      key: 'status',
-      label: 'Estado',
-      options: [
-        { value: 'PENDIENTE', label: 'Pendiente' },
-        { value: 'COMPLETADO', label: 'Completado' },
-        { value: 'VENCIDO', label: 'Vencido' },
-        { value: 'CANCELADO', label: 'Cancelado' }
-      ]
-    },
-    {
-      key: 'paymentType',
-      label: 'Tipo',
-      options: [
-        { value: 'RENT', label: 'Alquiler' },
-        { value: 'DEPOSIT', label: 'Depósito' },
-        { value: 'MAINTENANCE', label: 'Mantenimiento' },
-        { value: 'LATE_FEE', label: 'Multa' },
-        { value: 'OTHER', label: 'Otro' }
-      ]
-    }
-  ];
-
-  // Función para convertir estados del backend (inglés) al frontend (español)
-  const convertStatusToSpanish = (englishStatus: string): string => {
-    switch (englishStatus.toUpperCase()) {
-      case 'PENDING':
-        return 'PENDIENTE';
-      case 'COMPLETED':
-        return 'COMPLETADO';
-      case 'OVERDUE':
-        return 'VENCIDO';
-      case 'CANCELLED':
-        return 'CANCELADO';
-      default:
-        return englishStatus;
-    }
-  };
-
-  // Función para convertir estados del frontend (español) al backend (inglés)
-  const convertStatusToEnglish = (spanishStatus: string): string => {
-    switch (spanishStatus.toUpperCase()) {
-      case 'PENDIENTE':
-        return 'PENDING';
-      case 'COMPLETADO':
-        return 'COMPLETED';
-      case 'VENCIDO':
-        return 'OVERDUE';
-      case 'CANCELADO':
-        return 'CANCELLED';
-      default:
-        return spanishStatus;
-    }
-  };
+  const paymentFilters: FilterConfig[] = [];
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -231,8 +168,6 @@ const PaymentPage = () => {
     amount: '',
     paymentDate: new Date().toISOString().split('T')[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 días por defecto
-    paymentType: 'RENT',
-    status: 'PENDIENTE',
     notes: '',
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -243,8 +178,6 @@ const PaymentPage = () => {
     amount: '',
     paymentDate: '',
     dueDate: '',
-    paymentType: 'RENT',
-    status: 'PENDIENTE',
     notes: '',
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -255,13 +188,8 @@ const PaymentPage = () => {
       setLoading(true);
       setError(''); // Limpiar error anterior
       const data = await paymentService.getAllPayments();
-      // Convertir estados al español para el frontend
-      const convertedData = data.map(payment => ({
-        ...payment,
-        status: convertStatusToSpanish(payment.status)
-      }));
-      setPayments(convertedData);
-      const filtered = filterPayments(searchQuery, filterValues, convertedData);
+      setPayments(data);
+      const filtered = filterPayments(searchQuery, filterValues, data);
       setFilteredPayments(filtered);
     } catch (err: any) {
       // Solo mostrar error si es un error real de red/API, no si es array vacío
@@ -276,30 +204,18 @@ const PaymentPage = () => {
     }
   };
 
-  const filterPayments = (query: string, filters: Record<string, string | string[]>, paymentsList: Payment[]) => {
+  const filterPayments = (query: string, _filters: Record<string, string | string[]>, paymentsList: Payment[]) => {
     return paymentsList.filter(payment => {
       // Filtro de búsqueda por texto
       if (query.trim()) {
         const lowerQuery = query.toLowerCase();
         const matchesQuery =
           payment.amount.toString().includes(lowerQuery) ||
-          payment.status.toLowerCase().includes(lowerQuery) ||
-          payment.paymentType.toLowerCase().includes(lowerQuery) ||
           payment.notes?.toLowerCase().includes(lowerQuery) ||
           new Date(payment.paymentDate).toLocaleDateString('es-ES').toLowerCase().includes(lowerQuery) ||
           new Date(payment.dueDate).toLocaleDateString('es-ES').toLowerCase().includes(lowerQuery);
 
         if (!matchesQuery) return false;
-      }
-
-      // Filtro por estado
-      if (filters.status && payment.status !== filters.status) {
-        return false;
-      }
-
-      // Filtro por tipo de pago
-      if (filters.paymentType && payment.paymentType !== filters.paymentType) {
-        return false;
       }
 
       return true;
@@ -327,7 +243,7 @@ const PaymentPage = () => {
   };
 
   const handleClearFilters = () => {
-    const newFilters = { status: '', paymentType: '' };
+    const newFilters = {};
     setFilterValues(newFilters);
     const filtered = filterPayments(searchQuery, newFilters, payments);
     setFilteredPayments(filtered);
@@ -366,8 +282,6 @@ const PaymentPage = () => {
         amount: parseFloat(createForm.amount),
         paymentDate: createForm.paymentDate,
         dueDate: createForm.dueDate,
-        paymentType: createForm.paymentType,
-        status: convertStatusToEnglish(createForm.status),
         notes: createForm.notes || undefined,
       };
 
@@ -382,8 +296,6 @@ const PaymentPage = () => {
         amount: '',
         paymentDate: new Date().toISOString().split('T')[0],
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 días por defecto
-        paymentType: 'RENT',
-        status: 'PENDIENTE',
         notes: '',
       });
       fetchPayments(); // Refresh the list
@@ -436,8 +348,6 @@ const PaymentPage = () => {
       amount: payment.amount.toString(),
       paymentDate: new Date(payment.paymentDate).toISOString().split('T')[0],
       dueDate: new Date(payment.dueDate).toISOString().split('T')[0],
-      paymentType: payment.paymentType || 'RENT',
-      status: payment.status, // Ya está convertido al español
       notes: payment.notes || '',
     });
     setEditDialogOpen(true);
@@ -471,8 +381,6 @@ const PaymentPage = () => {
         amount: parseFloat(editForm.amount),
         paymentDate: editForm.paymentDate,
         dueDate: editForm.dueDate,
-        paymentType: editForm.paymentType,
-        status: convertStatusToEnglish(editForm.status),
         notes: editForm.notes || undefined,
       };
 
@@ -486,8 +394,6 @@ const PaymentPage = () => {
         amount: '',
         paymentDate: '',
         dueDate: '',
-        paymentType: 'RENT',
-        status: 'PENDIENTE',
         notes: '',
       });
       fetchPayments(); // Refresh the list
@@ -505,21 +411,6 @@ const PaymentPage = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES');
-  };
-
-  const getPaymentStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completado':
-        return 'success';
-      case 'pendiente':
-        return 'warning';
-      case 'vencido':
-        return 'error';
-      case 'cancelado':
-        return 'default';
-      default:
-        return 'default';
-    }
   };
 
   return (
@@ -568,11 +459,10 @@ const PaymentPage = () => {
             <TableHead>
               <TableRow>
                 <TableCell><strong>ID</strong></TableCell>
-                <TableCell><strong>Inquilino - Propiedad</strong></TableCell>
+                <TableCell><strong>Inquilino - Local</strong></TableCell>
                 <TableCell><strong>Monto</strong></TableCell>
                 <TableCell><strong>Fecha Pago</strong></TableCell>
                 <TableCell><strong>Fecha Vencimiento</strong></TableCell>
-                <TableCell><strong>Estado</strong></TableCell>
                 <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
             </TableHead>
@@ -584,13 +474,6 @@ const PaymentPage = () => {
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
                   <TableCell>{formatDate(payment.paymentDate)}</TableCell>
                   <TableCell>{formatDate(payment.dueDate)}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={payment.status}
-                      color={getPaymentStatusColor(payment.status) as any}
-                      size="small"
-                    />
-                  </TableCell>
                   <TableCell align="center">
                     <IconButton
                       size="small"
@@ -620,7 +503,7 @@ const PaymentPage = () => {
               ))}
               {payments.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
                       No hay pagos registrados
                     </Typography>
@@ -674,7 +557,7 @@ const PaymentPage = () => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Seleccionar Propiedad"
+                  label="Seleccionar Local"
                   required
                   sx={{ mb: 2 }}
                   helperText="Busque por nombre de propiedad, dirección o nombre del inquilino"
@@ -716,34 +599,6 @@ const PaymentPage = () => {
               InputLabelProps={{ shrink: true }}
             />
             <TextField
-              select
-              fullWidth
-              label="Tipo de Pago"
-              value={createForm.paymentType}
-              onChange={(e) => setCreateForm({ ...createForm, paymentType: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="RENT">Alquiler</MenuItem>
-              <MenuItem value="DEPOSIT">Depósito</MenuItem>
-              <MenuItem value="MAINTENANCE">Mantenimiento</MenuItem>
-                <MenuItem value="UTILITIES">Servicios Públicos</MenuItem>
-              <MenuItem value="OTHER">Otro</MenuItem>
-            </TextField>
-            <TextField
-              select
-              fullWidth
-              label="Estado"
-              value={createForm.status}
-              onChange={(e) => setCreateForm({ ...createForm, status: e.target.value })}
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="PENDIENTE">Pendiente</MenuItem>
-              <MenuItem value="COMPLETADO">Completado</MenuItem>
-              <MenuItem value="VENCIDO">Vencido</MenuItem>
-              <MenuItem value="CANCELADO">Cancelado</MenuItem>
-            </TextField>
-            <TextField
               fullWidth
               label="Notas"
               value={createForm.notes}
@@ -781,7 +636,7 @@ const PaymentPage = () => {
             />
             <TextField
               fullWidth
-              label="ID de la Propiedad"
+              label="ID del Local"
               type="number"
               value={editForm.propertyId}
               onChange={(e) => setEditForm({ ...editForm, propertyId: e.target.value })}
@@ -817,34 +672,6 @@ const PaymentPage = () => {
               sx={{ mb: 2 }}
               InputLabelProps={{ shrink: true }}
             />
-            <TextField
-              select
-              fullWidth
-              label="Tipo de Pago"
-              value={editForm.paymentType}
-              onChange={(e) => setEditForm({ ...editForm, paymentType: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="RENT">Alquiler</MenuItem>
-              <MenuItem value="DEPOSIT">Depósito</MenuItem>
-              <MenuItem value="MAINTENANCE">Mantenimiento</MenuItem>
-                <MenuItem value="UTILITIES">Servicios Públicos</MenuItem>
-              <MenuItem value="OTHER">Otro</MenuItem>
-            </TextField>
-            <TextField
-              select
-              fullWidth
-              label="Estado"
-              value={editForm.status}
-              onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="PENDIENTE">Pendiente</MenuItem>
-              <MenuItem value="COMPLETADO">Completado</MenuItem>
-              <MenuItem value="VENCIDO">Vencido</MenuItem>
-              <MenuItem value="CANCELADO">Cancelado</MenuItem>
-            </TextField>
             <TextField
               fullWidth
               label="Notas"

@@ -52,14 +52,10 @@ const PropertyPage = () => {
     },
     {
       key: 'propertyType',
-      label: 'Tipo',
+      label: 'Ubicación',
       options: [
-        { value: 'APARTMENT', label: 'Apartamento' },
-        { value: 'HOUSE', label: 'Casa' },
-        { value: 'STUDIO', label: 'Estudio' },
-        { value: 'OFFICE', label: 'Oficina' },
-        { value: 'COMMERCIAL', label: 'Comercial' },
-        { value: 'LAND', label: 'Terreno' }
+        { value: 'INSIDE', label: 'Adentro' },
+        { value: 'OUTSIDE', label: 'Afuera' }
       ]
     }
   ];
@@ -86,7 +82,7 @@ const PropertyPage = () => {
     address: '',
     city: '',
     state: '',
-    propertyType: 'HOUSE',
+        propertyType: 'INSIDE',
     monthlyRent: '',
     bedrooms: '',
     bathrooms: '',
@@ -130,7 +126,7 @@ const PropertyPage = () => {
           property.city.toLowerCase().includes(lowerQuery) ||
           property.state.toLowerCase().includes(lowerQuery) ||
           property.description?.toLowerCase().includes(lowerQuery) ||
-          property.propertyType.toLowerCase().includes(lowerQuery) ||
+          (property.propertyType === 'INSIDE' ? 'adentro' : 'afuera').includes(lowerQuery) ||
           property.tenant?.firstName.toLowerCase().includes(lowerQuery) ||
           property.tenant?.lastName.toLowerCase().includes(lowerQuery);
 
@@ -320,7 +316,7 @@ const PropertyPage = () => {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h4" component="h1" gutterBottom>
-            Propiedades
+            Locales
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
@@ -379,10 +375,8 @@ const PropertyPage = () => {
                   <TableCell>{property.city}, {property.state}</TableCell>
                   <TableCell>
                     <Chip
-                      label={property.propertyType === 'HOUSE' ? 'Casa' :
-                             property.propertyType === 'APARTMENT' ? 'Apartamento' :
-                             property.propertyType === 'CONDO' ? 'Condominio' :
-                             property.propertyType === 'TOWNHOUSE' ? 'Townhouse' :
+                      label={property.propertyType === 'INSIDE' ? 'Adentro' :
+                             property.propertyType === 'OUTSIDE' ? 'Afuera' :
                              property.propertyType}
                       size="small"
                       variant="outlined"
@@ -449,7 +443,7 @@ const PropertyPage = () => {
 
       {/* Create Property Dialog */}
       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Crear Nueva Propiedad</DialogTitle>
+        <DialogTitle>Crear Nuevo Local</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
@@ -589,14 +583,14 @@ const PropertyPage = () => {
         <DialogActions>
           <Button onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
           <Button onClick={handleCreateProperty} variant="contained">
-            Crear Propiedad
+            Crear Local
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Edit Property Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Editar Propiedad</DialogTitle>
+        <DialogTitle>Editar Local</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
