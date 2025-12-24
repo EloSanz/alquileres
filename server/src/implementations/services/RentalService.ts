@@ -28,7 +28,7 @@ export class RentalService implements IRentalService {
               id: tenant.id,
               firstName: tenant.firstName,
               lastName: tenant.lastName,
-              email: tenant.email,
+              documentId: tenant.documentId,
             };
           }
         }
@@ -68,7 +68,7 @@ export class RentalService implements IRentalService {
           id: tenant.id,
           firstName: tenant.firstName,
           lastName: tenant.lastName,
-          email: tenant.email,
+          documentId: tenant.documentId,
         };
       }
     }

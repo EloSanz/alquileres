@@ -567,6 +567,7 @@ const PaymentPage = () => {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell><strong>ID</strong></TableCell>
                 <TableCell><strong>Inquilino - Propiedad</strong></TableCell>
                 <TableCell><strong>Monto</strong></TableCell>
                 <TableCell><strong>Fecha Pago</strong></TableCell>
@@ -578,6 +579,7 @@ const PaymentPage = () => {
             <TableBody>
               {filteredPayments.map((payment) => (
                 <TableRow key={payment.id} hover>
+                  <TableCell>{payment.id}</TableCell>
                   <TableCell>Inq: {payment.tenantId} - Prop: {payment.propertyId}</TableCell>
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
                   <TableCell>{formatDate(payment.paymentDate)}</TableCell>

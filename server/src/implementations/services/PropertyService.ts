@@ -26,7 +26,7 @@ export class PropertyService implements IPropertyService {
               id: tenant.id,
               firstName: tenant.firstName,
               lastName: tenant.lastName,
-              email: tenant.email,
+              documentId: tenant.documentId,
             };
           }
         }
@@ -54,7 +54,7 @@ export class PropertyService implements IPropertyService {
           id: tenant.id,
           firstName: tenant.firstName,
           lastName: tenant.lastName,
-          email: tenant.email,
+          documentId: tenant.documentId,
         };
       }
     }

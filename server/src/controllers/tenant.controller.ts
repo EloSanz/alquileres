@@ -28,20 +28,6 @@ export class TenantController {
     };
   };
 
-  getByEmail = async ({
-    params: { email },
-    userId,
-  }: {
-    params: { email: string };
-    userId: number;
-  }) => {
-    const tenant = await this.tenantService.getTenantByEmail(email, userId);
-    return {
-      success: true,
-      message: 'Tenant retrieved successfully',
-      data: tenant,
-    };
-  };
 
   getByDocumentId = async ({
     params: { documentId },

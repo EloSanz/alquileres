@@ -15,10 +15,6 @@ export class PrismaTenantRepository implements ITenantRepository {
     return tenant ? TenantEntity.fromPrisma(tenant) : null;
   }
 
-  async findByEmail(email: string): Promise<TenantEntity | null> {
-    const tenant = await prisma.tenant.findUnique({ where: { email } });
-    return tenant ? TenantEntity.fromPrisma(tenant) : null;
-  }
 
   async findByDocumentId(documentId: string): Promise<TenantEntity | null> {
     const tenant = await prisma.tenant.findUnique({ where: { documentId } });

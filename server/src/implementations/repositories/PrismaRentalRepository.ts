@@ -11,7 +11,7 @@ export class PrismaRentalRepository implements IRentalRepository {
             id: true,
             firstName: true,
             lastName: true,
-            email: true
+            documentId: true
           }
         },
         property: {
@@ -36,7 +36,7 @@ export class PrismaRentalRepository implements IRentalRepository {
             id: true,
             firstName: true,
             lastName: true,
-            email: true
+            documentId: true
           }
         },
         property: {
@@ -60,7 +60,7 @@ export class PrismaRentalRepository implements IRentalRepository {
             id: true,
             firstName: true,
             lastName: true,
-            email: true
+            documentId: true
           }
         },
         property: {
@@ -85,7 +85,7 @@ export class PrismaRentalRepository implements IRentalRepository {
             id: true,
             firstName: true,
             lastName: true,
-            email: true
+            documentId: true
           }
         },
         property: {

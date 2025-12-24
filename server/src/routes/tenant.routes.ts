@@ -2,13 +2,15 @@ import { Elysia, t } from 'elysia';
 import { TenantController } from '../controllers/tenant.controller';
 import { TenantService } from '../implementations/services/TenantService';
 import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
+import { PrismaPaymentRepository } from '../implementations/repositories/PrismaPaymentRepository';
 import { authPlugin } from '../plugins/auth.plugin';
 import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
 import { verify as jwtVerify } from 'jsonwebtoken';
 
 // Dependency injection
 const tenantRepository = new PrismaTenantRepository();
-const tenantService = new TenantService(tenantRepository);
+const paymentRepository = new PrismaPaymentRepository();
+const tenantService = new TenantService(tenantRepository, paymentRepository);
 const tenantController = new TenantController(tenantService);
 
 export const tenantRoutes = new Elysia({ prefix: '/tenants' })
@@ -48,15 +50,6 @@ export const tenantRoutes = new Elysia({ prefix: '/tenants' })
     detail: {
       tags: ['Tenants'],
       summary: 'Get tenant by ID'
-    }
-  })
-  .get('/email/:email', tenantController.getByEmail, {
-    params: t.Object({
-      email: t.String({ format: 'email' })
-    }),
-    detail: {
-      tags: ['Tenants'],
-      summary: 'Get tenant by email'
     }
   })
   .get('/document/:documentId', tenantController.getByDocumentId, {
