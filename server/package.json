@@ -27,7 +27,8 @@
     "elysia": "^1.0.0",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.11.0",
-    "prisma": "^5.0.0"
+    "prisma": "^5.0.0",
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

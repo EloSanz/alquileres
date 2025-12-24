@@ -1,0 +1,165 @@
+import winston from 'winston';
+import { Elysia } from 'elysia';
+
+// Define colors for different log levels and HTTP status codes
+const colors = {
+  error: 'red',
+  warn: 'yellow',
+  info: 'green',
+  http: 'magenta',
+  debug: 'white',
+  success: 'cyan',
+  request: 'blue',
+  response: 'green'
+};
+
+winston.addColors(colors);
+
+// Create custom format for HTTP requests/responses
+const httpFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.json(),
+  winston.format.colorize({ all: true }),
+  winston.format.printf(({ timestamp, level, message, method, url, statusCode, duration, userId, ...meta }) => {
+    let log = `${timestamp} ${level}:`;
+
+    if (method && url) {
+      log += ` ${method} ${url}`;
+    }
+
+    if (typeof statusCode === 'number') {
+      // Color code status codes
+      let statusColor = '\x1b[37m'; // white default
+      if (statusCode >= 200 && statusCode < 300) statusColor = '\x1b[32m'; // green
+      else if (statusCode >= 300 && statusCode < 400) statusColor = '\x1b[36m'; // cyan
+      else if (statusCode >= 400 && statusCode < 500) statusColor = '\x1b[33m'; // yellow
+      else if (statusCode >= 500) statusColor = '\x1b[31m'; // red
+
+      log += ` → ${statusColor}${statusCode}\x1b[0m`; // reset color
+    }
+
+    if (duration) {
+      log += ` (${duration}ms)`;
+    }
+
+    if (userId) {
+      log += ` [User: ${userId}]`;
+    }
+
+    log += ` ${message}`;
+
+    if (Object.keys(meta).length > 0) {
+      log += ` ${JSON.stringify(meta)}`;
+    }
+
+    return log;
+  })
+);
+
+// Create the logger
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: httpFormat,
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize({ all: true }),
+        httpFormat
+      )
+    }),
+    // In production, you might want to add file transport
+    ...(process.env.NODE_ENV === 'production' ? [
+      new winston.transports.File({
+        filename: 'logs/error.log',
+        level: 'error',
+        format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.errors({ stack: true }),
+          winston.format.json()
+        )
+      }),
+      new winston.transports.File({
+        filename: 'logs/combined.log',
+        format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.errors({ stack: true }),
+          winston.format.json()
+        )
+      })
+    ] : [])
+  ]
+});
+
+// Helper functions for different types of logs
+export const logRequest = (method: string, url: string, userId?: number) => {
+  logger.http(`Request started`, { method, url, userId });
+};
+
+export const logResponse = (method: string, url: string, statusCode: number, duration: number, userId?: number) => {
+  logger.http(`Response`, { method, url, statusCode, duration, userId });
+};
+
+export const logError = (message: string, error?: any, meta?: any) => {
+  logger.error(message, { error: error?.message || error, ...meta });
+};
+
+export const logWarn = (message: string, meta?: any) => {
+  logger.warn(message, meta);
+};
+
+export const logInfo = (message: string, meta?: any) => {
+  logger.info(message, meta);
+};
+
+export const logDebug = (message: string, meta?: any) => {
+  logger.debug(message, meta);
+};
+
+// Elysia middleware for automatic request/response logging
+export const requestLogger = new Elysia({ name: 'request-logger' })
+  .derive({ as: 'global' }, () => ({
+    startTime: Date.now()
+  }))
+  .onBeforeHandle(({ request, headers }: any) => {
+    const method = request.method;
+    const url = request.url.replace(request.origin || '', '');
+    const authHeader = headers.authorization;
+
+    // Extract userId from JWT if available
+    let userId: number | undefined;
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const payload = require('jsonwebtoken').verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+        userId = payload.userId;
+      } catch (e) {
+        // Ignore decode errors - userId will remain undefined
+      }
+    }
+
+    logRequest(method, url, userId);
+  })
+  .onAfterHandle(({ request, startTime, set }: any) => {
+    const method = request.method;
+    const url = request.url.replace(request.origin || '', '');
+    const duration = Date.now() - startTime;
+    const statusCode = set.status || 200;
+
+    logResponse(method, url, statusCode, duration);
+  })
+  .onError(({ request, startTime, error, set }: any) => {
+    const method = request.method;
+    const url = request.url.replace(request.origin || '', '');
+    const duration = Date.now() - startTime;
+    const statusCode = set.status || 500;
+
+    logError(`Request failed: ${error.message}`, error, {
+      method,
+      url,
+      statusCode,
+      duration
+    });
+  });
+
+export default logger;

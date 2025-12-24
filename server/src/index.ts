@@ -4,6 +4,7 @@ import { userRoutes } from './routes/user.routes'
 import { protectedRoutes } from './routes/protected.routes'
 import { authRoutes } from './routes/auth.routes'
 import { errorPlugin } from './plugins/error.plugin'
+import { logRequest, logResponse, logError } from './utils/logger'
 
 // Initialize app
 const app = new Elysia()
@@ -21,7 +22,7 @@ const server = createServer(async (req, res) => {
   const method = req.method || 'GET'
   const url = req.url || '/'
 
-  console.log(`[${new Date().toISOString()}] ${method} ${url} - Request started`)
+  logRequest(method, url)
 
   try {
     // Read request body
@@ -50,7 +51,7 @@ const server = createServer(async (req, res) => {
     const response = await app.fetch(request)
 
     const duration = Date.now() - startTime
-    console.log(`[${new Date().toISOString()}] ${method} ${url} - Response: ${response.status} (${duration}ms)`)
+    logResponse(method, url, response.status, duration)
 
     res.statusCode = response.status
     response.headers.forEach((value, key) => {
@@ -60,15 +61,15 @@ const server = createServer(async (req, res) => {
     const responseBody = await response.text()
     const isAuthRoute = url.startsWith('/api/auth')
     if (response.status >= 400 && !isAuthRoute) {
-      console.log(`[${new Date().toISOString()}] ${method} ${url} - Error response body:`, responseBody.substring(0, 500))
+      logError(`Error response body: ${responseBody.substring(0, 500)}`, undefined, { method, url, statusCode: response.status })
     } else if (response.status >= 400 && isAuthRoute) {
-      console.log(`[${new Date().toISOString()}] ${method} ${url} - Error response: [REDACTED - Auth route]`)
+      logError('Error response: [REDACTED - Auth route]', undefined, { method, url, statusCode: response.status })
     }
 
     res.end(responseBody)
   } catch (err) {
     const duration = Date.now() - startTime
-    console.error(`[${new Date().toISOString()}] ${method} ${url} - Server error (${duration}ms):`, err)
+    logError(`Server error`, err, { method, url, duration })
     res.statusCode = 500
     res.end('Internal Server Error')
   }

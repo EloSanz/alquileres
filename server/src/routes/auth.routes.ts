@@ -4,6 +4,7 @@ import { AuthService } from '../implementations/services/AuthService';
 import { PrismaUserRepository } from '../implementations/repositories/PrismaUserRepository';
 import { JWT_SECRET } from '../types/jwt.types';
 import { verify as jwtVerify } from 'jsonwebtoken';
+import { logError, logInfo } from '../utils/logger';
 
 // Dependency injection
 const userRepository = new PrismaUserRepository();
@@ -44,10 +45,10 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
   })
   .get('/me', async ({ headers }) => {
     const authHeader = headers.authorization;
-    console.log('[Auth Routes /me] Checking auth header:', authHeader ? 'present' : 'missing') // Safe to log
+    // Auth header presence is now logged by the global logger
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('[Auth Routes /me] No token provided')
+      logError('No token provided', undefined, { route: 'auth/me', method: 'GET' })
       return {
         success: false,
         message: 'No token provided',
@@ -60,11 +61,11 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
     let userId: number;
 
     try {
-      console.log('[Auth Routes /me] Verifying token...')
+      // Token verification is now handled silently
       userId = verifyToken(token);
-      console.log('[Auth Routes /me] Token verified, userId:', userId)
+      // Token verification success is logged by global logger
     } catch (error: any) {
-      console.log('[Auth Routes /me] Token verification failed:', error.message)
+      logError('Token verification failed', error, { route: 'auth/me', method: 'GET' })
       return {
         success: false,
         message: 'Invalid token',
@@ -73,7 +74,7 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
       };
     }
 
-    console.log('[Auth Routes /me] Getting user data for userId:', userId)
+    logInfo('Getting user data', { userId, route: 'auth/me' })
     return await authController.getCurrentUser(userId);
   }, {
     detail: {

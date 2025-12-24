@@ -143,7 +143,23 @@ class TenantService {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      let errorData: any;
+      const contentType = response.headers.get('content-type');
+
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          // If JSON parsing fails, use text response
+          const textResponse = await response.text();
+          errorData = { message: textResponse || 'Unknown error' };
+        }
+      } else {
+        // Response is not JSON, use text
+        const textResponse = await response.text();
+        errorData = { message: textResponse || 'Unknown error' };
+      }
+
       const error = new Error(errorData.message || 'Failed to delete tenant');
       (error as any).response = { data: errorData };
       throw error;
