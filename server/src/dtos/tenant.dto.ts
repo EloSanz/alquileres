@@ -8,7 +8,7 @@ export interface TenantDTO {
   documentId: string;
   address: string | null;
   birthDate: string | null;
-  numeroLocal: number | null;
+  numeroLocal: string | null;
   rubro: Rubro | null; // Se mantiene como string en DTO para compatibilidad con frontend
   fechaInicioContrato: string | null;
   estadoPago: string;
@@ -23,7 +23,7 @@ export interface CreateTenantDTO {
   documentId: string;
   address?: string;
   birthDate?: string;
-  numeroLocal?: number;
+  numeroLocal?: string;
   rubro?: string;
   fechaInicioContrato?: string;
 }
@@ -34,7 +34,7 @@ export interface UpdateTenantDTO {
   phone?: string;
   address?: string;
   birthDate?: string;
-  numeroLocal?: number;
+  numeroLocal?: string;
   rubro?: string;
   fechaInicioContrato?: string;
 }

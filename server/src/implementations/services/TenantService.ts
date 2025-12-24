@@ -132,7 +132,7 @@ export class TenantService implements ITenantService {
       data.documentId,
       data.address || null,
       data.birthDate ? new Date(data.birthDate) : null,
-      data.numeroLocal !== undefined ? data.numeroLocal : null,
+      data.numeroLocal || null,
       stringToRubro(data.rubro !== undefined ? data.rubro : null),
       data.fechaInicioContrato ? new Date(data.fechaInicioContrato) : null,
       'AL_DIA', // Estado inicial: al día

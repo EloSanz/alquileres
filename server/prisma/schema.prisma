@@ -29,7 +29,7 @@ model Tenant {
   documentId            String       @unique // DNI, Cedula, etc.
   address               String?
   birthDate             DateTime?
-  numeroLocal           Int?         // Número de local comercial
+  numeroLocal           String?      // Número de local comercial
   rubro                 Rubro?       // Rubro del negocio
   fechaInicioContrato   DateTime?    // Fecha de inicio del contrato de alquiler
   estadoPago            EstadoPago   @default(AL_DIA) // Estado de pagos del inquilino

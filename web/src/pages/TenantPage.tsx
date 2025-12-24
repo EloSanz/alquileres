@@ -33,7 +33,7 @@ interface Tenant {
   lastName: string;
   phone?: string;
   documentId: string;
-  numeroLocal?: number;
+  numeroLocal?: string;
   rubro?: string;
   fechaInicioContrato?: string;
   estadoPago: string;
@@ -45,7 +45,7 @@ interface CreateTenantData {
   lastName: string;
   phone?: string;
   documentId: string;
-  numeroLocal?: number;
+  numeroLocal?: string;
   rubro?: string;
   fechaInicioContrato?: string;
 }
@@ -173,7 +173,15 @@ const TenantPage = () => {
     }
   ];
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({
+  const [createForm, setCreateForm] = useState<{
+    firstName: string;
+    lastName: string;
+    phone: string;
+    documentId: string;
+    numeroLocal: string;
+    rubro: string;
+    fechaInicioContrato: string;
+  }>({
     firstName: '',
     lastName: '',
     phone: '',
@@ -184,7 +192,15 @@ const TenantPage = () => {
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<{
+    firstName: string;
+    lastName: string;
+    phone: string;
+    documentId: string;
+    numeroLocal: string;
+    rubro: string;
+    fechaInicioContrato: string;
+  }>({
     firstName: '',
     lastName: '',
     phone: '',
@@ -228,7 +244,7 @@ const TenantPage = () => {
         tenant.lastName.toLowerCase().includes(lowerQuery) ||
         tenant.documentId.toLowerCase().includes(lowerQuery) ||
         tenant.phone?.toLowerCase().includes(lowerQuery) ||
-        tenant.numeroLocal?.toLowerCase().includes(lowerQuery) ||
+        tenant.numeroLocal?.toString().toLowerCase().includes(lowerQuery) ||
         tenant.rubro?.toLowerCase().includes(lowerQuery)
       );
     }
@@ -345,7 +361,7 @@ const TenantPage = () => {
       lastName: tenant.lastName,
       phone: tenant.phone || '',
       documentId: tenant.documentId,
-      numeroLocal: tenant.numeroLocal || '',
+      numeroLocal: tenant.numeroLocal?.toString() || '',
       rubro: tenant.rubro || '',
       fechaInicioContrato: tenant.fechaInicioContrato || '',
     });
@@ -472,7 +488,7 @@ const TenantPage = () => {
                   </TableCell>
                   <TableCell>{tenant.phone || '-'}</TableCell>
                   <TableCell>{tenant.documentId}</TableCell>
-                  <TableCell>{tenant.numeroLocal || '-'}</TableCell>
+                  <TableCell>{tenant.numeroLocal ?? '-'}</TableCell>
                   <TableCell>{tenant.rubro || '-'}</TableCell>
                   <TableCell>
                     <Chip

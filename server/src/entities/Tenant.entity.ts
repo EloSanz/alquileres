@@ -20,7 +20,7 @@ export class TenantEntity {
     public documentId: string,
     public address: string | null,
     public birthDate: Date | null,
-    public numeroLocal: number | null | undefined,
+    public numeroLocal: string | null | undefined,
     public rubro: Rubro | null,
     public fechaInicioContrato: Date | null,
     public estadoPago: EstadoPago,
@@ -107,7 +107,7 @@ export interface TenantDTO {
   documentId: string;
   address: string | null;
   birthDate: string | null;
-  numeroLocal: number | null;
+  numeroLocal: string | null;
   rubro: Rubro | null;
   fechaInicioContrato: string | null;
   estadoPago: string;
