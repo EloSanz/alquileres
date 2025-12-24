@@ -216,6 +216,15 @@ const TenantPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tenantToDelete, setTenantToDelete] = useState<Tenant | null>(null);
 
+  // Modal para mostrar propiedades asociadas
+  const [propertiesDialogOpen, setPropertiesDialogOpen] = useState(false);
+  const [associatedProperties, setAssociatedProperties] = useState<Array<{
+    id: number;
+    name: string;
+    address: string;
+    city: string;
+  }>>([]);
+
   const fetchTenants = async () => {
     try {
       setLoading(true);
@@ -386,7 +395,14 @@ const TenantPage = () => {
       setTenantToDelete(null);
       fetchTenants(); // Refresh the list
     } catch (err: any) {
-      setError(err.message || 'Failed to delete tenant');
+      if (err.code === 'TENANT_HAS_PROPERTIES' && err.properties) {
+        // Mostrar modal con propiedades asociadas
+        setAssociatedProperties(err.properties);
+        setPropertiesDialogOpen(true);
+        setDeleteDialogOpen(false);
+      } else {
+        setError(err.message || 'Failed to delete tenant');
+      }
     }
   };
 
@@ -724,6 +740,59 @@ const TenantPage = () => {
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
           <Button onClick={handleDeleteConfirm} color="error" variant="contained">
             Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Properties Associated Dialog */}
+      <Dialog
+        open={propertiesDialogOpen}
+        onClose={() => setPropertiesDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          No se puede eliminar el inquilino
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            El inquilino{' '}
+            <strong>
+              {tenantToDelete?.firstName} {tenantToDelete?.lastName}
+            </strong>{' '}
+            tiene las siguientes propiedades asociadas que quedarían disponibles:
+          </Typography>
+
+          <TableContainer component={Paper} sx={{ mt: 2 }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell><strong>ID</strong></TableCell>
+                  <TableCell><strong>Nombre</strong></TableCell>
+                  <TableCell><strong>Dirección</strong></TableCell>
+                  <TableCell><strong>Ciudad</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {associatedProperties.map((property) => (
+                  <TableRow key={property.id}>
+                    <TableCell>{property.id}</TableCell>
+                    <TableCell>{property.name}</TableCell>
+                    <TableCell>{property.address}</TableCell>
+                    <TableCell>{property.city}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <Typography variant="body2" color="warning.main" sx={{ mt: 2 }}>
+            ⚠️ Para eliminar este inquilino, primero debes eliminar o reasignar estas propiedades.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPropertiesDialogOpen(false)} variant="contained">
+            Entendido
           </Button>
         </DialogActions>
       </Dialog>

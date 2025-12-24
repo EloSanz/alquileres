@@ -181,7 +181,16 @@ export class TenantService implements ITenantService {
     // Verificar si el tenant tiene propiedades activas
     const properties = await this.propertyRepository.findByTenantId(id);
     if (properties.length > 0) {
-      throw new Error('No se puede eliminar el inquilino porque tiene propiedades asociadas. Primero debe eliminar o reasignar las propiedades.');
+      const propertyDetails = properties.map(p => ({
+        id: p.id,
+        name: p.name,
+        address: p.address,
+        city: p.city
+      }));
+      const error = new Error(`No se puede eliminar el inquilino porque tiene ${properties.length} propiedades asociadas.`);
+      (error as any).properties = propertyDetails;
+      (error as any).code = 'TENANT_HAS_PROPERTIES';
+      throw error;
     }
 
     const deleted = await this.tenantRepository.delete(id);
