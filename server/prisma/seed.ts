@@ -253,8 +253,7 @@ async function main() {
       const property = await prisma.property.create({
         data: {
           name: `${getRandomElement(propertyNames)} ${getRandomNumber(1, 999)}`,
-          address: `${street} ${getRandomNumber(100, 999)}, ${district}, Lima`,
-          city: 'Lima',
+          localNumber: getRandomNumber(1, 999),
           state: 'Lima',
           zipCode: `LIMA${getRandomNumber(1, 43).toString().padStart(2, '0')}`,
           propertyType,

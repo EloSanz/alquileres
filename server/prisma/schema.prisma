@@ -51,8 +51,7 @@ model Tenant {
 model Property {
   id          Int         @id @default(autoincrement())
   name        String
-  address     String
-  city        String
+  localNumber Int         // Número de local
   state       String
   zipCode     String?
   propertyType PropertyType

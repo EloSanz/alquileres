@@ -572,7 +572,7 @@ const PaymentPage = () => {
               fullWidth
               options={properties}
               getOptionLabel={(property) =>
-                `${property.name} - ${property.address}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
+                `${property.name} - Local N° ${property.localNumber}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
               }
               value={selectedProperty}
               onChange={(_, newValue) => {

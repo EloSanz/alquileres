@@ -40,7 +40,7 @@ export class RentalService implements IRentalService {
             dto.property = {
               id: property.id,
               name: property.name,
-              address: property.address,
+              localNumber: property.localNumber,
             };
           }
         }
@@ -80,7 +80,7 @@ export class RentalService implements IRentalService {
         dto.property = {
           id: property.id,
           name: property.name,
-          address: property.address,
+          localNumber: property.localNumber,
         };
       }
     }

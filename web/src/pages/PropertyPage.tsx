@@ -62,8 +62,7 @@ const PropertyPage = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     name: '',
-    address: '',
-    city: 'Miraflores',
+    localNumber: '',
     state: 'Lima',
     propertyType: 'APARTMENT',
     monthlyRent: '',
@@ -79,8 +78,7 @@ const PropertyPage = () => {
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [editForm, setEditForm] = useState({
     name: '',
-    address: '',
-    city: '',
+    localNumber: '',
     state: '',
         propertyType: 'INSIDE',
     monthlyRent: '',
@@ -122,8 +120,7 @@ const PropertyPage = () => {
         const lowerQuery = query.toLowerCase();
         const matchesQuery =
           property.name.toLowerCase().includes(lowerQuery) ||
-          property.address.toLowerCase().includes(lowerQuery) ||
-          property.city.toLowerCase().includes(lowerQuery) ||
+          property.localNumber.toString().includes(lowerQuery) ||
           property.state.toLowerCase().includes(lowerQuery) ||
           property.description?.toLowerCase().includes(lowerQuery) ||
           (property.propertyType === 'INSIDE' ? 'adentro' : 'afuera').includes(lowerQuery) ||
@@ -178,8 +175,7 @@ const PropertyPage = () => {
     try {
       const propertyData: CreatePropertyData = {
         name: createForm.name,
-        address: createForm.address,
-        city: createForm.city,
+        localNumber: parseInt(createForm.localNumber),
         state: createForm.state,
         propertyType: createForm.propertyType,
         monthlyRent: parseFloat(createForm.monthlyRent),
@@ -197,8 +193,7 @@ const PropertyPage = () => {
       setCreateDialogOpen(false);
       setCreateForm({
         name: '',
-        address: '',
-        city: 'Miraflores',
+        localNumber: '',
         state: 'Lima',
         propertyType: 'APARTMENT',
         monthlyRent: '',
@@ -235,8 +230,7 @@ const PropertyPage = () => {
     setEditingProperty(property);
     setEditForm({
       name: property.name,
-      address: property.address,
-      city: property.city,
+      localNumber: property.localNumber?.toString() || '',
       state: property.state,
       propertyType: property.propertyType,
       monthlyRent: property.monthlyRent?.toString() || '',
@@ -274,8 +268,7 @@ const PropertyPage = () => {
     try {
       const propertyData: UpdatePropertyData = {
         name: editForm.name,
-        address: editForm.address,
-        city: editForm.city,
+        localNumber: parseInt(editForm.localNumber),
         state: editForm.state,
         propertyType: editForm.propertyType,
         monthlyRent: parseFloat(editForm.monthlyRent),
@@ -293,8 +286,7 @@ const PropertyPage = () => {
       setEditingProperty(null);
       setEditForm({
         name: '',
-        address: '',
-        city: 'Miraflores',
+        localNumber: '',
         state: 'Lima',
         propertyType: 'APARTMENT',
         monthlyRent: '',
@@ -358,8 +350,8 @@ const PropertyPage = () => {
               <TableRow>
                 <TableCell><strong>ID</strong></TableCell>
                 <TableCell><strong>Nombre</strong></TableCell>
-                <TableCell><strong>Dirección</strong></TableCell>
-                <TableCell><strong>Ciudad</strong></TableCell>
+                <TableCell><strong>N° Local</strong></TableCell>
+                <TableCell><strong>Estado</strong></TableCell>
                 <TableCell><strong>Tipo</strong></TableCell>
                 <TableCell align="right"><strong>Renta Mensual</strong></TableCell>
                 <TableCell align="center"><strong>Disponible</strong></TableCell>
@@ -371,8 +363,8 @@ const PropertyPage = () => {
                 <TableRow key={property.id} hover>
                   <TableCell>{property.id}</TableCell>
                   <TableCell>{property.name}</TableCell>
-                  <TableCell>{property.address}</TableCell>
-                  <TableCell>{property.city}, {property.state}</TableCell>
+                  <TableCell>{property.localNumber}</TableCell>
+                  <TableCell>{property.state}</TableCell>
                   <TableCell>
                     <Chip
                       label={property.propertyType === 'INSIDE' ? 'Adentro' :
@@ -458,10 +450,11 @@ const PropertyPage = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Dirección"
-                value={createForm.address}
-                onChange={(e) => setCreateForm({ ...createForm, address: e.target.value })}
-                placeholder="Ej: Av. Larco 123, Miraflores"
+                label="Número de Local"
+                type="number"
+                value={createForm.localNumber}
+                onChange={(e) => setCreateForm({ ...createForm, localNumber: e.target.value })}
+                placeholder="Ej: 123"
                 required
               />
             </Grid>
@@ -477,14 +470,6 @@ const PropertyPage = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Distrito"
-                value={createForm.city}
-                onChange={(e) => setCreateForm({ ...createForm, city: e.target.value })}
-                placeholder="Ej: Miraflores, San Isidro, Barranco"
-                required
-              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -605,18 +590,10 @@ const PropertyPage = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Dirección"
-                value={editForm.address}
-                onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Ciudad"
-                value={editForm.city}
-                onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                label="Número de Local"
+                type="number"
+                value={editForm.localNumber}
+                onChange={(e) => setEditForm({ ...editForm, localNumber: e.target.value })}
                 required
               />
             </Grid>

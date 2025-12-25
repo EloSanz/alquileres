@@ -12,8 +12,7 @@ import {
 interface Property {
   id: number;
   name: string;
-  address: string;
-  city: string;
+  localNumber: number;
   state: string;
   propertyType: string;
   monthlyRent: number;
@@ -50,7 +49,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, on
           {property.name}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {property.address}, {property.city}, {property.state}
+          Local N° {property.localNumber}, {property.state}
           {property.zipCode && ` ${property.zipCode}`}
         </Typography>
         <Typography variant="h5" color="primary" sx={{ mb: 2 }}>

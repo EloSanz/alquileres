@@ -146,9 +146,6 @@ export class PaymentEntity {
     if (this.amount <= 0) {
       throw new Error('Payment amount must be greater than 0');
     }
-    if (this.paymentDate > this.dueDate) {
-      throw new Error('Payment date cannot be after due date');
-    }
     if (this.contractId !== null && (this.monthNumber === null || this.monthNumber < 1 || this.monthNumber > 12)) {
       throw new Error('Month number must be between 1 and 12 when contractId is set');
     }

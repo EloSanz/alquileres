@@ -1,8 +1,7 @@
 interface Property {
   id: number;
   name: string;
-  address: string;
-  city: string;
+  localNumber: number;
   state: string;
   propertyType: string;
   monthlyRent: number;
@@ -25,8 +24,7 @@ interface Property {
 
 interface CreatePropertyData {
   name: string;
-  address: string;
-  city: string;
+  localNumber: number;
   state: string;
   propertyType: string;
   monthlyRent: number;

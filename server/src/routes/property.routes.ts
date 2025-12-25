@@ -54,8 +54,7 @@ export const propertyRoutes = new Elysia({ prefix: '/properties' })
   .post('/', propertyController.create, {
     body: t.Object({
       name: t.String({ minLength: 2 }),
-      address: t.String({ minLength: 5 }),
-      city: t.String({ minLength: 2 }),
+      localNumber: t.Number({ minimum: 1 }),
       state: t.String({ minLength: 2 }),
       zipCode: t.Optional(t.String()),
       propertyType: t.String(),

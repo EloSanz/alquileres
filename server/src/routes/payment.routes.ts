@@ -50,7 +50,7 @@ export const paymentRoutes = new Elysia({ prefix: '/payments' })
   .post('/', paymentController.create, {
     body: t.Object({
       tenantId: t.Number({ minimum: 1 }),
-      propertyId: t.Number({ minimum: 1 }),
+      propertyId: t.Union([t.Number({ minimum: 1 }), t.Null()]),
       amount: t.Number({ minimum: 0 }),
       paymentDate: t.Optional(t.String()),
       dueDate: t.String(),
@@ -67,8 +67,8 @@ export const paymentRoutes = new Elysia({ prefix: '/payments' })
       id: t.Numeric({ minimum: 1 })
     }),
     body: t.Object({
-      tenantId: t.Optional(t.Number({ minimum: 1 })),
-      propertyId: t.Optional(t.Number({ minimum: 1 })),
+      tenantId: t.Optional(t.Union([t.Number({ minimum: 1 }), t.Null()])),
+      propertyId: t.Optional(t.Union([t.Number({ minimum: 1 }), t.Null()])),
       amount: t.Optional(t.Number({ minimum: 0 })),
       paymentDate: t.Optional(t.String()),
       dueDate: t.Optional(t.String()),
