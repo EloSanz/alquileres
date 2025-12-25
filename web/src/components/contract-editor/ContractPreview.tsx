@@ -27,11 +27,9 @@ function PlaceholderText({ value, placeholder }: { value: string | number | null
   if (!stringValue) {
     return (
       <span style={{
-        backgroundColor: '#ffebee',
         color: '#d32f2f',
-        padding: '2px 4px',
-        borderRadius: '2px',
-        fontStyle: 'italic'
+        fontStyle: 'italic',
+        textDecoration: 'underline'
       }}>
         [Falta completar: {placeholder}]
       </span>
@@ -42,10 +40,46 @@ function PlaceholderText({ value, placeholder }: { value: string | number | null
 
 function ContractPreview({ data, fullPage }: ContractPreviewProps) {
   const fontSize = fullPage ? '11pt' : '10pt';
-  const lineHeight = fullPage ? 1.6 : 1.5;
+
+  // Estilos para mejor renderizado PDF
+  const pdfStyles = fullPage ? {
+    maxWidth: '170mm', // Limitar ancho para evitar cortes
+    margin: '0 auto',
+    textAlign: 'justify' as const,
+    hyphens: 'auto',
+    wordWrap: 'break-word' as const,
+    overflowWrap: 'break-word' as const,
+    padding: '0 5mm',
+  } : {};
 
   return (
-    <Box sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize, lineHeight, color: '#000' }}>
+    <Box sx={{
+      fontFamily: 'Times, "Times New Roman", serif',
+      fontSize,
+      lineHeight: 1.4,
+      color: '#000',
+      backgroundColor: '#fff',
+      ...pdfStyles,
+      // Estilos optimizados para conversión PDF (texto seleccionable)
+      '& *': {
+        fontFamily: 'inherit !important',
+        color: '#000 !important',
+        backgroundColor: 'transparent !important',
+        boxShadow: 'none !important',
+        textShadow: 'none !important',
+        border: 'none !important',
+      },
+      // Asegurar que los elementos Material-UI no interfieran
+      '& .MuiTypography-root': {
+        fontFamily: 'inherit !important',
+        color: '#000 !important',
+        backgroundColor: 'transparent !important',
+      },
+      '& .MuiBox-root': {
+        backgroundColor: 'transparent !important',
+        boxShadow: 'none !important',
+      }
+    }}>
       {/* Título */}
       <Typography
         variant="h5"
