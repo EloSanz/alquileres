@@ -16,6 +16,40 @@ const propertyRepository = new PrismaPropertyRepository();
 const tenantService = new TenantService(tenantRepository, paymentRepository, propertyRepository);
 const tenantController = new TenantController(tenantService);
 
+// Validation schemas - aligned with DTOs for consistency
+const idParamsSchema = t.Object({
+  id: t.Numeric({ minimum: 1 })
+});
+
+const documentIdParamsSchema = t.Object({
+  documentId: t.String({ minLength: 5 })
+});
+
+const createTenantBodySchema = t.Object({
+  firstName: t.String({ minLength: 2 }),
+  lastName: t.String({ minLength: 2 }),
+  email: t.String({ format: 'email' }),
+  phone: t.Optional(t.String()),
+  documentId: t.String({ minLength: 5 }),
+  address: t.Optional(t.String()),
+  birthDate: t.Optional(t.String()),
+  numeroLocal: t.Optional(t.String()),
+  rubro: t.Optional(t.String()),
+  fechaInicioContrato: t.Optional(t.String())
+});
+
+const updateTenantBodySchema = t.Object({
+  firstName: t.Optional(t.String({ minLength: 2 })),
+  lastName: t.Optional(t.String({ minLength: 2 })),
+  email: t.Optional(t.String({ format: 'email' })),
+  phone: t.Optional(t.String()),
+  address: t.Optional(t.String()),
+  birthDate: t.Optional(t.String()),
+  numeroLocal: t.Optional(t.String()),
+  rubro: t.Optional(t.String()),
+  fechaInicioContrato: t.Optional(t.String())
+});
+
 export const tenantRoutes = new Elysia({ prefix: '/tenants' })
   .use(authPlugin)
   .derive(async ({ headers, request }) => {
@@ -43,59 +77,36 @@ export const tenantRoutes = new Elysia({ prefix: '/tenants' })
     }
   })
   .get('/:id', tenantController.getById, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
+    params: idParamsSchema,
     detail: {
       tags: ['Tenants'],
       summary: 'Get tenant by ID'
     }
   })
   .get('/document/:documentId', tenantController.getByDocumentId, {
-    params: t.Object({
-      documentId: t.String({ minLength: 5 })
-    }),
+    params: documentIdParamsSchema,
     detail: {
       tags: ['Tenants'],
       summary: 'Get tenant by document ID'
     }
   })
   .post('/', tenantController.create, {
-    body: t.Object({
-      firstName: t.String({ minLength: 2 }),
-      lastName: t.String({ minLength: 2 }),
-      email: t.String({ format: 'email' }),
-      phone: t.Optional(t.String()),
-      documentId: t.String({ minLength: 5 }),
-      address: t.Optional(t.String()),
-      birthDate: t.Optional(t.String())
-    }),
+    body: createTenantBodySchema,
     detail: {
       tags: ['Tenants'],
       summary: 'Create new tenant'
     }
   })
   .put('/:id', tenantController.update, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
-    body: t.Object({
-      firstName: t.Optional(t.String({ minLength: 2 })),
-      lastName: t.Optional(t.String({ minLength: 2 })),
-      email: t.Optional(t.String({ format: 'email' })),
-      phone: t.Optional(t.String()),
-      address: t.Optional(t.String()),
-      birthDate: t.Optional(t.String())
-    }),
+    params: idParamsSchema,
+    body: updateTenantBodySchema,
     detail: {
       tags: ['Tenants'],
       summary: 'Update tenant'
     }
   })
   .delete('/:id', tenantController.delete, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
+    params: idParamsSchema,
     detail: {
       tags: ['Tenants'],
       summary: 'Delete tenant'

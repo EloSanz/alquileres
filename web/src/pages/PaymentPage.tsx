@@ -25,135 +25,14 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
-import { propertyService, type Property } from '../services/propertyService';
+import { usePropertyService, type Property } from '../services/propertyService';
+import { usePaymentService, type Payment, type CreatePaymentData } from '../services/paymentService';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { FilterConfig } from '../components/FilterBar';
 
-interface Payment {
-  id: number;
-  tenantId?: number;
-  propertyId: number | null;
-  tenantFullName?: string;
-  tenantPhone?: string;
-  amount: number;
-  paymentDate: string;
-  dueDate: string;
-  paymentMethod: string;
-  notes?: string;
-  createdAt: string;
-}
-
-interface CreatePaymentData {
-  tenantId?: number;
-  propertyId: number | null;
-  amount: number;
-  paymentDate?: string;
-  dueDate: string;
-  paymentMethod?: string;
-  notes?: string;
-}
-
-class PaymentService {
-  private getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
-  }
-
-  async getAllPayments(): Promise<Payment[]> {
-    const response = await fetch('/api/payments', {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch payments');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to fetch payments');
-    }
-
-    return data.data || [];
-  }
-
-  async getPaymentById(id: number): Promise<Payment> {
-    const response = await fetch(`/api/payments/${id}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch payment');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to fetch payment');
-    }
-
-    return data.data;
-  }
-
-  async createPayment(paymentData: CreatePaymentData): Promise<Payment> {
-    const response = await fetch('/api/payments', {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(paymentData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create payment');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to create payment');
-    }
-
-    return data.data;
-  }
-
-  async updatePayment(id: number, paymentData: Partial<CreatePaymentData>): Promise<Payment> {
-    const response = await fetch(`/api/payments/${id}`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(paymentData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update payment');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to update payment');
-    }
-
-    return data.data;
-  }
-
-  async deletePayment(id: number): Promise<void> {
-    const response = await fetch(`/api/payments/${id}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete payment');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to delete payment');
-    }
-  }
-}
-
-const paymentService = new PaymentService();
-
 const PaymentPage = () => {
+  const propertyService = usePropertyService()
+  const paymentService = usePaymentService()
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -303,7 +182,7 @@ const PaymentPage = () => {
 
     try {
       const paymentData: CreatePaymentData = {
-        tenantId: selectedProperty.tenantId,
+        tenantId: selectedProperty.tenantId || undefined,
         propertyId: selectedProperty.id,
         amount: parseFloat(createForm.amount),
         paymentDate: createForm.paymentDate,

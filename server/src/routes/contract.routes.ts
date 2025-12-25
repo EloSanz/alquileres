@@ -14,6 +14,34 @@ const paymentRepository = new PrismaPaymentRepository();
 const contractService = new ContractService(contractRepository, paymentRepository);
 const contractController = new ContractController(contractService);
 
+// Validation schemas - aligned with DTOs for consistency
+const idParamsSchema = t.Object({
+  id: t.Numeric({ minimum: 1 })
+});
+
+const tenantIdParamsSchema = t.Object({
+  tenantId: t.Numeric({ minimum: 1 })
+});
+
+const propertyIdParamsSchema = t.Object({
+  propertyId: t.Numeric({ minimum: 1 })
+});
+
+const createContractBodySchema = t.Object({
+  tenantId: t.Number({ minimum: 1 }),
+  propertyId: t.Number({ minimum: 1 }),
+  startDate: t.String(),
+  monthlyRent: t.Number({ minimum: 0 })
+});
+
+const updateContractBodySchema = t.Object({
+  tenantId: t.Optional(t.Number({ minimum: 1 })),
+  propertyId: t.Optional(t.Number({ minimum: 1 })),
+  startDate: t.Optional(t.String()),
+  monthlyRent: t.Optional(t.Number({ minimum: 0 })),
+  status: t.Optional(t.String())
+});
+
 export const contractRoutes = new Elysia({ prefix: '/contracts' })
   .use(authPlugin)
   .derive(async ({ headers, request }) => {
@@ -41,48 +69,35 @@ export const contractRoutes = new Elysia({ prefix: '/contracts' })
     }
   })
   .get('/:id', contractController.getById, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
+    params: idParamsSchema,
     detail: {
       tags: ['Contracts'],
       summary: 'Get contract by ID'
     }
   })
   .get('/:id/progress', contractController.getProgress, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
+    params: idParamsSchema,
     detail: {
       tags: ['Contracts'],
       summary: 'Get contract payment progress'
     }
   })
   .get('/tenant/:tenantId/active', contractController.getActiveByTenant, {
-    params: t.Object({
-      tenantId: t.Numeric({ minimum: 1 })
-    }),
+    params: tenantIdParamsSchema,
     detail: {
       tags: ['Contracts'],
       summary: 'Get active contract by tenant ID'
     }
   })
   .get('/property/:propertyId/active', contractController.getActiveByProperty, {
-    params: t.Object({
-      propertyId: t.Numeric({ minimum: 1 })
-    }),
+    params: propertyIdParamsSchema,
     detail: {
       tags: ['Contracts'],
       summary: 'Get active contract by property ID'
     }
   })
   .post('/', contractController.create, {
-    body: t.Object({
-      tenantId: t.Number({ minimum: 1 }),
-      propertyId: t.Number({ minimum: 1 }),
-      startDate: t.String(),
-      monthlyRent: t.Number({ minimum: 0 })
-    }),
+    body: createContractBodySchema,
     detail: {
       tags: ['Contracts'],
       summary: 'Create new contract'
@@ -97,25 +112,15 @@ export const contractRoutes = new Elysia({ prefix: '/contracts' })
     if (body.status !== undefined) updateData.status = body.status;
     return contractController.update({ params: { id: params.id }, body: updateData, userId });
   }, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
-    body: t.Object({
-      tenantId: t.Optional(t.Number({ minimum: 1 })),
-      propertyId: t.Optional(t.Number({ minimum: 1 })),
-      startDate: t.Optional(t.String()),
-      monthlyRent: t.Optional(t.Number({ minimum: 0 })),
-      status: t.Optional(t.String())
-    }),
+    params: idParamsSchema,
+    body: updateContractBodySchema,
     detail: {
       tags: ['Contracts'],
       summary: 'Update contract'
     }
   })
   .delete('/:id', contractController.delete, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
+    params: idParamsSchema,
     detail: {
       tags: ['Contracts'],
       summary: 'Delete contract'

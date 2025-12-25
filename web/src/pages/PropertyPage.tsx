@@ -25,12 +25,13 @@ import {
   Grid,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { propertyService, Property, CreatePropertyData, UpdatePropertyData } from '../services/propertyService';
+import { usePropertyService, Property, CreatePropertyData, UpdatePropertyData } from '../services/propertyService';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
 
 const PropertyPage = () => {
+  const propertyService = usePropertyService()
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);

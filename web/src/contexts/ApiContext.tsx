@@ -13,7 +13,15 @@ export const useApi = () => {
 }
 
 export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
-  const api = treaty<App>(import.meta.env.VITE_API_URL || 'http://localhost:3000')
+  const api = treaty<App>(import.meta.env.VITE_API_URL || 'http://localhost:3000', {
+    headers: () => {
+      const token = localStorage.getItem('token')
+      if (token) {
+        return { Authorization: `Bearer ${token}` } as HeadersInit
+      }
+      return undefined
+    }
+  })
 
   return <ApiContext.Provider value={api}>{children}</ApiContext.Provider>
 }

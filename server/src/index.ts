@@ -1,14 +1,22 @@
 import { Elysia } from 'elysia'
+import { cors } from '@elysiajs/cors'
 import { createServer } from 'node:http'
 import { userRoutes } from './routes/user.routes'
 import { protectedRoutes } from './routes/protected.routes'
 import { authRoutes } from './routes/auth.routes'
 import { errorPlugin } from './plugins/error.plugin'
-import { logRequest, logResponse, logError } from './utils/logger'
+import { logRequest, logResponse, logError, requestLogger } from './utils/logger'
 
 // Initialize app
 const app = new Elysia()
   .use(errorPlugin)
+  .use(requestLogger)
+  .use(cors({
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }))
   .use(authRoutes)  // Auth routes don't need auth plugin (register/login are public)
   .use(userRoutes)
   .group('/api', app => app

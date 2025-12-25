@@ -17,9 +17,10 @@ import {
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
-import { contractService, type Contract } from '../services/contractService';
+import { useContractService, type Contract } from '../services/contractService';
 
 const ContractPage = () => {
+  const contractService = useContractService()
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,8 +50,8 @@ const ContractPage = () => {
         const lowerQuery = query.toLowerCase();
         const matchesQuery =
           contract.id.toString().includes(lowerQuery) ||
-          contract.tenantId.toString().includes(lowerQuery) ||
-          contract.propertyId.toString().includes(lowerQuery) ||
+          (contract.tenantId?.toString() || '').includes(lowerQuery) ||
+          (contract.propertyId?.toString() || '').includes(lowerQuery) ||
           contract.tenantFullName?.toLowerCase().includes(lowerQuery) ||
           contract.propertyName?.toLowerCase().includes(lowerQuery) ||
           contract.monthlyRent.toString().includes(lowerQuery) ||

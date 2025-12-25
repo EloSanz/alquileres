@@ -1,164 +1,145 @@
-interface Property {
-  id: number;
-  name: string;
-  localNumber: number;
-  state: string;
-  propertyType: string;
-  monthlyRent: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  areaSqm?: number;
-  description?: string;
-  zipCode?: string;
-  isAvailable?: boolean;
-  tenantId?: number; // Ahora opcional
+import { useApi } from '../contexts/ApiContext'
+
+// Types inferred from backend DTOs
+export interface Property {
+  id: number
+  name: string
+  localNumber: number
+  state: string
+  propertyType: string
+  monthlyRent: number
+  bedrooms?: number | null
+  bathrooms?: number | null
+  areaSqm?: number | null
+  description?: string | null
+  zipCode?: string | null
+  isAvailable?: boolean
+  tenantId?: number | null
   tenant?: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  createdAt: string;
-  updatedAt: string;
+    id: number
+    firstName: string
+    lastName: string
+    email: string
+  }
+  createdAt: string
+  updatedAt: string
 }
 
-interface CreatePropertyData {
-  name: string;
-  localNumber: number;
-  state: string;
-  propertyType: string;
-  monthlyRent: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  areaSqm?: number;
-  description?: string;
-  zipCode?: string;
-  isAvailable?: boolean;
-  tenantId?: number; // Ahora opcional
+export interface CreatePropertyData {
+  name: string
+  localNumber: number
+  state: string
+  propertyType: string
+  monthlyRent: number
+  bedrooms?: number
+  bathrooms?: number
+  areaSqm?: number
+  description?: string
+  zipCode?: string
+  isAvailable?: boolean
+  tenantId: number
 }
 
-interface UpdatePropertyData extends Partial<CreatePropertyData> {
-  status?: string;
+export interface UpdatePropertyData {
+  name?: string
+  localNumber?: number
+  state?: string
+  propertyType?: string
+  monthlyRent?: number
+  bedrooms?: number
+  bathrooms?: number
+  areaSqm?: number
+  description?: string
+  zipCode?: string
+  isAvailable?: boolean
+  status?: string
 }
 
-class PropertyService {
-  private baseUrl = '/api';
-
-  private getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
-  }
-
-  async getAllProperties(): Promise<Property[]> {
-    const response = await fetch(`${this.baseUrl}/properties`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch properties');
+export const usePropertyService = () => {
+  const api = useApi()
+  
+  return {
+    getAllProperties: async (): Promise<Property[]> => {
+      const response = await api.api.properties.get()
+      if (response.error) {
+        const errorMsg = typeof response.error.value === 'string' 
+          ? response.error.value 
+          : (response.error.value as any)?.message || 'Failed to fetch properties'
+        throw new Error(errorMsg)
+      }
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || 'Failed to fetch properties')
+      }
+      return response.data.data
+    },
+    
+    getPropertyById: async (id: number): Promise<Property> => {
+      const response = await api.api.properties({ id }).get()
+      if (response.error) {
+        const errorMsg = typeof response.error.value === 'string' 
+          ? response.error.value 
+          : (response.error.value as any)?.message || 'Failed to fetch property'
+        throw new Error(errorMsg)
+      }
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || 'Failed to fetch property')
+      }
+      return response.data.data
+    },
+    
+    createProperty: async (propertyData: CreatePropertyData): Promise<Property> => {
+      const response = await api.api.properties.post(propertyData)
+      if (response.error) {
+        const errorMsg = typeof response.error.value === 'string' 
+          ? response.error.value 
+          : (response.error.value as any)?.message || 'Failed to create property'
+        throw new Error(errorMsg)
+      }
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || 'Failed to create property')
+      }
+      return response.data.data
+    },
+    
+    updateProperty: async (id: number, propertyData: UpdatePropertyData): Promise<Property> => {
+      const response = await api.api.properties({ id }).put(propertyData)
+      if (response.error) {
+        const errorMsg = typeof response.error.value === 'string' 
+          ? response.error.value 
+          : (response.error.value as any)?.message || 'Failed to update property'
+        throw new Error(errorMsg)
+      }
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || 'Failed to update property')
+      }
+      return response.data.data
+    },
+    
+    deleteProperty: async (id: number): Promise<void> => {
+      const response = await api.api.properties({ id }).delete()
+      if (response.error) {
+        const errorMsg = typeof response.error.value === 'string' 
+          ? response.error.value 
+          : (response.error.value as any)?.message || 'Failed to delete property'
+        throw new Error(errorMsg)
+      }
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || 'Failed to delete property')
+      }
+    },
+    
+    releaseProperty: async (id: number): Promise<Property> => {
+      const response = await api.api.properties({ id }).release.put()
+      if (response.error) {
+        const errorMsg = typeof response.error.value === 'string' 
+          ? response.error.value 
+          : (response.error.value as any)?.message || 'Failed to release property'
+        throw new Error(errorMsg)
+      }
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || 'Failed to release property')
+      }
+      return response.data.data
     }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to fetch properties');
-    }
-
-    return data.data;
-  }
-
-  async getPropertyById(id: number): Promise<Property> {
-    const response = await fetch(`${this.baseUrl}/properties/${id}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch property');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to fetch property');
-    }
-
-    return data.data;
-  }
-
-  async createProperty(propertyData: CreatePropertyData): Promise<Property> {
-    const response = await fetch(`${this.baseUrl}/properties`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(propertyData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create property');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to create property');
-    }
-
-    return data.data;
-  }
-
-  async updateProperty(id: number, propertyData: UpdatePropertyData): Promise<Property> {
-    const response = await fetch(`${this.baseUrl}/properties/${id}`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(propertyData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update property');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to update property');
-    }
-
-    return data.data;
-  }
-
-  async deleteProperty(id: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/properties/${id}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete property');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to delete property');
-    }
-  }
-
-  async releaseProperty(id: number): Promise<Property> {
-    const response = await fetch(`${this.baseUrl}/properties/${id}/release`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to release property');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to release property');
-    }
-
-    return data.data;
   }
 }
-
-export const propertyService = new PropertyService();
-export type { Property, CreatePropertyData, UpdatePropertyData };
