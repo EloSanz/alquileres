@@ -13,12 +13,16 @@ import {
   TableRow,
   Paper,
   Chip,
+  Fab,
+  Tooltip,
 } from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
 import { useContractService, type Contract } from '../services/contractService';
 import ContractDetailsModal from '../components/ContractDetailsModal';
+import ContractEditorModal from '../components/contract-editor/ContractEditorModal';
 
 const ContractPage = () => {
   const contractService = useContractService()
@@ -32,6 +36,7 @@ const ContractPage = () => {
   const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({
     status: ''
   });
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const contractFilters: FilterConfig[] = [
     {
@@ -252,6 +257,28 @@ const ContractPage = () => {
         contract={selectedContract}
         onClose={() => setDetailsOpen(false)}
       />
+
+      {/* Editor Modal */}
+      <ContractEditorModal
+        open={editorOpen}
+        onClose={() => setEditorOpen(false)}
+      />
+
+      {/* FAB para crear nuevo contrato */}
+      <Tooltip title="Generar nuevo contrato" placement="left">
+        <Fab
+          color="primary"
+          aria-label="generar contrato"
+          onClick={() => setEditorOpen(true)}
+          sx={{
+            position: 'fixed',
+            bottom: 32,
+            right: 32,
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      </Tooltip>
     </Container>
   );
 };

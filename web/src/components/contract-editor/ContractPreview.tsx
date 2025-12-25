@@ -1,0 +1,216 @@
+import { memo } from 'react';
+import { Box, Typography, Divider } from '@mui/material';
+import type { ContractData } from '../../services/contractDraftService';
+
+interface ContractPreviewProps {
+  data: ContractData;
+  fullPage?: boolean;
+}
+
+// Formato de fecha a texto largo
+function formatDateLong(dateStr: string): string {
+  if (!dateStr) return '____';
+  const date = new Date(dateStr);
+  const day = date.getDate().toString().padStart(2, '0');
+  const months = [
+    'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+    'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+  ];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day} de ${month} del ${year}`;
+}
+
+function ContractPreview({ data, fullPage }: ContractPreviewProps) {
+  const fontSize = fullPage ? '11pt' : '10pt';
+  const lineHeight = fullPage ? 1.6 : 1.5;
+
+  return (
+    <Box sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize, lineHeight, color: '#000' }}>
+      {/* Título */}
+      <Typography
+        variant="h5"
+        component="h1"
+        sx={{ textAlign: 'center', fontWeight: 'bold', mb: 2, fontFamily: 'inherit', fontSize: fullPage ? '14pt' : '12pt' }}
+      >
+        CONTRATO DE ARRENDAMIENTO COMERCIAL
+      </Typography>
+      <Typography sx={{ textAlign: 'center', mb: 3, fontFamily: 'inherit' }}>
+        Stand N.º {data.stand_numero || '___'} - {data.lugar_firma || 'Pucallpa'}, Perú
+      </Typography>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Introducción */}
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        Conste por el presente documento el Contrato de Arrendamiento que celebran de una parte{' '}
+        <strong>{data.arrendador_nombre || '____'}</strong>, identificada con RUC. Nº{' '}
+        <strong>{data.arrendador_ruc || '____'}</strong>, debidamente representada por el{' '}
+        <strong>GERENTE GENERAL Sr. {data.gerente_nombre || '____'}</strong>, identificado con DNI Nº{' '}
+        <strong>{data.gerente_dni || '____'}</strong>, según poder inscrito en la partida electrónica Nº{' '}
+        <strong>{data.gerente_partida_registral || '____'}</strong> del registro de personas jurídicas de la oficina registral de {data.lugar_firma || 'Pucallpa'}, 
+        con domicilio fiscal sito en {data.arrendador_domicilio || '____'}, del distrito de {data.arrendador_distrito || '____'}, 
+        provincia de {data.arrendador_provincia || '____'}, departamento de {data.arrendador_departamento || '____'}, 
+        que en lo sucesivo se denominará <strong>EL ARRENDADOR</strong> y de la otra parte, 
+        Doña <strong>{data.arrendatario_nombre || '____'}</strong>, identificado con D.N.I. Nº{' '}
+        <strong>{data.arrendatario_dni || '____'}</strong>, con domicilio en {data.arrendatario_domicilio || '____'}, 
+        distrito de {data.arrendatario_distrito || '____'}, provincia de {data.arrendatario_provincia || '____'} y 
+        departamento de {data.arrendatario_departamento || '____'}, a quien en adelante se le denominará{' '}
+        <strong>EL ARRENDATARIO</strong> en los términos y condiciones de las cláusulas siguientes:
+      </Typography>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Antecedentes */}
+      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+        ANTECEDENTES
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        <strong>PRIMERA:</strong> <strong>EL ARRENDADOR</strong> es conductor del inmueble ubicado sito en{' '}
+        {data.inmueble_direccion || '____'}, distrito de {data.arrendador_distrito || '____'}, 
+        provincia de {data.arrendador_provincia || '____'}, departamento de {data.arrendador_departamento || '____'}, 
+        el mismo que se encuentra inscrito en la Partida Registral Nº <strong>{data.inmueble_partida_registral || '____'}</strong>, 
+        del Registro de la Propiedad Inmueble de la Zona Registral Nº <strong>{data.inmueble_zona_registral || '____'}</strong>, 
+        en mérito al Contrato de Comodato, mediante la cual la empresa propietaria del bien{' '}
+        <strong>{data.propietario_nombre || '____'}</strong>, identificado con RUC Nº{' '}
+        <strong>{data.propietario_ruc || '____'}</strong>, con domicilio fiscal sito en {data.propietario_domicilio || '____'}, 
+        debidamente representado por su Apoderado Legal <strong>{data.propietario_representante || '____'}</strong>, 
+        identificado con DNI Nº <strong>{data.propietario_representante_dni || '____'}</strong>, conforme consta en su 
+        Certificado de Vigencia, inscrito en la <strong>Partida Registral Nº {data.propietario_partida_registral || '____'}</strong>, 
+        del Registro de Personas Jurídicas de la Zona Registral Nº IX - Sede Lima, otorga el bien en{' '}
+        <strong>COMODATO CON CLÁUSULA DE AUTORIZACIÓN DE SUBARRIENDO (ANEXO 01-B)</strong>, 
+        en favor de la empresa <strong>{data.arrendador_nombre || '____'}</strong>.
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        Que, sobre el bien inmueble descrito en el párrafo anterior se ha construido{' '}
+        <strong>{data.total_stands || '____'}</strong> stands.
+      </Typography>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Objeto del Contrato */}
+      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+        OBJETO DEL CONTRATO
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        <strong>SEGUNDA:</strong> Por el Presente documento, <strong>EL ARRENDADOR</strong> da en arrendamiento a{' '}
+        <strong>EL ARRENDATARIO</strong> <strong>EL INMUEBLE</strong> de su propiedad, referido en la cláusula primera 
+        anterior, a fin de que sea ocupado por <strong>EL ARRENDATARIO</strong>; el{' '}
+        <strong>STAND Nº {data.stand_numero || '____'}</strong> siendo este mismo destinado para el desarrollo de la 
+        actividad comercial.
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        <strong>EL ARRENDATARIO</strong> declara conocer y reconoce que tanto <strong>EL INMUEBLE</strong> materia de 
+        este contrato como los accesorios que igualmente son objeto del presente arrendamiento, se encuentran en 
+        perfecto estado de conservación y funcionamiento, y en tal sentido se obliga a devolverlos en el estado en 
+        que los reciben y sin más deterioro que el ocasionado por el uso ordinario, cuidadoso y racional de los mismos.
+      </Typography>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Plazo del Contrato */}
+      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+        PLAZO DEL CONTRATO
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        <strong>TERCERA:</strong> El plazo del presente contrato de arrendamiento, pactado de común acuerdo por las 
+        partes contratantes, es por el período de un <strong>({data.plazo_meses || '12'}) meses</strong>, que se inicia 
+        el <strong>{formatDateLong(data.fecha_inicio)}</strong> y concluye indefectiblemente el{' '}
+        <strong>{formatDateLong(data.fecha_fin)}</strong>.
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        En caso de que <strong>EL ARRENDATARIO</strong> deseara prorrogar el plazo del presente contrato, deberá 
+        solicitarlo a <strong>EL ARRENDADOR</strong> con una anticipación no menor de TREINTA (30) días a la fecha de 
+        conclusión del arrendamiento.
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        En el supuesto que, a la terminación del presente contrato, por vencimiento del plazo o por resolución del 
+        contrato, <strong>EL ARRENDATARIO</strong> no cumliese con entregar <strong>EL INMUEBLE</strong> arrendado a{' '}
+        <strong>EL ARRENDADOR</strong>, y sin perjuicio de entenderse que el presente contrato no continúa,{' '}
+        <strong>EL ARRENDATARIO</strong> queda obligado a pagar a <strong>EL ARRENDADOR</strong> una penalidad de{' '}
+        <strong>$ {data.penalidad_diaria || '____'} ({data.penalidad_texto || '____'})</strong> por cada día de demora 
+        hasta la entrega efectiva de los inmuebles y sus accesorios a <strong>EL ARRENDADOR</strong>.
+      </Typography>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Merced Conductiva */}
+      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+        LA MERCED CONDUCTIVA: FORMA Y OPORTUNIDAD DE PAGO
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        <strong>SEXTA:</strong> El pago de la renta mensual, convenida de mutuo acuerdo por las partes contratantes, 
+        es de <strong>S/{data.renta_mensual || '____'} ({data.renta_texto || '____'})</strong>, por el arrendamiento de{' '}
+        <strong>EL INMUEBLE</strong> y de los accesorios.
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        Cabe señalar que el pago de la renta será abonado los de cada <strong>{data.dia_vencimiento || '____'}</strong> de 
+        cada mes, con una tolerancia de <strong>{data.tolerancia_dias || '____'}</strong> días calendarios siguientes a 
+        su vencimiento.
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        <strong>SETIMA:</strong> La renta será pagada por <strong>EL ARRENDATARIO</strong> mediante abono en la cuenta 
+        de Ahorros Soles del <strong>{data.banco_nombre || '____'} Nº {data.banco_cuenta || '____'}</strong>, con Código 
+        Interbancario Nº <strong>{data.banco_cci || '____'}</strong>, de propiedad de <strong>EL ARRENDADOR</strong>.
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        El incumplimiento de pago oportuno de dos meses y 15 días consecutivos de renta constituye causal de resolución 
+        automática del presente contrato, sin necesidad de previo pronunciamiento judicial.
+      </Typography>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Importes Pecuniarios */}
+      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+        SOBRE LOS IMPORTES PECUNIARIOS
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+        <strong>DÉCIMO SEXTA:</strong> A la firma del presente contrato, <strong>EL ARRENDATARIO</strong> hace entrega 
+        a <strong>EL ARRENDADOR</strong> los siguientes importes:
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 1, ml: 2, fontFamily: 'inherit' }}>
+        • El importe de <strong>S/ {data.adelanto_monto || '____'} ({data.adelanto_texto || '____'})</strong>, en calidad 
+        de <strong>ADELANTO</strong> que cubren el importe de un mes de renta.
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 1, ml: 2, fontFamily: 'inherit' }}>
+        • El importe de <strong>S/ {data.garantia_monto || '____'} ({data.garantia_texto || '____'})</strong> que 
+        equivalen a una mensualidad por concepto de <strong>depósito de garantía</strong>.
+      </Typography>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Firma */}
+      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+        FIRMA Y LEGALIZACIÓN
+      </Typography>
+      <Typography sx={{ textAlign: 'justify', mb: 4, fontFamily: 'inherit' }}>
+        Hecho y firmado en {data.lugar_firma || '____'}, bajo legalización notarial de las partes intervinientes, 
+        a los {formatDateLong(data.fecha_firma)} en dos (2) ejemplares de idéntico tenor que obrarán en poder de{' '}
+        <strong>EL ARRENDADOR</strong> y de <strong>EL ARRENDATARIO</strong>, respectivamente.
+      </Typography>
+
+      {/* Firmas */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: fullPage ? 6 : 4, mb: 2 }}>
+        <Box sx={{ width: '40%', textAlign: 'center' }}>
+          <Box sx={{ borderTop: '1px solid #000', pt: 1, mt: 8 }}>
+            <Typography sx={{ fontFamily: 'inherit', fontWeight: 'bold' }}>EL ARRENDATARIO</Typography>
+            <Typography sx={{ fontFamily: 'inherit', fontSize: '9pt' }}>
+              {data.arrendatario_nombre || '________________________'}
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={{ width: '40%', textAlign: 'center' }}>
+          <Box sx={{ borderTop: '1px solid #000', pt: 1, mt: 8 }}>
+            <Typography sx={{ fontFamily: 'inherit', fontWeight: 'bold' }}>EL ARRENDADOR</Typography>
+            <Typography sx={{ fontFamily: 'inherit', fontSize: '9pt' }}>
+              {data.arrendador_nombre || '________________________'}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+export default memo(ContractPreview);
+

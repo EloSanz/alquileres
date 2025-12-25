@@ -198,3 +198,14 @@ enum PaymentMethod {
   DEPOSITO
   TRANSFERENCIA_VIRTUAL
 }
+
+// ContractDraft - Borradores de contratos para el editor WYSIWYG
+model ContractDraft {
+  id        Int      @id @default(autoincrement())
+  name      String   // Nombre descriptivo: "Contrato Stand 16 - Melissa Rivera"
+  data      Json     // Todos los campos del contrato en formato JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contract_drafts")
+}
