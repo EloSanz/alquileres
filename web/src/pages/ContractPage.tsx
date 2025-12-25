@@ -18,6 +18,7 @@ import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
 import { useContractService, type Contract } from '../services/contractService';
+import ContractDetailsModal from '../components/ContractDetailsModal';
 
 const ContractPage = () => {
   const contractService = useContractService()
@@ -25,6 +26,8 @@ const ContractPage = () => {
   const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({
     status: ''
@@ -119,6 +122,11 @@ const ContractPage = () => {
     fetchContracts();
   }, []);
 
+  const handleRowClick = (contract: Contract) => {
+    setSelectedContract(contract);
+    setDetailsOpen(true);
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
@@ -186,7 +194,12 @@ const ContractPage = () => {
                 </TableRow>
               ) : (
                 filteredContracts.map((contract) => (
-                  <TableRow key={contract.id}>
+                  <TableRow
+                    key={contract.id}
+                    hover
+                    onClick={() => handleRowClick(contract)}
+                    sx={{ cursor: 'pointer' }}
+                  >
                     <TableCell>{contract.id}</TableCell>
                     <TableCell>
                       {contract.tenantFullName || `ID: ${contract.tenantId}`}
@@ -234,6 +247,11 @@ const ContractPage = () => {
           </Table>
         </TableContainer>
       )}
+      <ContractDetailsModal
+        open={detailsOpen}
+        contract={selectedContract}
+        onClose={() => setDetailsOpen(false)}
+      />
     </Container>
   );
 };
