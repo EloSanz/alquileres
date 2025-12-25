@@ -20,206 +20,41 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip,
   IconButton,
   Autocomplete,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
-import { propertyService, type Property } from '../services/propertyService';
+import { usePropertyService, type Property } from '../services/propertyService';
+import { usePaymentService, type Payment, type CreatePaymentData } from '../services/paymentService';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { FilterConfig } from '../components/FilterBar';
 
-interface Payment {
-  id: number;
-  tenantId?: number;
-  propertyId: number;
-  amount: number;
-  paymentDate: string;
-  dueDate: string;
-  paymentType: string;
-  status: string;
-  notes?: string;
-  createdAt: string;
-}
-
-interface CreatePaymentData {
-  tenantId?: number;
-  propertyId: number;
-  amount: number;
-  paymentDate?: string;
-  dueDate: string;
-  paymentType: string;
-  status?: string;
-  notes?: string;
-}
-
-class PaymentService {
-  private getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
-  }
-
-  async getAllPayments(): Promise<Payment[]> {
-    const response = await fetch('/api/payments', {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch payments');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to fetch payments');
-    }
-
-    return data.data || [];
-  }
-
-  async getPaymentById(id: number): Promise<Payment> {
-    const response = await fetch(`/api/payments/${id}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch payment');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to fetch payment');
-    }
-
-    return data.data;
-  }
-
-  async createPayment(paymentData: CreatePaymentData): Promise<Payment> {
-    const response = await fetch('/api/payments', {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(paymentData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create payment');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to create payment');
-    }
-
-    return data.data;
-  }
-
-  async updatePayment(id: number, paymentData: Partial<CreatePaymentData>): Promise<Payment> {
-    const response = await fetch(`/api/payments/${id}`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(paymentData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update payment');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to update payment');
-    }
-
-    return data.data;
-  }
-
-  async deletePayment(id: number): Promise<void> {
-    const response = await fetch(`/api/payments/${id}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete payment');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to delete payment');
-    }
-  }
-}
-
-const paymentService = new PaymentService();
-
 const PaymentPage = () => {
+  const propertyService = usePropertyService()
+  const paymentService = usePaymentService()
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({
-    status: '',
-    paymentType: ''
+    paymentMethod: ''
   });
 
   const paymentFilters: FilterConfig[] = [
     {
-      key: 'status',
-      label: 'Estado',
+      key: 'paymentMethod',
+      label: 'Medio de Pago',
       options: [
-        { value: 'PENDIENTE', label: 'Pendiente' },
-        { value: 'COMPLETADO', label: 'Completado' },
-        { value: 'VENCIDO', label: 'Vencido' },
-        { value: 'CANCELADO', label: 'Cancelado' }
-      ]
-    },
-    {
-      key: 'paymentType',
-      label: 'Tipo',
-      options: [
-        { value: 'RENT', label: 'Alquiler' },
-        { value: 'DEPOSIT', label: 'Depósito' },
-        { value: 'MAINTENANCE', label: 'Mantenimiento' },
-        { value: 'LATE_FEE', label: 'Multa' },
-        { value: 'OTHER', label: 'Otro' }
+        { value: 'YAPE', label: 'Yape' },
+        { value: 'DEPOSITO', label: 'Depósito' },
+        { value: 'TRANSFERENCIA_VIRTUAL', label: 'Transferencia Virtual' }
       ]
     }
   ];
-
-  // Función para convertir estados del backend (inglés) al frontend (español)
-  const convertStatusToSpanish = (englishStatus: string): string => {
-    switch (englishStatus.toUpperCase()) {
-      case 'PENDING':
-        return 'PENDIENTE';
-      case 'COMPLETED':
-        return 'COMPLETADO';
-      case 'OVERDUE':
-        return 'VENCIDO';
-      case 'CANCELLED':
-        return 'CANCELADO';
-      default:
-        return englishStatus;
-    }
-  };
-
-  // Función para convertir estados del frontend (español) al backend (inglés)
-  const convertStatusToEnglish = (spanishStatus: string): string => {
-    switch (spanishStatus.toUpperCase()) {
-      case 'PENDIENTE':
-        return 'PENDING';
-      case 'COMPLETADO':
-        return 'COMPLETED';
-      case 'VENCIDO':
-        return 'OVERDUE';
-      case 'CANCELADO':
-        return 'CANCELLED';
-      default:
-        return spanishStatus;
-    }
-  };
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -231,8 +66,7 @@ const PaymentPage = () => {
     amount: '',
     paymentDate: new Date().toISOString().split('T')[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 días por defecto
-    paymentType: 'RENT',
-    status: 'PENDIENTE',
+    paymentMethod: 'YAPE',
     notes: '',
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -243,25 +77,31 @@ const PaymentPage = () => {
     amount: '',
     paymentDate: '',
     dueDate: '',
-    paymentType: 'RENT',
-    status: 'PENDIENTE',
+    paymentMethod: 'YAPE',
     notes: '',
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
+
+  // Toggle Pentamont persisted in backend
+  const handleTogglePentamont = async (payment: Payment) => {
+    try {
+      const next = !payment.pentamontSettled;
+      await paymentService.updatePayment(payment.id, { pentamontSettled: next });
+      setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
+      setFilteredPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
+    } catch (e: any) {
+      setError(e?.message || 'No se pudo actualizar Pentamont');
+    }
+  };
 
   const fetchPayments = async () => {
     try {
       setLoading(true);
       setError(''); // Limpiar error anterior
       const data = await paymentService.getAllPayments();
-      // Convertir estados al español para el frontend
-      const convertedData = data.map(payment => ({
-        ...payment,
-        status: convertStatusToSpanish(payment.status)
-      }));
-      setPayments(convertedData);
-      const filtered = filterPayments(searchQuery, filterValues, convertedData);
+      setPayments(data);
+      const filtered = filterPayments(searchQuery, filterValues, data);
       setFilteredPayments(filtered);
     } catch (err: any) {
       // Solo mostrar error si es un error real de red/API, no si es array vacío
@@ -276,15 +116,15 @@ const PaymentPage = () => {
     }
   };
 
-  const filterPayments = (query: string, filters: Record<string, string | string[]>, paymentsList: Payment[]) => {
+  const filterPayments = (query: string, _filters: Record<string, string | string[]>, paymentsList: Payment[]) => {
     return paymentsList.filter(payment => {
       // Filtro de búsqueda por texto
       if (query.trim()) {
         const lowerQuery = query.toLowerCase();
         const matchesQuery =
           payment.amount.toString().includes(lowerQuery) ||
-          payment.status.toLowerCase().includes(lowerQuery) ||
-          payment.paymentType.toLowerCase().includes(lowerQuery) ||
+          payment.tenantFullName?.toLowerCase().includes(lowerQuery) ||
+          payment.paymentMethod?.toLowerCase().includes(lowerQuery) ||
           payment.notes?.toLowerCase().includes(lowerQuery) ||
           new Date(payment.paymentDate).toLocaleDateString('es-ES').toLowerCase().includes(lowerQuery) ||
           new Date(payment.dueDate).toLocaleDateString('es-ES').toLowerCase().includes(lowerQuery);
@@ -292,13 +132,8 @@ const PaymentPage = () => {
         if (!matchesQuery) return false;
       }
 
-      // Filtro por estado
-      if (filters.status && payment.status !== filters.status) {
-        return false;
-      }
-
-      // Filtro por tipo de pago
-      if (filters.paymentType && payment.paymentType !== filters.paymentType) {
+      // Filtro por medio de pago
+      if (_filters.paymentMethod && payment.paymentMethod !== _filters.paymentMethod) {
         return false;
       }
 
@@ -327,7 +162,7 @@ const PaymentPage = () => {
   };
 
   const handleClearFilters = () => {
-    const newFilters = { status: '', paymentType: '' };
+    const newFilters = { paymentMethod: '' };
     setFilterValues(newFilters);
     const filtered = filterPayments(searchQuery, newFilters, payments);
     setFilteredPayments(filtered);
@@ -361,13 +196,12 @@ const PaymentPage = () => {
 
     try {
       const paymentData: CreatePaymentData = {
-        tenantId: selectedProperty.tenantId,
+        tenantId: selectedProperty.tenantId || undefined,
         propertyId: selectedProperty.id,
         amount: parseFloat(createForm.amount),
         paymentDate: createForm.paymentDate,
         dueDate: createForm.dueDate,
-        paymentType: createForm.paymentType,
-        status: convertStatusToEnglish(createForm.status),
+        paymentMethod: createForm.paymentMethod,
         notes: createForm.notes || undefined,
       };
 
@@ -382,8 +216,7 @@ const PaymentPage = () => {
         amount: '',
         paymentDate: new Date().toISOString().split('T')[0],
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 días por defecto
-        paymentType: 'RENT',
-        status: 'PENDIENTE',
+        paymentMethod: 'YAPE',
         notes: '',
       });
       fetchPayments(); // Refresh the list
@@ -432,12 +265,11 @@ const PaymentPage = () => {
     setEditingPayment(payment);
     setEditForm({
       tenantId: payment.tenantId?.toString() || '',
-      propertyId: payment.propertyId.toString(),
+      propertyId: payment.propertyId?.toString() || '',
       amount: payment.amount.toString(),
       paymentDate: new Date(payment.paymentDate).toISOString().split('T')[0],
       dueDate: new Date(payment.dueDate).toISOString().split('T')[0],
-      paymentType: payment.paymentType || 'RENT',
-      status: payment.status, // Ya está convertido al español
+      paymentMethod: payment.paymentMethod || 'YAPE',
       notes: payment.notes || '',
     });
     setEditDialogOpen(true);
@@ -471,8 +303,7 @@ const PaymentPage = () => {
         amount: parseFloat(editForm.amount),
         paymentDate: editForm.paymentDate,
         dueDate: editForm.dueDate,
-        paymentType: editForm.paymentType,
-        status: convertStatusToEnglish(editForm.status),
+        paymentMethod: editForm.paymentMethod,
         notes: editForm.notes || undefined,
       };
 
@@ -486,8 +317,7 @@ const PaymentPage = () => {
         amount: '',
         paymentDate: '',
         dueDate: '',
-        paymentType: 'RENT',
-        status: 'PENDIENTE',
+        paymentMethod: 'YAPE',
         notes: '',
       });
       fetchPayments(); // Refresh the list
@@ -507,21 +337,6 @@ const PaymentPage = () => {
     return new Date(dateString).toLocaleDateString('es-ES');
   };
 
-  const getPaymentStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completado':
-        return 'success';
-      case 'pendiente':
-        return 'warning';
-      case 'vencido':
-        return 'error';
-      case 'cancelado':
-        return 'default';
-      default:
-        return 'default';
-    }
-  };
-
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
@@ -536,7 +351,7 @@ const PaymentPage = () => {
               searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
               onClearSearch={handleClearSearch}
-              placeholder="Buscar por monto, estado, tipo..."
+              placeholder="Buscar por monto, inquilino, medio de pago, notas..."
               label="Buscar pagos"
             />
           </Box>
@@ -568,11 +383,11 @@ const PaymentPage = () => {
             <TableHead>
               <TableRow>
                 <TableCell><strong>ID</strong></TableCell>
-                <TableCell><strong>Inquilino - Propiedad</strong></TableCell>
+                <TableCell><strong>Inquilino</strong></TableCell>
                 <TableCell><strong>Monto</strong></TableCell>
                 <TableCell><strong>Fecha Pago</strong></TableCell>
                 <TableCell><strong>Fecha Vencimiento</strong></TableCell>
-                <TableCell><strong>Estado</strong></TableCell>
+                <TableCell><strong>Medio de Pago</strong></TableCell>
                 <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
             </TableHead>
@@ -580,16 +395,32 @@ const PaymentPage = () => {
               {filteredPayments.map((payment) => (
                 <TableRow key={payment.id} hover>
                   <TableCell>{payment.id}</TableCell>
-                  <TableCell>Inq: {payment.tenantId} - Prop: {payment.propertyId}</TableCell>
+                  <TableCell>{payment.tenantFullName || `ID: ${payment.tenantId}`}</TableCell>
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
                   <TableCell>{formatDate(payment.paymentDate)}</TableCell>
                   <TableCell>{formatDate(payment.dueDate)}</TableCell>
                   <TableCell>
-                    <Chip
-                      label={payment.status}
-                      color={getPaymentStatusColor(payment.status) as any}
-                      size="small"
-                    />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2">
+                        {payment.paymentMethod === 'YAPE' ? 'Yape' :
+                         payment.paymentMethod === 'DEPOSITO' ? 'Depósito' :
+                         payment.paymentMethod === 'TRANSFERENCIA_VIRTUAL' ? 'Transferencia Virtual' :
+                         payment.paymentMethod}
+                      </Typography>
+                      {payment.paymentMethod === 'YAPE' && (
+                        <FormControlLabel
+                          sx={{ ml: 1 }}
+                          label={`Pentamont: ${payment.pentamontSettled ? 'Sí' : 'No'}`}
+                          control={
+                            <Switch
+                              size="small"
+                              checked={!!payment.pentamontSettled}
+                              onChange={() => handleTogglePentamont(payment)}
+                            />
+                          }
+                        />
+                      )}
+                    </Box>
                   </TableCell>
                   <TableCell align="center">
                     <IconButton
@@ -651,7 +482,7 @@ const PaymentPage = () => {
               fullWidth
               options={properties}
               getOptionLabel={(property) =>
-                `${property.name} - ${property.address}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
+                `${property.name} - Local N° ${property.localNumber}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
               }
               value={selectedProperty}
               onChange={(_, newValue) => {
@@ -674,7 +505,7 @@ const PaymentPage = () => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Seleccionar Propiedad"
+                  label="Seleccionar Local"
                   required
                   sx={{ mb: 2 }}
                   helperText="Busque por nombre de propiedad, dirección o nombre del inquilino"
@@ -718,30 +549,15 @@ const PaymentPage = () => {
             <TextField
               select
               fullWidth
-              label="Tipo de Pago"
-              value={createForm.paymentType}
-              onChange={(e) => setCreateForm({ ...createForm, paymentType: e.target.value })}
+              label="Medio de Pago"
+              value={createForm.paymentMethod}
+              onChange={(e) => setCreateForm({ ...createForm, paymentMethod: e.target.value })}
               required
               sx={{ mb: 2 }}
             >
-              <MenuItem value="RENT">Alquiler</MenuItem>
-              <MenuItem value="DEPOSIT">Depósito</MenuItem>
-              <MenuItem value="MAINTENANCE">Mantenimiento</MenuItem>
-                <MenuItem value="UTILITIES">Servicios Públicos</MenuItem>
-              <MenuItem value="OTHER">Otro</MenuItem>
-            </TextField>
-            <TextField
-              select
-              fullWidth
-              label="Estado"
-              value={createForm.status}
-              onChange={(e) => setCreateForm({ ...createForm, status: e.target.value })}
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="PENDIENTE">Pendiente</MenuItem>
-              <MenuItem value="COMPLETADO">Completado</MenuItem>
-              <MenuItem value="VENCIDO">Vencido</MenuItem>
-              <MenuItem value="CANCELADO">Cancelado</MenuItem>
+              <MenuItem value="YAPE">Yape</MenuItem>
+              <MenuItem value="DEPOSITO">Depósito</MenuItem>
+              <MenuItem value="TRANSFERENCIA_VIRTUAL">Transferencia Virtual</MenuItem>
             </TextField>
             <TextField
               fullWidth
@@ -781,7 +597,7 @@ const PaymentPage = () => {
             />
             <TextField
               fullWidth
-              label="ID de la Propiedad"
+              label="ID del Local"
               type="number"
               value={editForm.propertyId}
               onChange={(e) => setEditForm({ ...editForm, propertyId: e.target.value })}
@@ -820,30 +636,15 @@ const PaymentPage = () => {
             <TextField
               select
               fullWidth
-              label="Tipo de Pago"
-              value={editForm.paymentType}
-              onChange={(e) => setEditForm({ ...editForm, paymentType: e.target.value })}
+              label="Medio de Pago"
+              value={editForm.paymentMethod}
+              onChange={(e) => setEditForm({ ...editForm, paymentMethod: e.target.value })}
               required
               sx={{ mb: 2 }}
             >
-              <MenuItem value="RENT">Alquiler</MenuItem>
-              <MenuItem value="DEPOSIT">Depósito</MenuItem>
-              <MenuItem value="MAINTENANCE">Mantenimiento</MenuItem>
-                <MenuItem value="UTILITIES">Servicios Públicos</MenuItem>
-              <MenuItem value="OTHER">Otro</MenuItem>
-            </TextField>
-            <TextField
-              select
-              fullWidth
-              label="Estado"
-              value={editForm.status}
-              onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="PENDIENTE">Pendiente</MenuItem>
-              <MenuItem value="COMPLETADO">Completado</MenuItem>
-              <MenuItem value="VENCIDO">Vencido</MenuItem>
-              <MenuItem value="CANCELADO">Cancelado</MenuItem>
+              <MenuItem value="YAPE">Yape</MenuItem>
+              <MenuItem value="DEPOSITO">Depósito</MenuItem>
+              <MenuItem value="TRANSFERENCIA_VIRTUAL">Transferencia Virtual</MenuItem>
             </TextField>
             <TextField
               fullWidth

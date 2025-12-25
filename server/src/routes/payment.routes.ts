@@ -12,6 +12,33 @@ const paymentRepository = new PrismaPaymentRepository();
 const paymentService = new PaymentService(paymentRepository);
 const paymentController = new PaymentController(paymentService);
 
+// Validation schemas - aligned with DTOs for consistency
+const idParamsSchema = t.Object({
+  id: t.Numeric({ minimum: 1 })
+});
+
+const createPaymentBodySchema = t.Object({
+  tenantId: t.Number({ minimum: 1 }),
+  propertyId: t.Union([t.Number({ minimum: 1 }), t.Null()]),
+  amount: t.Number({ minimum: 0 }),
+  paymentDate: t.Optional(t.String()),
+  dueDate: t.String(),
+  paymentMethod: t.Optional(t.String()),
+  pentamontSettled: t.Optional(t.Boolean()),
+  notes: t.Optional(t.String())
+});
+
+const updatePaymentBodySchema = t.Object({
+  tenantId: t.Optional(t.Union([t.Number({ minimum: 1 }), t.Null()])),
+  propertyId: t.Optional(t.Union([t.Number({ minimum: 1 }), t.Null()])),
+  amount: t.Optional(t.Number({ minimum: 0 })),
+  paymentDate: t.Optional(t.String()),
+  dueDate: t.Optional(t.String()),
+  paymentMethod: t.Optional(t.String()),
+  pentamontSettled: t.Optional(t.Boolean()),
+  notes: t.Optional(t.String())
+});
+
 export const paymentRoutes = new Elysia({ prefix: '/payments' })
   .use(authPlugin)
   .derive(async ({ headers, request }) => {
@@ -39,53 +66,29 @@ export const paymentRoutes = new Elysia({ prefix: '/payments' })
     }
   })
   .get('/:id', paymentController.getById, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
+    params: idParamsSchema,
     detail: {
       tags: ['Payments'],
       summary: 'Get payment by ID'
     }
   })
   .post('/', paymentController.create, {
-    body: t.Object({
-      tenantId: t.Number({ minimum: 1 }),
-      propertyId: t.Number({ minimum: 1 }),
-      amount: t.Number({ minimum: 0 }),
-      paymentDate: t.Optional(t.String()),
-      dueDate: t.String(),
-      paymentType: t.String(),
-      status: t.Optional(t.String()),
-      notes: t.Optional(t.String())
-    }),
+    body: createPaymentBodySchema,
     detail: {
       tags: ['Payments'],
       summary: 'Create new payment'
     }
   })
   .put('/:id', paymentController.update, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
-    body: t.Object({
-      tenantId: t.Optional(t.Number({ minimum: 1 })),
-      propertyId: t.Optional(t.Number({ minimum: 1 })),
-      amount: t.Optional(t.Number({ minimum: 0 })),
-      paymentDate: t.Optional(t.String()),
-      dueDate: t.Optional(t.String()),
-      paymentType: t.Optional(t.String()),
-      status: t.Optional(t.String()),
-      notes: t.Optional(t.String())
-    }),
+    params: idParamsSchema,
+    body: updatePaymentBodySchema,
     detail: {
       tags: ['Payments'],
       summary: 'Update payment'
     }
   })
   .delete('/:id', paymentController.delete, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
+    params: idParamsSchema,
     detail: {
       tags: ['Payments'],
       summary: 'Delete payment'

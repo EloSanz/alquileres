@@ -59,7 +59,7 @@ const httpFormat = winston.format.combine(
 
 // Create the logger
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'http'),
   format: httpFormat,
   transports: [
     new winston.transports.Console({

@@ -12,8 +12,7 @@ import {
 interface Property {
   id: number;
   name: string;
-  address: string;
-  city: string;
+  localNumber: number;
   state: string;
   propertyType: string;
   monthlyRent: number;
@@ -42,20 +41,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, on
     return isAvailable ? 'Disponible' : 'No Disponible';
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type.toUpperCase()) {
-      case 'HOUSE':
-        return 'Casa';
-      case 'APARTMENT':
-        return 'Apartamento';
-      case 'CONDO':
-        return 'Condominio';
-      case 'TOWNHOUSE':
-        return 'Townhouse';
-      default:
-        return type;
-    }
-  };
 
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -64,7 +49,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, on
           {property.name}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {property.address}, {property.city}, {property.state}
+          Local N° {property.localNumber}, {property.state}
           {property.zipCode && ` ${property.zipCode}`}
         </Typography>
         <Typography variant="h5" color="primary" sx={{ mb: 2 }}>
@@ -76,7 +61,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, on
           {property.areaSqm && <Chip label={`${property.areaSqm}m²`} size="small" />}
         </Box>
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-          <Chip label={getTypeLabel(property.propertyType)} size="small" variant="outlined" />
+          <Chip label={property.propertyType === 'INSIDE' ? 'Adentro' : 'Afuera'} size="small" variant="outlined" />
           <Chip
             label={getAvailabilityLabel(property.isAvailable)}
             size="small"

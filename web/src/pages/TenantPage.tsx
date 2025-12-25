@@ -31,151 +31,10 @@ import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
 import TenantDeletionModal from '../components/TenantDeletionModal';
-
-interface Tenant {
-  id: number;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  documentId: string;
-  numeroLocal?: string;
-  rubro?: string;
-  fechaInicioContrato?: string;
-  estadoPago: string;
-  createdAt: string;
-}
-
-interface CreateTenantData {
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  documentId: string;
-  numeroLocal?: string;
-  rubro?: string;
-  fechaInicioContrato?: string;
-}
-
-class TenantService {
-  private getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
-  }
-
-  async getAllTenants(): Promise<Tenant[]> {
-    const response = await fetch('/api/tenants', {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch tenants');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to fetch tenants');
-    }
-
-    return data.data || [];
-  }
-
-  async getTenantById(id: number): Promise<Tenant> {
-    const response = await fetch(`/api/tenants/${id}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch tenant');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to fetch tenant');
-    }
-
-    return data.data;
-  }
-
-  async createTenant(tenantData: CreateTenantData): Promise<Tenant> {
-    const response = await fetch('/api/tenants', {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(tenantData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create tenant');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to create tenant');
-    }
-
-    return data.data;
-  }
-
-  async updateTenant(id: number, tenantData: Partial<CreateTenantData>): Promise<Tenant> {
-    const response = await fetch(`/api/tenants/${id}`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(tenantData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update tenant');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to update tenant');
-    }
-
-    return data.data;
-  }
-
-  async deleteTenant(id: number): Promise<void> {
-    const response = await fetch(`/api/tenants/${id}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      let errorData: any;
-      const contentType = response.headers.get('content-type');
-
-      if (contentType && contentType.includes('application/json')) {
-        try {
-          errorData = await response.json();
-        } catch (e) {
-          // If JSON parsing fails, use text response
-          const textResponse = await response.text();
-          errorData = { message: textResponse || 'Unknown error' };
-        }
-      } else {
-        // Response is not JSON, use text
-        const textResponse = await response.text();
-        errorData = { message: textResponse || 'Unknown error' };
-      }
-
-      const error = new Error(errorData.message || 'Failed to delete tenant');
-      (error as any).response = { data: errorData };
-      throw error;
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to delete tenant');
-    }
-  }
-}
-
-
-const tenantService = new TenantService();
+import { useTenantService, type Tenant, type CreateTenantData, type UpdateTenantData } from '../services/tenantService';
 
 const TenantPage = () => {
+  const tenantService = useTenantService()
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [filteredTenants, setFilteredTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -272,7 +131,7 @@ const TenantPage = () => {
         tenant.lastName.toLowerCase().includes(lowerQuery) ||
         tenant.documentId.toLowerCase().includes(lowerQuery) ||
         tenant.phone?.toLowerCase().includes(lowerQuery) ||
-        tenant.numeroLocal?.toString().toLowerCase().includes(lowerQuery) ||
+        tenant.numeroLocal?.toLowerCase().includes(lowerQuery) ||
         tenant.rubro?.toLowerCase().includes(lowerQuery)
       );
     }
@@ -419,11 +278,10 @@ const TenantPage = () => {
     if (!editingTenant) return;
 
     try {
-      const tenantData: Partial<CreateTenantData> = {
+      const tenantData: UpdateTenantData = {
         firstName: editForm.firstName,
         lastName: editForm.lastName,
         phone: editForm.phone || undefined,
-        documentId: editForm.documentId,
         numeroLocal: editForm.numeroLocal || undefined,
         rubro: editForm.rubro || undefined,
         fechaInicioContrato: editForm.fechaInicioContrato || undefined,

@@ -1,14 +1,16 @@
 export interface PaymentDTO {
   id: number;
   tenantId: number | null;
-  propertyId: number;
+  propertyId: number | null;
+  contractId: number | null;
+  monthNumber: number | null;
   tenantFullName: string | null;
   tenantPhone: string | null;
   amount: number;
   paymentDate: string;
   dueDate: string;
-  paymentType: string;
-  status: string;
+  paymentMethod: string;
+  pentamontSettled: boolean;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -16,24 +18,26 @@ export interface PaymentDTO {
 
 export interface CreatePaymentDTO {
   tenantId: number;
-  propertyId: number;
+  propertyId: number | null;
   amount: number;
   paymentDate?: string;
   dueDate: string;
-  paymentType: string;
-  status?: string;
+  paymentMethod?: string;
+  pentamontSettled?: boolean;
   notes?: string;
 }
 
 export interface UpdatePaymentDTO {
   tenantId?: number | null;
-  propertyId?: number;
+  propertyId?: number | null;
+  contractId?: number | null;
+  monthNumber?: number | null;
   tenantFullName?: string | null;
   tenantPhone?: string | null;
   amount?: number;
   paymentDate?: string;
   dueDate?: string;
-  paymentType?: string;
-  status?: string;
+  paymentMethod?: string;
+  pentamontSettled?: boolean;
   notes?: string;
 }

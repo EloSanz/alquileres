@@ -31,15 +31,18 @@ export class PrismaPropertyRepository implements IPropertyRepository {
     delete (data as any).id;
 
     const property = await prisma.property.create({
-      data
+      data: data as any
     });
     return PropertyEntity.fromPrisma(property);
   }
 
   async update(entity: PropertyEntity): Promise<PropertyEntity> {
+    const data = entity.toPrisma();
+    delete (data as any).id; // Don't update id
+    delete (data as any).createdAt; // Don't update createdAt
     const property = await prisma.property.update({
       where: { id: entity.id! },
-      data: entity.toPrisma()
+      data: data as any
     });
     return PropertyEntity.fromPrisma(property);
   }

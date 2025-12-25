@@ -53,11 +53,12 @@ export class TenantService implements ITenantService {
     // Obtener todos los pagos del inquilino
     const payments = await this.paymentRepository.findByTenantId(tenantId);
 
-    // Contar pagos completados por mes
+    // Contar pagos completados por mes (si tiene paymentDate, está pagado)
     const completedPaymentsByMonth = new Set<number>();
 
     for (const payment of payments) {
-      if (payment.status === 'COMPLETED') {
+      // Si tiene paymentDate, significa que fue pagado
+      if (payment.paymentDate) {
         const paymentDate = new Date(payment.paymentDate);
         const monthsSinceContract = Math.floor(
           (paymentDate.getTime() - contractStart.getTime()) / (1000 * 60 * 60 * 24 * 30.44)
@@ -189,11 +190,19 @@ export class TenantService implements ITenantService {
 
     // Usar Prisma directamente para actualizar los campos históricos sin validación
     const { prisma } = await import('../../lib/prisma');
+    // Preservar trazabilidad en pagos
     await prisma.payment.updateMany({
       where: { tenantId: id },
       data: {
         tenantFullName: fullName,
         tenantPhone: tenant.phone
+      }
+    });
+    // Preservar trazabilidad en contratos
+    await prisma.contract.updateMany({
+      where: { tenantId: id },
+      data: {
+        tenantFullName: fullName
       }
     });
 
@@ -203,6 +212,10 @@ export class TenantService implements ITenantService {
       property.tenantId = null;
       await this.propertyRepository.update(property);
     }
+
+    // Liberar todos los contratos asociados (poner tenantId = null)
+    // Usar SQL nativo ya que updateMany puede tener restricciones
+    await prisma.$executeRaw`UPDATE contracts SET "tenantId" = NULL WHERE "tenantId" = ${id}`;
 
     // Eliminar el tenant
     const deleted = await this.tenantRepository.delete(id);

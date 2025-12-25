@@ -3,6 +3,7 @@ import { PropertyController } from '../controllers/property.controller';
 import { PropertyService } from '../implementations/services/PropertyService';
 import { PrismaPropertyRepository } from '../implementations/repositories/PrismaPropertyRepository';
 import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
+import { PrismaPaymentRepository } from '../implementations/repositories/PrismaPaymentRepository';
 import { authPlugin } from '../plugins/auth.plugin';
 import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
 import { verify as jwtVerify } from 'jsonwebtoken';
@@ -11,8 +12,43 @@ import { logError } from '../utils/logger';
 // Dependency injection
 const propertyRepository = new PrismaPropertyRepository();
 const tenantRepository = new PrismaTenantRepository();
-const propertyService = new PropertyService(propertyRepository, tenantRepository);
+const paymentRepository = new PrismaPaymentRepository();
+const propertyService = new PropertyService(propertyRepository, tenantRepository, paymentRepository);
 const propertyController = new PropertyController(propertyService);
+
+// Validation schemas - aligned with DTOs for consistency
+const idParamsSchema = t.Object({
+  id: t.Numeric({ minimum: 1 })
+});
+
+const createPropertyBodySchema = t.Object({
+  name: t.String({ minLength: 2 }),
+  localNumber: t.Number({ minimum: 1 }),
+  state: t.String({ minLength: 2 }),
+  zipCode: t.Optional(t.String()),
+  propertyType: t.String(),
+  bedrooms: t.Optional(t.Number()),
+  bathrooms: t.Optional(t.Number()),
+  areaSqm: t.Optional(t.Number()),
+  monthlyRent: t.Number({ minimum: 0 }),
+  description: t.Optional(t.String()),
+  isAvailable: t.Optional(t.Boolean()),
+  tenantId: t.Number({ minimum: 1 })
+});
+
+const updatePropertyBodySchema = t.Object({
+  name: t.Optional(t.String({ minLength: 2 })),
+  localNumber: t.Optional(t.Number({ minimum: 1 })),
+  state: t.Optional(t.String({ minLength: 2 })),
+  zipCode: t.Optional(t.String()),
+  propertyType: t.Optional(t.String()),
+  bedrooms: t.Optional(t.Number()),
+  bathrooms: t.Optional(t.Number()),
+  areaSqm: t.Optional(t.Number()),
+  monthlyRent: t.Optional(t.Number({ minimum: 0 })),
+  description: t.Optional(t.String()),
+  isAvailable: t.Optional(t.Boolean())
+});
 
 export const propertyRoutes = new Elysia({ prefix: '/properties' })
   .use(authPlugin)
@@ -41,71 +77,36 @@ export const propertyRoutes = new Elysia({ prefix: '/properties' })
     }
   })
   .get('/:id', propertyController.getById, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
+    params: idParamsSchema,
     detail: {
       tags: ['Properties'],
       summary: 'Get property by ID'
     }
   })
   .post('/', propertyController.create, {
-    body: t.Object({
-      name: t.String({ minLength: 2 }),
-      address: t.String({ minLength: 5 }),
-      city: t.String({ minLength: 2 }),
-      state: t.String({ minLength: 2 }),
-      zipCode: t.Optional(t.String()),
-      propertyType: t.String(),
-      bedrooms: t.Optional(t.Number()),
-      bathrooms: t.Optional(t.Number()),
-      areaSqm: t.Optional(t.Number()),
-      monthlyRent: t.Number({ minimum: 0 }),
-      description: t.Optional(t.String()),
-      isAvailable: t.Optional(t.Boolean()),
-      tenantId: t.Number({ minimum: 1 })
-    }),
+    body: createPropertyBodySchema,
     detail: {
       tags: ['Properties'],
       summary: 'Create new property'
     }
   })
   .put('/:id', propertyController.update, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
-    body: t.Object({
-      name: t.Optional(t.String({ minLength: 2 })),
-      address: t.Optional(t.String({ minLength: 5 })),
-      city: t.Optional(t.String({ minLength: 2 })),
-      state: t.Optional(t.String({ minLength: 2 })),
-      zipCode: t.Optional(t.String()),
-      propertyType: t.Optional(t.String()),
-      bedrooms: t.Optional(t.Number()),
-      bathrooms: t.Optional(t.Number()),
-      areaSqm: t.Optional(t.Number()),
-      monthlyRent: t.Optional(t.Number({ minimum: 0 })),
-      description: t.Optional(t.String()),
-      isAvailable: t.Optional(t.Boolean())
-    }),
+    params: idParamsSchema,
+    body: updatePropertyBodySchema,
     detail: {
       tags: ['Properties'],
       summary: 'Update property'
     }
   })
   .put('/:id/release', propertyController.release, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
+    params: idParamsSchema,
     detail: {
       tags: ['Properties'],
       summary: 'Release property (make it available by removing tenant assignment)'
     }
   })
   .delete('/:id', propertyController.delete, {
-    params: t.Object({
-      id: t.Numeric({ minimum: 1 })
-    }),
+    params: idParamsSchema,
     detail: {
       tags: ['Properties'],
       summary: 'Delete property'

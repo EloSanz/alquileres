@@ -9,6 +9,7 @@ import {
   People as PeopleIcon,
   Home as HomeIcon,
   Payment as PaymentIcon,
+  Description as ContractIcon,
 } from '@mui/icons-material';
 
 const NavigationTabs: React.FC = () => {
@@ -20,6 +21,7 @@ const NavigationTabs: React.FC = () => {
     if (location.pathname === '/tenants') return 'tenants';
     if (location.pathname === '/property') return 'properties';
     if (location.pathname === '/payments') return 'payments';
+    if (location.pathname === '/contracts') return 'contracts';
     if (location.pathname === '/' || location.pathname.startsWith('/#')) return 'home';
     return 'home'; // Default
   };
@@ -34,7 +36,7 @@ const NavigationTabs: React.FC = () => {
   return (
     <Box mb={4}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Button
             fullWidth
             variant={activeSection === 'tenants' ? 'contained' : 'outlined'}
@@ -45,7 +47,7 @@ const NavigationTabs: React.FC = () => {
             Inquilinos
           </Button>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Button
             fullWidth
             variant={activeSection === 'properties' ? 'contained' : 'outlined'}
@@ -53,10 +55,10 @@ const NavigationTabs: React.FC = () => {
             onClick={() => handleNavigate('/property')}
             sx={{ py: 2 }}
           >
-            Propiedades
+            Locales
           </Button>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Button
             fullWidth
             variant={activeSection === 'payments' ? 'contained' : 'outlined'}
@@ -65,6 +67,17 @@ const NavigationTabs: React.FC = () => {
             sx={{ py: 2 }}
           >
             Pagos
+          </Button>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Button
+            fullWidth
+            variant={activeSection === 'contracts' ? 'contained' : 'outlined'}
+            startIcon={<ContractIcon />}
+            onClick={() => handleNavigate('/contracts')}
+            sx={{ py: 2 }}
+          >
+            Contratos
           </Button>
         </Grid>
       </Grid>

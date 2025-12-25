@@ -5,6 +5,9 @@ import { prisma } from '../../lib/prisma';
 export class PrismaPaymentRepository implements IPaymentRepository {
   async findAll(): Promise<PaymentEntity[]> {
     const payments = await prisma.payment.findMany({
+      include: {
+        tenant: true
+      },
       orderBy: { createdAt: 'desc' }
     });
     return payments.map(payment => PaymentEntity.fromPrisma(payment));
@@ -20,7 +23,21 @@ export class PrismaPaymentRepository implements IPaymentRepository {
   async findByTenantId(tenantId: number): Promise<PaymentEntity[]> {
     const payments = await prisma.payment.findMany({
       where: { tenantId },
+      include: {
+        tenant: true
+      },
       orderBy: { paymentDate: 'desc' }
+    });
+    return payments.map(payment => PaymentEntity.fromPrisma(payment));
+  }
+
+  async findByContractId(contractId: number): Promise<PaymentEntity[]> {
+    const payments = await prisma.payment.findMany({
+      where: { contractId },
+      include: {
+        tenant: true
+      },
+      orderBy: { monthNumber: 'asc' }
     });
     return payments.map(payment => PaymentEntity.fromPrisma(payment));
   }
@@ -31,15 +48,18 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     delete (data as any).id;
 
     const payment = await prisma.payment.create({
-      data
+      data: data as any
     });
     return PaymentEntity.fromPrisma(payment);
   }
 
   async update(entity: PaymentEntity): Promise<PaymentEntity> {
+    const data = entity.toPrisma();
+    delete (data as any).id; // Don't update id
+    delete (data as any).createdAt; // Don't update createdAt
     const payment = await prisma.payment.update({
       where: { id: entity.id! },
-      data: entity.toPrisma()
+      data: data as any // Allow null values
     });
     return PaymentEntity.fromPrisma(payment);
   }

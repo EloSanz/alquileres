@@ -1,12 +1,12 @@
 // Import the enum
 import { PropertyStatus } from '@prisma/client';
+import { PropertyDTO } from '../dtos/property.dto';
 
 export class PropertyEntity {
   constructor(
     public id: number | null,
     public name: string,
-    public address: string,
-    public city: string,
+    public localNumber: number,
     public state: string,
     public zipCode: string | null,
     public propertyType: PropertyType,
@@ -24,8 +24,7 @@ export class PropertyEntity {
 
   static create(data: {
     name: string;
-    address: string;
-    city: string;
+    localNumber: number;
     state: string;
     zipCode?: string;
     propertyType: string;
@@ -40,8 +39,7 @@ export class PropertyEntity {
     return new PropertyEntity(
       null, // id
       data.name,
-      data.address,
-      data.city,
+      data.localNumber,
       data.state,
       data.zipCode || null,
       data.propertyType as PropertyType,
@@ -60,8 +58,7 @@ export class PropertyEntity {
 
   update(data: {
     name?: string;
-    address?: string;
-    city?: string;
+    localNumber?: number;
     state?: string;
     zipCode?: string;
     propertyType?: string;
@@ -75,8 +72,7 @@ export class PropertyEntity {
     tenantId?: number | null;
   }): PropertyEntity {
     if (data.name !== undefined) this.name = data.name;
-    if (data.address !== undefined) this.address = data.address;
-    if (data.city !== undefined) this.city = data.city;
+    if (data.localNumber !== undefined) this.localNumber = data.localNumber;
     if (data.state !== undefined) this.state = data.state;
     if (data.zipCode !== undefined) this.zipCode = data.zipCode;
     if (data.propertyType !== undefined) this.propertyType = data.propertyType as PropertyType;
@@ -97,8 +93,7 @@ export class PropertyEntity {
     return new PropertyEntity(
       prismaData.id,
       prismaData.name,
-      prismaData.address,
-      prismaData.city,
+      prismaData.localNumber,
       prismaData.state,
       prismaData.zipCode,
       prismaData.propertyType,
@@ -119,8 +114,7 @@ export class PropertyEntity {
     return {
       id: this.id || undefined,
       name: this.name,
-      address: this.address,
-      city: this.city,
+      localNumber: this.localNumber,
       state: this.state,
       zipCode: this.zipCode,
       propertyType: this.propertyType,
@@ -141,8 +135,7 @@ export class PropertyEntity {
     return {
       id: this.id!,
       name: this.name,
-      address: this.address,
-      city: this.city,
+      localNumber: this.localNumber,
       state: this.state,
       zipCode: this.zipCode,
       propertyType: this.propertyType,
@@ -163,11 +156,8 @@ export class PropertyEntity {
     if (!this.name || this.name.trim().length < 3) {
       throw new Error('Property name must be at least 3 characters');
     }
-    if (!this.address || this.address.trim().length < 5) {
-      throw new Error('Address must be at least 5 characters');
-    }
-    if (!this.city || this.city.trim().length < 2) {
-      throw new Error('City must be at least 2 characters');
+    if (!this.localNumber || this.localNumber <= 0) {
+      throw new Error('Local number must be greater than 0');
     }
     if (!this.state || this.state.trim().length < 2) {
       throw new Error('State must be at least 2 characters');
@@ -180,61 +170,7 @@ export class PropertyEntity {
 
 // Enums
 export enum PropertyType {
-  APARTMENT = 'APARTMENT',
-  HOUSE = 'HOUSE',
-  STUDIO = 'STUDIO',
-  OFFICE = 'OFFICE',
-  COMMERCIAL = 'COMMERCIAL',
-  LAND = 'LAND'
+  INSIDE = 'INSIDE',  // Local adentro
+  OUTSIDE = 'OUTSIDE' // Local afuera
 }
 
-// DTO types
-export interface PropertyDTO {
-  id: number;
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string | null;
-  propertyType: PropertyType;
-  bedrooms: number | null;
-  bathrooms: number | null;
-  areaSqm: number | null;
-  monthlyRent: number;
-  description: string | null;
-  isAvailable: boolean;
-  status: string;
-  tenantId: number | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreatePropertyDTO {
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode?: string;
-  propertyType: PropertyType;
-  bedrooms?: number;
-  bathrooms?: number;
-  areaSqm?: number;
-  monthlyRent: number;
-  description?: string;
-  isAvailable?: boolean;
-}
-
-export interface UpdatePropertyDTO {
-  name?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  propertyType?: PropertyType;
-  bedrooms?: number;
-  bathrooms?: number;
-  areaSqm?: number;
-  monthlyRent?: number;
-  description?: string;
-  isAvailable?: boolean;
-}
