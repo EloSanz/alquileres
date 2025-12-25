@@ -290,6 +290,7 @@ async function main() {
       data: {
         tenantId: firstTenant.id,
         propertyId: firstProperty.id,
+        tenantFullName: `${firstTenant.firstName} ${firstTenant.lastName}`,
         startDate,
         endDate,
         monthlyRent: firstProperty.monthlyRent,

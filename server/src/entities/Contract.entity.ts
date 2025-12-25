@@ -9,8 +9,9 @@ export interface ContractDTO {
   id: number;
   tenantId: number | null;
   propertyId: number | null;
-  tenantFullName?: string;
+  tenantFullName?: string | null;
   propertyName?: string;
+  propertyLocalNumber?: number;
   startDate: string;
   endDate: string;
   monthlyRent: number;
@@ -39,6 +40,8 @@ export class ContractEntity {
     public id: number | null,
     public tenantId: number | null,
     public propertyId: number | null,
+    // Redundancia para trazabilidad
+    public tenantFullName: string | null,
     public startDate: Date,
     public endDate: Date,
     public monthlyRent: number,
@@ -52,10 +55,11 @@ export class ContractEntity {
     const endDate = new Date(startDate);
     endDate.setFullYear(endDate.getFullYear() + 1); // Contrato de 1 año
 
-    return new ContractEntity(
+    const entity = new ContractEntity(
       null, // id
       data.tenantId,
       data.propertyId,
+      null,
       startDate,
       endDate,
       data.monthlyRent,
@@ -63,6 +67,7 @@ export class ContractEntity {
       new Date(), // createdAt
       new Date()  // updatedAt
     );
+    return entity;
   }
 
   update(data: UpdateContractDTO): ContractEntity {
@@ -86,6 +91,7 @@ export class ContractEntity {
       prismaData.id,
       prismaData.tenantId,
       prismaData.propertyId,
+      prismaData.tenantFullName ?? null,
       prismaData.startDate,
       prismaData.endDate,
       Number(prismaData.monthlyRent),
@@ -95,10 +101,11 @@ export class ContractEntity {
     );
     // Agregar datos de relaciones si están disponibles
     if (prismaData.tenant) {
-      (entity as any).tenantFullName = `${prismaData.tenant.firstName} ${prismaData.tenant.lastName}`;
+      entity.tenantFullName = entity.tenantFullName ?? `${prismaData.tenant.firstName} ${prismaData.tenant.lastName}`;
     }
     if (prismaData.property) {
       (entity as any).propertyName = prismaData.property.name;
+      (entity as any).propertyLocalNumber = prismaData.property.localNumber;
     }
     return entity;
   }
@@ -108,6 +115,7 @@ export class ContractEntity {
       id: this.id || undefined,
       tenantId: this.tenantId,
       propertyId: this.propertyId,
+      tenantFullName: this.tenantFullName ?? undefined,
       startDate: this.startDate,
       endDate: this.endDate,
       monthlyRent: this.monthlyRent,
@@ -122,8 +130,9 @@ export class ContractEntity {
       id: this.id!,
       tenantId: this.tenantId,
       propertyId: this.propertyId,
-      tenantFullName: (this as any).tenantFullName,
+      tenantFullName: this.tenantFullName,
       propertyName: (this as any).propertyName,
+      propertyLocalNumber: (this as any).propertyLocalNumber,
       startDate: this.startDate.toISOString().split('T')[0],
       endDate: this.endDate.toISOString().split('T')[0],
       monthlyRent: this.monthlyRent,

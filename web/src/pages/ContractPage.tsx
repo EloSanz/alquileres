@@ -166,7 +166,7 @@ const ContractPage = () => {
               <TableRow>
                 <TableCell><strong>ID</strong></TableCell>
                 <TableCell><strong>Inquilino</strong></TableCell>
-                <TableCell><strong>Local</strong></TableCell>
+                <TableCell><strong>Local / N°</strong></TableCell>
                 <TableCell><strong>Estado</strong></TableCell>
                 <TableCell><strong>Fecha Inicio</strong></TableCell>
                 <TableCell><strong>Fecha Fin</strong></TableCell>
@@ -193,6 +193,11 @@ const ContractPage = () => {
                     </TableCell>
                     <TableCell>
                       {contract.propertyName || `ID: ${contract.propertyId}`}
+                      {contract.propertyLocalNumber !== undefined && (
+                        <Box component="span" sx={{ color: 'text.secondary', ml: 1 }}>
+                          / N° {contract.propertyLocalNumber}
+                        </Box>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Chip

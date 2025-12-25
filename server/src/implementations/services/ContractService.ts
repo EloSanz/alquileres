@@ -74,6 +74,16 @@ export class ContractService implements IContractService {
   async createContract(data: CreateContractDTO, _userId: number): Promise<ContractDTO> {
     // Crear entidad del contrato
     const entity = ContractEntity.create(data);
+    // Calcular y setear redundancia de nombre completo del inquilino
+    try {
+      const { prisma } = await import('../../lib/prisma');
+      const tenant = await prisma.tenant.findUnique({ where: { id: data.tenantId }, select: { firstName: true, lastName: true } });
+      if (tenant) {
+        (entity as any).tenantFullName = `${tenant.firstName} ${tenant.lastName}`;
+      }
+    } catch {
+      // Ignorar si falla, no bloquear la creación
+    }
     entity.validate();
 
     // Guardar contrato

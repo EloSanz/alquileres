@@ -104,6 +104,8 @@ model Contract {
   id           Int            @id @default(autoincrement())
   tenantId     Int?
   propertyId   Int?
+  // Redundancia para trazabilidad si tenantId queda en NULL
+  tenantFullName String?
   startDate    DateTime
   endDate      DateTime       // startDate + 1 año
   monthlyRent  Decimal

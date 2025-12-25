@@ -190,11 +190,19 @@ export class TenantService implements ITenantService {
 
     // Usar Prisma directamente para actualizar los campos históricos sin validación
     const { prisma } = await import('../../lib/prisma');
+    // Preservar trazabilidad en pagos
     await prisma.payment.updateMany({
       where: { tenantId: id },
       data: {
         tenantFullName: fullName,
         tenantPhone: tenant.phone
+      }
+    });
+    // Preservar trazabilidad en contratos
+    await prisma.contract.updateMany({
+      where: { tenantId: id },
+      data: {
+        tenantFullName: fullName
       }
     });
 

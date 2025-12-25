@@ -6,6 +6,7 @@ export interface Contract {
   propertyId: number | null
   tenantFullName?: string | null
   propertyName?: string | null
+  propertyLocalNumber?: number
   startDate: string
   endDate: string
   monthlyRent: number
