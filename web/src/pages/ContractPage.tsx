@@ -38,6 +38,17 @@ const ContractPage = () => {
   });
   const [editorOpen, setEditorOpen] = useState(false);
 
+  // Helper para traducir estados a español
+  const getStatusLabel = (status: string): string => {
+    const labels: Record<string, string> = {
+      'ACTIVE': 'Activo',
+      'COMPLETED': 'Completado',
+      'CANCELLED': 'Cancelado',
+      'TERMINATED': 'Terminado'
+    };
+    return labels[status] || status;
+  };
+
   const contractFilters: FilterConfig[] = [
     {
       key: 'status',
@@ -219,7 +230,7 @@ const ContractPage = () => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={contract.status}
+                        label={getStatusLabel(contract.status)}
                         color={
                           contract.status === 'ACTIVE'
                             ? 'success'

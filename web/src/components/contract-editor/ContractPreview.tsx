@@ -21,6 +21,25 @@ function formatDateLong(dateStr: string): string {
   return `${day} de ${month} del ${year}`;
 }
 
+// Componente para mostrar placeholders con mensajes de campos faltantes
+function PlaceholderText({ value, placeholder }: { value: string | number | null | undefined; placeholder: string }) {
+  const stringValue = String(value || '').trim();
+  if (!stringValue) {
+    return (
+      <span style={{
+        backgroundColor: '#ffebee',
+        color: '#d32f2f',
+        padding: '2px 4px',
+        borderRadius: '2px',
+        fontStyle: 'italic'
+      }}>
+        [Falta completar: {placeholder}]
+      </span>
+    );
+  }
+  return <strong>{stringValue}</strong>;
+}
+
 function ContractPreview({ data, fullPage }: ContractPreviewProps) {
   const fontSize = fullPage ? '11pt' : '10pt';
   const lineHeight = fullPage ? 1.6 : 1.5;
@@ -36,7 +55,7 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
         CONTRATO DE ARRENDAMIENTO COMERCIAL
       </Typography>
       <Typography sx={{ textAlign: 'center', mb: 3, fontFamily: 'inherit' }}>
-        Stand N.º {data.stand_numero || '___'} - {data.lugar_firma || 'Pucallpa'}, Perú
+        Stand N.º <PlaceholderText value={data.stand_numero} placeholder="Número de Stand" /> - {data.lugar_firma || 'Pucallpa'}, Perú
       </Typography>
 
       <Divider sx={{ my: 2 }} />
@@ -44,17 +63,17 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
       {/* Introducción */}
       <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
         Conste por el presente documento el Contrato de Arrendamiento que celebran de una parte{' '}
-        <strong>{data.arrendador_nombre || '____'}</strong>, identificada con RUC. Nº{' '}
-        <strong>{data.arrendador_ruc || '____'}</strong>, debidamente representada por el{' '}
-        <strong>GERENTE GENERAL Sr. {data.gerente_nombre || '____'}</strong>, identificado con DNI Nº{' '}
-        <strong>{data.gerente_dni || '____'}</strong>, según poder inscrito en la partida electrónica Nº{' '}
-        <strong>{data.gerente_partida_registral || '____'}</strong> del registro de personas jurídicas de la oficina registral de {data.lugar_firma || 'Pucallpa'}, 
-        con domicilio fiscal sito en {data.arrendador_domicilio || '____'}, del distrito de {data.arrendador_distrito || '____'}, 
-        provincia de {data.arrendador_provincia || '____'}, departamento de {data.arrendador_departamento || '____'}, 
-        que en lo sucesivo se denominará <strong>EL ARRENDADOR</strong> y de la otra parte, 
-        Doña <strong>{data.arrendatario_nombre || '____'}</strong>, identificado con D.N.I. Nº{' '}
-        <strong>{data.arrendatario_dni || '____'}</strong>, con domicilio en {data.arrendatario_domicilio || '____'}, 
-        distrito de {data.arrendatario_distrito || '____'}, provincia de {data.arrendatario_provincia || '____'} y 
+        <PlaceholderText value={data.arrendador_nombre} placeholder="Nombre del Arrendador" />, identificada con RUC. Nº{' '}
+        <PlaceholderText value={data.arrendador_ruc} placeholder="RUC del Arrendador" />, debidamente representada por el{' '}
+        <strong>GERENTE GENERAL Sr. <PlaceholderText value={data.gerente_nombre} placeholder="Nombre del Gerente" /></strong>, identificado con DNI Nº{' '}
+        <PlaceholderText value={data.gerente_dni} placeholder="DNI del Gerente" />, según poder inscrito en la partida electrónica Nº{' '}
+        <PlaceholderText value={data.gerente_partida_registral} placeholder="Partida Registral del Gerente" /> del registro de personas jurídicas de la oficina registral de {data.lugar_firma || 'Pucallpa'},
+        con domicilio fiscal sito en {data.arrendador_domicilio || '____'}, del distrito de {data.arrendador_distrito || '____'},
+        provincia de {data.arrendador_provincia || '____'}, departamento de {data.arrendador_departamento || '____'},
+        que en lo sucesivo se denominará <strong>EL ARRENDADOR</strong> y de la otra parte,
+        Doña <PlaceholderText value={data.arrendatario_nombre} placeholder="Nombre del Arrendatario" />, identificado con D.N.I. Nº{' '}
+        <PlaceholderText value={data.arrendatario_dni} placeholder="DNI del Arrendatario" />, con domicilio en {data.arrendatario_domicilio || '____'},
+        distrito de {data.arrendatario_distrito || '____'}, provincia de {data.arrendatario_provincia || '____'} y
         departamento de {data.arrendatario_departamento || '____'}, a quien en adelante se le denominará{' '}
         <strong>EL ARRENDATARIO</strong> en los términos y condiciones de las cláusulas siguientes:
       </Typography>
@@ -113,10 +132,10 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
         PLAZO DEL CONTRATO
       </Typography>
       <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
-        <strong>TERCERA:</strong> El plazo del presente contrato de arrendamiento, pactado de común acuerdo por las 
-        partes contratantes, es por el período de un <strong>({data.plazo_meses || '12'}) meses</strong>, que se inicia 
-        el <strong>{formatDateLong(data.fecha_inicio)}</strong> y concluye indefectiblemente el{' '}
-        <strong>{formatDateLong(data.fecha_fin)}</strong>.
+        <strong>TERCERA:</strong> El plazo del presente contrato de arrendamiento, pactado de común acuerdo por las
+        partes contratantes, es por el período de un <strong>({data.plazo_meses || '12'}) meses</strong>, que se inicia
+        el <strong>{data.fecha_inicio ? formatDateLong(data.fecha_inicio) : <PlaceholderText value="" placeholder="Fecha de Inicio" />}</strong> y concluye indefectiblemente el{' '}
+        <strong>{data.fecha_fin ? formatDateLong(data.fecha_fin) : <PlaceholderText value="" placeholder="Fecha de Fin" />}</strong>.
       </Typography>
       <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
         En caso de que <strong>EL ARRENDATARIO</strong> deseara prorrogar el plazo del presente contrato, deberá 
@@ -139,8 +158,8 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
         LA MERCED CONDUCTIVA: FORMA Y OPORTUNIDAD DE PAGO
       </Typography>
       <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
-        <strong>SEXTA:</strong> El pago de la renta mensual, convenida de mutuo acuerdo por las partes contratantes, 
-        es de <strong>S/{data.renta_mensual || '____'} ({data.renta_texto || '____'})</strong>, por el arrendamiento de{' '}
+        <strong>SEXTA:</strong> El pago de la renta mensual, convenida de mutuo acuerdo por las partes contratantes,
+        es de <strong>S/<PlaceholderText value={data.renta_mensual} placeholder="Renta Mensual" /> ({data.renta_texto || '____'})</strong>, por el arrendamiento de{' '}
         <strong>EL INMUEBLE</strong> y de los accesorios.
       </Typography>
       <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>

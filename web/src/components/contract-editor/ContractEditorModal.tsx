@@ -63,6 +63,8 @@ export default function ContractEditorModal({
   const [draftId, setDraftId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -80,6 +82,8 @@ export default function ContractEditorModal({
       }
       setHasChanges(false);
       setError('');
+      setNameError('');
+      setFieldErrors({});
       setTabValue(0);
     }
   }, [open, draft]);
@@ -106,16 +110,97 @@ export default function ContractEditorModal({
   const handleDataChange = useCallback((field: keyof ContractData, value: string) => {
     setContractData(prev => ({ ...prev, [field]: value }));
     setHasChanges(true);
-  }, []);
+
+    // Validación en tiempo real
+    const newFieldErrors = { ...fieldErrors };
+    let error = '';
+
+    // Validaciones específicas por campo
+    switch (field) {
+      case 'arrendador_ruc':
+        if (value.trim() && !/^\d{11}$/.test(value.trim())) {
+          error = 'Debe tener 11 dígitos';
+        }
+        break;
+      case 'gerente_dni':
+      case 'arrendatario_dni':
+        if (value.trim() && !/^(\d{7}|\d{8}|\d{8}[A-Za-z0-9])$/.test(value.trim())) {
+          error = 'Debe tener 7-9 caracteres (dígitos + opcional letra)';
+        }
+        break;
+      case 'fecha_inicio':
+      case 'fecha_fin':
+        if (value.trim()) {
+          const date = new Date(value);
+          if (isNaN(date.getTime())) {
+            error = 'Fecha inválida';
+          } else if (field === 'fecha_fin' && contractData.fecha_inicio) {
+            const startDate = new Date(contractData.fecha_inicio);
+            if (date <= startDate) {
+              error = 'Debe ser posterior a fecha de inicio';
+            }
+          }
+        }
+        break;
+      case 'renta_mensual':
+      case 'garantia_monto':
+      case 'adelanto_monto':
+      case 'penalidad_diaria':
+        if (value.trim()) {
+          const num = parseFloat(value);
+          if (isNaN(num) || num <= 0) {
+            error = 'Debe ser un número positivo';
+          }
+        }
+        break;
+      case 'plazo_meses':
+        if (value.trim()) {
+          const num = parseInt(value);
+          if (isNaN(num) || num <= 0) {
+            error = 'Debe ser un número positivo';
+          }
+        }
+        break;
+      // Partida Registral: Sin validación restrictiva (acepta cualquier formato alfanumérico)
+      case 'gerente_partida_registral':
+      case 'inmueble_partida_registral':
+      case 'propietario_partida_registral':
+        // No aplicar validación - las partidas registrales pueden tener cualquier formato
+        break;
+    }
+
+    if (error) {
+      newFieldErrors[field] = error;
+    } else {
+      delete newFieldErrors[field];
+    }
+
+    setFieldErrors(newFieldErrors);
+  }, [contractData.fecha_inicio, fieldErrors]);
 
   const handleNameChange = (name: string) => {
     setDraftName(name);
     setHasChanges(true);
+
+    // Real-time validation
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setNameError('El nombre del borrador es requerido');
+    } else if (trimmed.length < 3) {
+      setNameError('El nombre debe tener al menos 3 caracteres');
+    } else {
+      setNameError('');
+    }
   };
 
   const handleSave = async (silent = false) => {
-    if (!draftName.trim()) {
+    const trimmedName = draftName.trim();
+    if (!trimmedName) {
       if (!silent) setError('El nombre del borrador es requerido');
+      return;
+    }
+    if (trimmedName.length < 3) {
+      if (!silent) setError('El nombre del borrador debe tener al menos 3 caracteres');
       return;
     }
 
@@ -126,9 +211,10 @@ export default function ContractEditorModal({
       if (draftId) {
         // Update existing draft
         const updated = await contractDraftService.updateDraft(draftId, {
-          name: draftName,
+          name: trimmedName,
           data: contractData
         });
+        setDraftName(trimmedName); // Update the state with trimmed name
         if (!silent) {
           setSnackbar({ open: true, message: 'Borrador actualizado correctamente' });
         }
@@ -136,10 +222,11 @@ export default function ContractEditorModal({
       } else {
         // Create new draft
         const created = await contractDraftService.createDraft({
-          name: draftName,
+          name: trimmedName,
           data: contractData
         });
         setDraftId(created.id);
+        setDraftName(trimmedName); // Update the state with trimmed name
         if (!silent) {
           setSnackbar({ open: true, message: 'Borrador creado correctamente' });
         }
@@ -155,76 +242,135 @@ export default function ContractEditorModal({
     }
   };
 
-  const handleExportPDF = () => {
-    // Open print dialog for the preview content
-    const printContent = previewRef.current;
-    if (!printContent) return;
+  const validateRequiredFields = (): string[] => {
+    const missingFields: string[] = [];
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      setError('No se pudo abrir la ventana de impresión. Verifica que no estén bloqueados los pop-ups.');
-      return;
+    // Campos requeridos del contrato
+    if (!contractData.arrendador_nombre.trim()) missingFields.push('Nombre del Arrendador');
+    if (!contractData.arrendador_ruc.trim()) missingFields.push('RUC del Arrendador');
+    if (!contractData.gerente_nombre.trim()) missingFields.push('Nombre del Gerente');
+    if (!contractData.gerente_dni.trim()) missingFields.push('DNI del Gerente');
+    if (!contractData.arrendatario_nombre.trim()) missingFields.push('Nombre del Arrendatario');
+    if (!contractData.arrendatario_dni.trim()) missingFields.push('DNI del Arrendatario');
+    if (!contractData.fecha_inicio.trim()) missingFields.push('Fecha de Inicio');
+    if (!contractData.fecha_fin.trim()) missingFields.push('Fecha de Fin');
+    if (!contractData.renta_mensual.trim()) missingFields.push('Renta Mensual');
+    if (!contractData.stand_numero.trim()) missingFields.push('Número de Stand');
+
+    return missingFields;
+  };
+
+  const validateFieldFormats = (): string[] => {
+    const formatErrors: string[] = [];
+
+    // Validar RUC (11 dígitos)
+    if (contractData.arrendador_ruc.trim() && !/^\d{11}$/.test(contractData.arrendador_ruc.trim())) {
+      formatErrors.push('RUC del Arrendador debe tener 11 dígitos');
     }
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${draftName || 'Contrato de Arrendamiento'}</title>
-          <style>
-            @page {
-              size: A4;
-              margin: 2cm;
-            }
-            body {
-              font-family: 'Times New Roman', Times, serif;
-              font-size: 11pt;
-              line-height: 1.5;
-              color: #000;
-            }
-            h1 {
-              text-align: center;
-              font-size: 14pt;
-              margin-bottom: 0.5cm;
-            }
-            h2 {
-              font-size: 12pt;
-              margin-top: 0.5cm;
-              margin-bottom: 0.3cm;
-              border-bottom: 1px solid #000;
-            }
-            p {
-              text-align: justify;
-              margin-bottom: 0.3cm;
-            }
-            strong {
-              font-weight: bold;
-            }
-            .firma-section {
-              margin-top: 2cm;
-              display: flex;
-              justify-content: space-between;
-            }
-            .firma-box {
-              width: 40%;
-              text-align: center;
-            }
-            .firma-linea {
-              border-top: 1px solid #000;
-              margin-top: 2cm;
-              padding-top: 0.3cm;
-            }
-          </style>
-        </head>
-        <body>
-          ${printContent.innerHTML}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    // Validar DNI del gerente (7-9 caracteres: dígitos + opcional alfanumérico)
+    if (contractData.gerente_dni.trim() && !/^(\d{7}|\d{8}|\d{8}[A-Za-z0-9])$/.test(contractData.gerente_dni.trim())) {
+      formatErrors.push('DNI del Gerente debe tener 7-9 caracteres (dígitos + opcional letra)');
+    }
+
+    // Validar DNI del arrendatario (7-9 caracteres: dígitos + opcional alfanumérico)
+    if (contractData.arrendatario_dni.trim() && !/^(\d{7}|\d{8}|\d{8}[A-Za-z0-9])$/.test(contractData.arrendatario_dni.trim())) {
+      formatErrors.push('DNI del Arrendatario debe tener 7-9 caracteres (dígitos + opcional letra)');
+    }
+
+    // Validar fechas
+    if (contractData.fecha_inicio.trim()) {
+      const startDate = new Date(contractData.fecha_inicio);
+      if (isNaN(startDate.getTime())) {
+        formatErrors.push('Fecha de Inicio no es válida');
+      }
+    }
+
+    if (contractData.fecha_fin.trim()) {
+      const endDate = new Date(contractData.fecha_fin);
+      if (isNaN(endDate.getTime())) {
+        formatErrors.push('Fecha de Fin no es válida');
+      } else if (contractData.fecha_inicio.trim()) {
+        const startDate = new Date(contractData.fecha_inicio);
+        if (endDate <= startDate) {
+          formatErrors.push('Fecha de Fin debe ser posterior a Fecha de Inicio');
+        }
+      }
+    }
+
+    // Validar renta mensual (número positivo)
+    if (contractData.renta_mensual.trim()) {
+      const rent = parseFloat(contractData.renta_mensual);
+      if (isNaN(rent) || rent <= 0) {
+        formatErrors.push('Renta Mensual debe ser un número positivo');
+      }
+    }
+
+    // Validar plazo en meses (número positivo)
+    if (contractData.plazo_meses.trim()) {
+      const months = parseInt(contractData.plazo_meses);
+      if (isNaN(months) || months <= 0) {
+        formatErrors.push('Plazo en meses debe ser un número positivo');
+      }
+    }
+
+    // Validar partida registral (alfanumérica, sin restricciones específicas)
+    // La partida registral puede tener cualquier formato alfanumérico
+    // No aplicamos validación restrictiva ya que varía según la SUNARP
+
+    return formatErrors;
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      // Validar campos requeridos
+      const missingFields = validateRequiredFields();
+      if (missingFields.length > 0) {
+        setError(`Faltan completar los siguientes campos: ${missingFields.join(', ')}`);
+        return;
+      }
+
+      // Validar formatos de campos
+      const formatErrors = validateFieldFormats();
+      if (formatErrors.length > 0) {
+        setError(`Errores de formato: ${formatErrors.join(', ')}`);
+        return;
+      }
+
+      // Dynamic import to avoid bundle size issues
+      const html2pdf = (await import('html2pdf.js')).default;
+
+      const printContent = previewRef.current;
+      if (!printContent) {
+        setError('Error interno: No se pudo acceder al contenido del contrato. Intente recargar la página.');
+        return;
+      }
+
+      // Configure options for PDF generation
+      const options = {
+        margin: [20, 15, 20, 15] as [number, number, number, number], // top, left, bottom, right in mm
+        filename: `${draftName || 'Contrato de Arrendamiento'}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true
+        },
+        jsPDF: {
+          unit: 'mm' as const,
+          format: 'a4' as const,
+          orientation: 'portrait' as const
+        }
+      };
+
+      // Generate and download PDF
+      await html2pdf().set(options).from(printContent).save();
+
+      setSnackbar({ open: true, message: 'PDF exportado correctamente' });
+    } catch (err: any) {
+      console.error('Error exporting PDF:', err);
+      setError('Error al exportar PDF: ' + (err.message || 'Error desconocido'));
+    }
   };
 
   const handleClose = () => {
@@ -273,8 +419,7 @@ export default function ContractEditorModal({
         <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3 }}>
           <Tabs value={tabValue} onChange={handleTabChange}>
             <Tab label="Formulario" id="contract-tab-0" aria-controls="contract-tabpanel-0" />
-            <Tab label="Vista Previa" id="contract-tab-1" aria-controls="contract-tabpanel-1" />
-            <Tab label="Página Completa" id="contract-tab-2" aria-controls="contract-tabpanel-2" />
+            <Tab label="Vista del Documento" id="contract-tab-1" aria-controls="contract-tabpanel-1" />
           </Tabs>
         </Box>
 
@@ -284,6 +429,8 @@ export default function ContractEditorModal({
               <ContractFormSection
                 data={contractData}
                 draftName={draftName}
+                nameError={nameError}
+                fieldErrors={fieldErrors}
                 onChange={handleDataChange}
                 onNameChange={handleNameChange}
               />
@@ -291,34 +438,32 @@ export default function ContractEditorModal({
           </TabPanel>
 
           <TabPanel value={tabValue} index={1}>
-            <Box sx={{ height: '100%', overflow: 'auto', p: 3, bgcolor: 'grey.100' }}>
+            <Box sx={{
+              height: '100%',
+              overflow: 'auto',
+              bgcolor: '#f5f5f5',
+              p: 0,
+              '@media print': {
+                bgcolor: 'white !important',
+                p: '0 !important'
+              }
+            }}>
               <Box
                 ref={previewRef}
                 sx={{
                   bgcolor: 'white',
-                  p: 4,
-                  maxWidth: 800,
+                  width: '210mm', // A4 width
+                  minHeight: '297mm', // A4 height
                   mx: 'auto',
-                  boxShadow: 3,
-                  minHeight: '100%'
-                }}
-              >
-                <ContractPreview data={contractData} />
-              </Box>
-            </Box>
-          </TabPanel>
-
-          <TabPanel value={tabValue} index={2}>
-            <Box sx={{ height: '100%', overflow: 'auto', bgcolor: 'grey.100' }}>
-              <Box
-                ref={tabValue === 2 ? previewRef : undefined}
-                sx={{
-                  bgcolor: 'white',
-                  p: 6,
-                  maxWidth: 900,
-                  mx: 'auto',
-                  my: 2,
-                  boxShadow: 3
+                  my: 0,
+                  p: 8,
+                  boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                  '@media print': {
+                    width: 'auto !important',
+                    minHeight: 'auto !important',
+                    boxShadow: 'none !important',
+                    p: '20mm !important'
+                  }
                 }}
               >
                 <ContractPreview data={contractData} fullPage />
