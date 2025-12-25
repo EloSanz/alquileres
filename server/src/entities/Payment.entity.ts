@@ -14,6 +14,7 @@ export class PaymentEntity {
     public paymentDate: Date,
     public dueDate: Date,
     public paymentMethod: PaymentMethod,
+    public pentamontSettled: boolean,
     public notes: string | null,
     public createdAt: Date,
     public updatedAt: Date
@@ -30,6 +31,7 @@ export class PaymentEntity {
     paymentDate?: string;
     dueDate: string;
     paymentMethod?: string;
+    pentamontSettled?: boolean;
     notes?: string;
   }): PaymentEntity {
     return new PaymentEntity(
@@ -44,6 +46,7 @@ export class PaymentEntity {
       data.paymentDate ? new Date(data.paymentDate) : new Date(),
       new Date(data.dueDate),
       (data.paymentMethod as PaymentMethod) || PaymentMethod.YAPE,
+      data.pentamontSettled ?? false,
       data.notes || null,
       new Date(), // createdAt
       new Date()  // updatedAt
@@ -61,6 +64,7 @@ export class PaymentEntity {
     paymentDate?: string;
     dueDate?: string;
     paymentMethod?: string;
+    pentamontSettled?: boolean;
     notes?: string;
   }): PaymentEntity {
     if (data.tenantId !== undefined) this.tenantId = data.tenantId;
@@ -73,6 +77,7 @@ export class PaymentEntity {
     if (data.paymentDate !== undefined) this.paymentDate = new Date(data.paymentDate);
     if (data.dueDate !== undefined) this.dueDate = new Date(data.dueDate);
     if (data.paymentMethod !== undefined) this.paymentMethod = data.paymentMethod as PaymentMethod;
+    if (data.pentamontSettled !== undefined) this.pentamontSettled = data.pentamontSettled;
     if (data.notes !== undefined) this.notes = data.notes;
     this.updatedAt = new Date();
     this.validate();
@@ -92,6 +97,7 @@ export class PaymentEntity {
       prismaData.paymentDate,
       prismaData.dueDate,
       prismaData.paymentMethod,
+      prismaData.pentamontSettled ?? false,
       prismaData.notes,
       prismaData.createdAt,
       prismaData.updatedAt
@@ -117,6 +123,7 @@ export class PaymentEntity {
       paymentDate: this.paymentDate,
       dueDate: this.dueDate,
       paymentMethod: this.paymentMethod,
+      pentamontSettled: this.pentamontSettled,
       notes: this.notes,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
@@ -136,6 +143,7 @@ export class PaymentEntity {
       paymentDate: this.paymentDate.toISOString().split('T')[0],
       dueDate: this.dueDate.toISOString().split('T')[0],
       paymentMethod: this.paymentMethod,
+      pentamontSettled: this.pentamontSettled,
       notes: this.notes,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
@@ -165,6 +173,7 @@ export interface PaymentDTO {
   paymentDate: string;
   dueDate: string;
   paymentMethod: string;
+  pentamontSettled: boolean;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -175,6 +184,7 @@ export interface CreatePaymentDTO {
   amount: number;
   paymentDate?: string;
   dueDate: string;
+  pentamontSettled?: boolean;
   notes?: string;
 }
 
@@ -182,5 +192,6 @@ export interface UpdatePaymentDTO {
   amount?: number;
   paymentDate?: string;
   dueDate?: string;
+  pentamontSettled?: boolean;
   notes?: string;
 }

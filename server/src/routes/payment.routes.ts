@@ -24,6 +24,7 @@ const createPaymentBodySchema = t.Object({
   paymentDate: t.Optional(t.String()),
   dueDate: t.String(),
   paymentMethod: t.Optional(t.String()),
+  pentamontSettled: t.Optional(t.Boolean()),
   notes: t.Optional(t.String())
 });
 
@@ -34,6 +35,7 @@ const updatePaymentBodySchema = t.Object({
   paymentDate: t.Optional(t.String()),
   dueDate: t.Optional(t.String()),
   paymentMethod: t.Optional(t.String()),
+  pentamontSettled: t.Optional(t.Boolean()),
   notes: t.Optional(t.String())
 });
 

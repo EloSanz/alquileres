@@ -135,6 +135,8 @@ model Payment {
   paymentDate    DateTime     @default(now())
   dueDate        DateTime
   paymentMethod  PaymentMethod @default(YAPE)
+  // Indica si este pago YAPE ya fue transferido a Pentamont (front/back office)
+  pentamontSettled Boolean      @default(false)
   notes          String?
   deletedAt      DateTime?    // Soft delete timestamp
   createdAt      DateTime     @default(now())

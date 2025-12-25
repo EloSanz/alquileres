@@ -22,6 +22,8 @@ import {
   Paper,
   IconButton,
   Autocomplete,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
@@ -80,6 +82,18 @@ const PaymentPage = () => {
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
+
+  // Toggle Pentamont persisted in backend
+  const handleTogglePentamont = async (payment: Payment) => {
+    try {
+      const next = !payment.pentamontSettled;
+      await paymentService.updatePayment(payment.id, { pentamontSettled: next });
+      setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
+      setFilteredPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
+    } catch (e: any) {
+      setError(e?.message || 'No se pudo actualizar Pentamont');
+    }
+  };
 
   const fetchPayments = async () => {
     try {
@@ -386,10 +400,27 @@ const PaymentPage = () => {
                   <TableCell>{formatDate(payment.paymentDate)}</TableCell>
                   <TableCell>{formatDate(payment.dueDate)}</TableCell>
                   <TableCell>
-                    {payment.paymentMethod === 'YAPE' ? 'Yape' :
-                     payment.paymentMethod === 'DEPOSITO' ? 'Depósito' :
-                     payment.paymentMethod === 'TRANSFERENCIA_VIRTUAL' ? 'Transferencia Virtual' :
-                     payment.paymentMethod}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2">
+                        {payment.paymentMethod === 'YAPE' ? 'Yape' :
+                         payment.paymentMethod === 'DEPOSITO' ? 'Depósito' :
+                         payment.paymentMethod === 'TRANSFERENCIA_VIRTUAL' ? 'Transferencia Virtual' :
+                         payment.paymentMethod}
+                      </Typography>
+                      {payment.paymentMethod === 'YAPE' && (
+                        <FormControlLabel
+                          sx={{ ml: 1 }}
+                          label={`Pentamont: ${payment.pentamontSettled ? 'Sí' : 'No'}`}
+                          control={
+                            <Switch
+                              size="small"
+                              checked={!!payment.pentamontSettled}
+                              onChange={() => handleTogglePentamont(payment)}
+                            />
+                          }
+                        />
+                      )}
+                    </Box>
                   </TableCell>
                   <TableCell align="center">
                     <IconButton

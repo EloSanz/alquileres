@@ -10,6 +10,7 @@ export interface PaymentDTO {
   paymentDate: string;
   dueDate: string;
   paymentMethod: string;
+  pentamontSettled: boolean;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -22,6 +23,7 @@ export interface CreatePaymentDTO {
   paymentDate?: string;
   dueDate: string;
   paymentMethod?: string;
+  pentamontSettled?: boolean;
   notes?: string;
 }
 
@@ -36,5 +38,6 @@ export interface UpdatePaymentDTO {
   paymentDate?: string;
   dueDate?: string;
   paymentMethod?: string;
+  pentamontSettled?: boolean;
   notes?: string;
 }

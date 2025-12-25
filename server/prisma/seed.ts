@@ -323,6 +323,7 @@ async function main() {
           paymentDate,
           dueDate,
           paymentMethod: getRandomPaymentMethod(), // Random payment method
+          pentamontSettled: Math.random() > 0.5
         }
       });
     }
@@ -378,6 +379,7 @@ async function main() {
             paymentDate,
             dueDate,
             paymentMethod: getRandomPaymentMethod(),
+            pentamontSettled: Math.random() > 0.5,
             notes: 'Pago de cuota'
           }
         });
@@ -420,6 +422,7 @@ async function main() {
           paymentDate: paymentDateValue || paymentDate,
           dueDate,
           paymentMethod: getRandomPaymentMethod(),
+          pentamontSettled: Math.random() > 0.5,
           notes,
         }
       });

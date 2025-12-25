@@ -12,6 +12,7 @@ export interface Payment {
   paymentDate: string
   dueDate: string
   paymentMethod: string
+  pentamontSettled?: boolean
   notes?: string | null
   createdAt: string
 }
@@ -23,6 +24,7 @@ export interface CreatePaymentData {
   paymentDate?: string
   dueDate: string
   paymentMethod?: string
+  pentamontSettled?: boolean
   notes?: string
 }
 
@@ -33,6 +35,7 @@ export interface UpdatePaymentData {
   paymentDate?: string
   dueDate?: string
   paymentMethod?: string
+  pentamontSettled?: boolean
   notes?: string
 }
 

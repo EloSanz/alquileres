@@ -9,8 +9,11 @@ export class PropertyService implements IPropertyService {
   constructor(
     private propertyRepository: IPropertyRepository,
     private tenantRepository: ITenantRepository,
-    private paymentRepository: IPaymentRepository
-  ) {}
+    private _paymentRepository: IPaymentRepository
+  ) {
+    // Reference to avoid TS unused property warning (injected for future use)
+    void this._paymentRepository;
+  }
 
   async getAllProperties(_userId: number): Promise<PropertyDTO[]> {
     const entities = await this.propertyRepository.findAll();

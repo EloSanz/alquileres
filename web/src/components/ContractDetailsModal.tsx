@@ -30,14 +30,12 @@ export default function ContractDetailsModal({
 }: ContractDetailsModalProps) {
   const paymentService = usePaymentService();
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const load = async () => {
       if (!contract) return;
       try {
-        setLoading(true);
         setError('');
         const all = await paymentService.getAllPayments();
         const byContract = all.filter(p => p.contractId === contract.id);
@@ -46,7 +44,7 @@ export default function ContractDetailsModal({
         setError(e?.message || 'Error al cargar pagos del contrato');
         setPayments([]);
       } finally {
-        setLoading(false);
+        // no-op
       }
     };
     if (open) load();
