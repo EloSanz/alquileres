@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  MenuItem,
   Button,
   Table,
   TableBody,
@@ -31,20 +32,24 @@ import FilterBar, { FilterConfig } from '../components/FilterBar';
 interface Payment {
   id: number;
   tenantId?: number;
-  propertyId: number;
+  propertyId: number | null;
+  tenantFullName?: string;
+  tenantPhone?: string;
   amount: number;
   paymentDate: string;
   dueDate: string;
+  paymentMethod: string;
   notes?: string;
   createdAt: string;
 }
 
 interface CreatePaymentData {
   tenantId?: number;
-  propertyId: number;
+  propertyId: number | null;
   amount: number;
   paymentDate?: string;
   dueDate: string;
+  paymentMethod?: string;
   notes?: string;
 }
 
@@ -154,9 +159,21 @@ const PaymentPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({});
+  const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({
+    paymentMethod: ''
+  });
 
-  const paymentFilters: FilterConfig[] = [];
+  const paymentFilters: FilterConfig[] = [
+    {
+      key: 'paymentMethod',
+      label: 'Medio de Pago',
+      options: [
+        { value: 'YAPE', label: 'Yape' },
+        { value: 'DEPOSITO', label: 'Depósito' },
+        { value: 'TRANSFERENCIA_VIRTUAL', label: 'Transferencia Virtual' }
+      ]
+    }
+  ];
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -168,6 +185,7 @@ const PaymentPage = () => {
     amount: '',
     paymentDate: new Date().toISOString().split('T')[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 días por defecto
+    paymentMethod: 'YAPE',
     notes: '',
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -178,6 +196,7 @@ const PaymentPage = () => {
     amount: '',
     paymentDate: '',
     dueDate: '',
+    paymentMethod: 'YAPE',
     notes: '',
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -211,11 +230,18 @@ const PaymentPage = () => {
         const lowerQuery = query.toLowerCase();
         const matchesQuery =
           payment.amount.toString().includes(lowerQuery) ||
+          payment.tenantFullName?.toLowerCase().includes(lowerQuery) ||
+          payment.paymentMethod?.toLowerCase().includes(lowerQuery) ||
           payment.notes?.toLowerCase().includes(lowerQuery) ||
           new Date(payment.paymentDate).toLocaleDateString('es-ES').toLowerCase().includes(lowerQuery) ||
           new Date(payment.dueDate).toLocaleDateString('es-ES').toLowerCase().includes(lowerQuery);
 
         if (!matchesQuery) return false;
+      }
+
+      // Filtro por medio de pago
+      if (_filters.paymentMethod && payment.paymentMethod !== _filters.paymentMethod) {
+        return false;
       }
 
       return true;
@@ -243,7 +269,7 @@ const PaymentPage = () => {
   };
 
   const handleClearFilters = () => {
-    const newFilters = {};
+    const newFilters = { paymentMethod: '' };
     setFilterValues(newFilters);
     const filtered = filterPayments(searchQuery, newFilters, payments);
     setFilteredPayments(filtered);
@@ -282,6 +308,7 @@ const PaymentPage = () => {
         amount: parseFloat(createForm.amount),
         paymentDate: createForm.paymentDate,
         dueDate: createForm.dueDate,
+        paymentMethod: createForm.paymentMethod,
         notes: createForm.notes || undefined,
       };
 
@@ -296,6 +323,7 @@ const PaymentPage = () => {
         amount: '',
         paymentDate: new Date().toISOString().split('T')[0],
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 días por defecto
+        paymentMethod: 'YAPE',
         notes: '',
       });
       fetchPayments(); // Refresh the list
@@ -344,10 +372,11 @@ const PaymentPage = () => {
     setEditingPayment(payment);
     setEditForm({
       tenantId: payment.tenantId?.toString() || '',
-      propertyId: payment.propertyId.toString(),
+      propertyId: payment.propertyId?.toString() || '',
       amount: payment.amount.toString(),
       paymentDate: new Date(payment.paymentDate).toISOString().split('T')[0],
       dueDate: new Date(payment.dueDate).toISOString().split('T')[0],
+      paymentMethod: payment.paymentMethod || 'YAPE',
       notes: payment.notes || '',
     });
     setEditDialogOpen(true);
@@ -381,6 +410,7 @@ const PaymentPage = () => {
         amount: parseFloat(editForm.amount),
         paymentDate: editForm.paymentDate,
         dueDate: editForm.dueDate,
+        paymentMethod: editForm.paymentMethod,
         notes: editForm.notes || undefined,
       };
 
@@ -394,6 +424,7 @@ const PaymentPage = () => {
         amount: '',
         paymentDate: '',
         dueDate: '',
+        paymentMethod: 'YAPE',
         notes: '',
       });
       fetchPayments(); // Refresh the list
@@ -427,7 +458,7 @@ const PaymentPage = () => {
               searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
               onClearSearch={handleClearSearch}
-              placeholder="Buscar por monto, estado, tipo..."
+              placeholder="Buscar por monto, inquilino, medio de pago, notas..."
               label="Buscar pagos"
             />
           </Box>
@@ -459,10 +490,11 @@ const PaymentPage = () => {
             <TableHead>
               <TableRow>
                 <TableCell><strong>ID</strong></TableCell>
-                <TableCell><strong>Inquilino - Local</strong></TableCell>
+                <TableCell><strong>Inquilino</strong></TableCell>
                 <TableCell><strong>Monto</strong></TableCell>
                 <TableCell><strong>Fecha Pago</strong></TableCell>
                 <TableCell><strong>Fecha Vencimiento</strong></TableCell>
+                <TableCell><strong>Medio de Pago</strong></TableCell>
                 <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
             </TableHead>
@@ -470,10 +502,16 @@ const PaymentPage = () => {
               {filteredPayments.map((payment) => (
                 <TableRow key={payment.id} hover>
                   <TableCell>{payment.id}</TableCell>
-                  <TableCell>Inq: {payment.tenantId} - Prop: {payment.propertyId}</TableCell>
+                  <TableCell>{payment.tenantFullName || `ID: ${payment.tenantId}`}</TableCell>
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
                   <TableCell>{formatDate(payment.paymentDate)}</TableCell>
                   <TableCell>{formatDate(payment.dueDate)}</TableCell>
+                  <TableCell>
+                    {payment.paymentMethod === 'YAPE' ? 'Yape' :
+                     payment.paymentMethod === 'DEPOSITO' ? 'Depósito' :
+                     payment.paymentMethod === 'TRANSFERENCIA_VIRTUAL' ? 'Transferencia Virtual' :
+                     payment.paymentMethod}
+                  </TableCell>
                   <TableCell align="center">
                     <IconButton
                       size="small"
@@ -503,7 +541,7 @@ const PaymentPage = () => {
               ))}
               {payments.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
                       No hay pagos registrados
                     </Typography>
@@ -599,6 +637,19 @@ const PaymentPage = () => {
               InputLabelProps={{ shrink: true }}
             />
             <TextField
+              select
+              fullWidth
+              label="Medio de Pago"
+              value={createForm.paymentMethod}
+              onChange={(e) => setCreateForm({ ...createForm, paymentMethod: e.target.value })}
+              required
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value="YAPE">Yape</MenuItem>
+              <MenuItem value="DEPOSITO">Depósito</MenuItem>
+              <MenuItem value="TRANSFERENCIA_VIRTUAL">Transferencia Virtual</MenuItem>
+            </TextField>
+            <TextField
               fullWidth
               label="Notas"
               value={createForm.notes}
@@ -672,6 +723,19 @@ const PaymentPage = () => {
               sx={{ mb: 2 }}
               InputLabelProps={{ shrink: true }}
             />
+            <TextField
+              select
+              fullWidth
+              label="Medio de Pago"
+              value={editForm.paymentMethod}
+              onChange={(e) => setEditForm({ ...editForm, paymentMethod: e.target.value })}
+              required
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value="YAPE">Yape</MenuItem>
+              <MenuItem value="DEPOSITO">Depósito</MenuItem>
+              <MenuItem value="TRANSFERENCIA_VIRTUAL">Transferencia Virtual</MenuItem>
+            </TextField>
             <TextField
               fullWidth
               label="Notas"

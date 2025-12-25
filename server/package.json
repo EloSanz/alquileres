@@ -5,7 +5,7 @@
     "dev:logs": "tsx watch --clear-screen=false src/index.ts",
     "dev:simple": "tsx src/index.ts",
     "kp": "lsof -ti:3000 | xargs kill -9 || true",
-    "type-check": "tsc --noEmit --watch",
+    "type-check": "tsc --noEmit",
     "dev:full": "concurrently \"npm run dev\" \"npm run type-check\"",
     "build": "tsc",
     "start": "node dist/index.js",

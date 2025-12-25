@@ -66,7 +66,7 @@ export class PrismaContractRepository implements IContractRepository {
   async create(entity: ContractEntity): Promise<ContractEntity> {
     const data = entity.toPrisma();
     delete (data as any).id; // Remove id for creation
-    const created = await prisma.contract.create({ data });
+    const created = await prisma.contract.create({ data: data as any });
     return ContractEntity.fromPrisma(created);
   }
 
@@ -76,7 +76,7 @@ export class PrismaContractRepository implements IContractRepository {
     delete (data as any).createdAt; // Don't update createdAt
     const updated = await prisma.contract.update({
       where: { id: entity.id! },
-      data
+      data: data as any // Use any to allow null values
     });
     return ContractEntity.fromPrisma(updated);
   }

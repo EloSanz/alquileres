@@ -54,6 +54,7 @@ export const paymentRoutes = new Elysia({ prefix: '/payments' })
       amount: t.Number({ minimum: 0 }),
       paymentDate: t.Optional(t.String()),
       dueDate: t.String(),
+      paymentMethod: t.Optional(t.String()),
       notes: t.Optional(t.String())
     }),
     detail: {
@@ -71,6 +72,7 @@ export const paymentRoutes = new Elysia({ prefix: '/payments' })
       amount: t.Optional(t.Number({ minimum: 0 })),
       paymentDate: t.Optional(t.String()),
       dueDate: t.Optional(t.String()),
+      paymentMethod: t.Optional(t.String()),
       notes: t.Optional(t.String())
     }),
     detail: {

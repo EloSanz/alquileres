@@ -103,8 +103,8 @@ model Rental {
 // Contract (Contrato) model
 model Contract {
   id           Int            @id @default(autoincrement())
-  tenantId     Int
-  propertyId   Int
+  tenantId     Int?
+  propertyId   Int?
   startDate    DateTime
   endDate      DateTime       // startDate + 1 año
   monthlyRent  Decimal
@@ -113,8 +113,8 @@ model Contract {
   updatedAt    DateTime       @updatedAt
 
   // Relations
-  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  property     Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  tenant       Tenant?        @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  property     Property?      @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   payments     Payment[]
 
   @@map("contracts")
@@ -124,7 +124,7 @@ model Contract {
 model Payment {
   id             Int          @id @default(autoincrement())
   tenantId       Int?         // Nullable para permitir eliminación de tenants
-  propertyId     Int
+  propertyId     Int?         // Nullable para permitir eliminación de propiedades
   contractId     Int?         // Nuevo: nullable para compatibilidad con pagos antiguos
   monthNumber    Int?         // Nuevo: 1-12, nullable para compatibilidad
   // Campos históricos para trazabilidad cuando se elimina el tenant
@@ -133,6 +133,7 @@ model Payment {
   amount         Decimal
   paymentDate    DateTime     @default(now())
   dueDate        DateTime
+  paymentMethod  PaymentMethod @default(YAPE)
   notes          String?
   deletedAt      DateTime?    // Soft delete timestamp
   createdAt      DateTime     @default(now())
@@ -140,7 +141,7 @@ model Payment {
 
   // Relations - Permite eliminación de tenants manteniendo pagos históricos
   tenant         Tenant?      @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  property       Property     @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  property       Property?    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   contract       Contract?    @relation(fields: [contractId], references: [id], onDelete: SetNull)
 
   @@unique([contractId, monthNumber]) // Una cuota por mes por contrato
@@ -187,4 +188,10 @@ enum ContractStatus {
   COMPLETED
   CANCELLED
   TERMINATED
+}
+
+enum PaymentMethod {
+  YAPE
+  DEPOSITO
+  TRANSFERENCIA_VIRTUAL
 }

@@ -7,8 +7,8 @@ export enum ContractStatus {
 
 export interface ContractDTO {
   id: number;
-  tenantId: number;
-  propertyId: number;
+  tenantId: number | null;
+  propertyId: number | null;
   tenantFullName?: string;
   propertyName?: string;
   startDate: string;
@@ -27,8 +27,8 @@ export interface CreateContractDTO {
 }
 
 export interface UpdateContractDTO {
-  tenantId?: number;
-  propertyId?: number;
+  tenantId?: number | null;
+  propertyId?: number | null;
   startDate?: string;
   monthlyRent?: number;
   status?: ContractStatus;
@@ -37,8 +37,8 @@ export interface UpdateContractDTO {
 export class ContractEntity {
   constructor(
     public id: number | null,
-    public tenantId: number,
-    public propertyId: number,
+    public tenantId: number | null,
+    public propertyId: number | null,
     public startDate: Date,
     public endDate: Date,
     public monthlyRent: number,
@@ -134,6 +134,13 @@ export class ContractEntity {
   }
 
   validate(): void {
+    // Validar tenantId y propertyId solo si no son null (para contratos activos)
+    if (this.tenantId === null) {
+      throw new Error('Contract must have a tenant');
+    }
+    if (this.propertyId === null) {
+      throw new Error('Contract must have a property');
+    }
     if (this.monthlyRent <= 0) {
       throw new Error('Monthly rent must be greater than 0');
     }

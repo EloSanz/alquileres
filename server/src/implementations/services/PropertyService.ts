@@ -1,13 +1,15 @@
 import { IPropertyService } from '../../interfaces/services/IPropertyService';
 import { IPropertyRepository } from '../../interfaces/repositories/IPropertyRepository';
 import { ITenantRepository } from '../../interfaces/repositories/ITenantRepository';
+import { IPaymentRepository } from '../../interfaces/repositories/IPaymentRepository';
 import { PropertyDTO, CreatePropertyDTO, UpdatePropertyDTO } from '../../dtos/property.dto';
 import { PropertyEntity } from '../../entities/Property.entity';
 
 export class PropertyService implements IPropertyService {
   constructor(
     private propertyRepository: IPropertyRepository,
-    private tenantRepository: ITenantRepository
+    private tenantRepository: ITenantRepository,
+    private paymentRepository: IPaymentRepository
   ) {}
 
   async getAllProperties(_userId: number): Promise<PropertyDTO[]> {
@@ -101,6 +103,18 @@ export class PropertyService implements IPropertyService {
   }
 
   async deleteProperty(id: number, _userId: number): Promise<boolean> {
+    // Verificar que la propiedad existe
+    const property = await this.propertyRepository.findById(id);
+    if (!property) {
+      throw new Error('Property not found');
+    }
+
+    // Liberar todos los pagos asociados (poner propertyId = null)
+    // Usar SQL nativo ya que updateMany puede tener restricciones
+    const { prisma } = await import('../../lib/prisma');
+    await prisma.$executeRaw`UPDATE payments SET "propertyId" = NULL WHERE "propertyId" = ${id}`;
+
+    // Eliminar la propiedad
     const deleted = await this.propertyRepository.delete(id);
     return deleted;
   }

@@ -205,6 +205,10 @@ export class TenantService implements ITenantService {
       await this.propertyRepository.update(property);
     }
 
+    // Liberar todos los contratos asociados (poner tenantId = null)
+    // Usar SQL nativo ya que updateMany puede tener restricciones
+    await prisma.$executeRaw`UPDATE contracts SET "tenantId" = NULL WHERE "tenantId" = ${id}`;
+
     // Eliminar el tenant
     const deleted = await this.tenantRepository.delete(id);
     return deleted;

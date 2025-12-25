@@ -92,6 +92,7 @@ export class ContractService implements IContractService {
         monthNumber: month,
         amount: data.monthlyRent,
         dueDate: dueDate.toISOString().split('T')[0],
+        paymentMethod: 'YAPE', // Default method
       });
 
       await this.paymentRepository.create(payment);
