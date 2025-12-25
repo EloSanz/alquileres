@@ -12,6 +12,7 @@ import {
   Divider
 } from '@mui/material';
 import { usePaymentService, type Payment } from '../services/paymentService';
+import { buildContractTimeline, type ContractMonthInfo } from '../services/contractTimeline';
 import type { Contract } from '../services/contractService';
 
 export interface ContractDetailsModalProps {
@@ -51,38 +52,9 @@ export default function ContractDetailsModal({
     if (open) load();
   }, [open, contract?.id]);
 
-  const monthStatuses = useMemo(() => {
-    const statuses: Record<number, MonthStatus> = {};
-    if (!contract) return statuses;
-    const now = new Date();
-    // Map existing payments by monthNumber si existe
-    const byMonth = new Map<number, Payment>();
-    for (const p of payments) {
-      if (p.monthNumber != null) byMonth.set(p.monthNumber, p);
-    }
-    for (let m = 1; m <= 12; m++) {
-      const p = byMonth.get(m);
-      if (p) {
-        if (p.paymentDate && new Date(p.paymentDate) <= now) {
-          statuses[m] = 'PAID';
-        } else if (new Date(p.dueDate) < now) {
-          statuses[m] = 'DUE';
-        } else {
-          statuses[m] = 'FUTURE';
-        }
-      } else {
-        // Si no hay registro, inferir por fecha relativa al startDate
-        const startDate = new Date(contract.startDate);
-        const dueDate = new Date(startDate);
-        dueDate.setMonth(dueDate.getMonth() + (m - 1));
-        if (dueDate < now) {
-          statuses[m] = 'DUE';
-        } else {
-          statuses[m] = 'FUTURE';
-        }
-      }
-    }
-    return statuses;
+  const timeline = useMemo<ContractMonthInfo[]>(() => {
+    if (!contract) return [];
+    return buildContractTimeline(contract.startDate, payments);
   }, [payments, contract]);
 
   const getColor = (status?: MonthStatus) => {
@@ -93,7 +65,7 @@ export default function ContractDetailsModal({
         return 'warning.light'; // amarillo
       case 'FUTURE':
       default:
-        return 'grey.300'; // gris
+        return 'grey.50'; // gris aún más claro para mejor contraste
     }
   };
 
@@ -105,7 +77,7 @@ export default function ContractDetailsModal({
         return 'warning.main';
       case 'FUTURE':
       default:
-        return 'grey.400';
+        return 'grey.500';
     }
   };
 
@@ -177,35 +149,51 @@ export default function ContractDetailsModal({
           Estado de cuotas (12 meses)
         </Typography>
         <Grid container spacing={1.2}>
-          {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
-            const status = monthStatuses[m];
+          {timeline.map((mi) => {
+            const status = mi.status as MonthStatus;
             return (
-              <Grid item xs={4} sm={3} md={2} key={m}>
+              <Grid item xs={4} sm={3} md={2} key={mi.monthNumber}>
                 <Box
                   sx={{
                     borderRadius: 1,
                     border: '1px solid',
                     borderColor: getBorderColor(status),
                     bgcolor: getColor(status),
-                    px: 1.25,
-                    py: 1.5,
+                    px: 1.5,
+                    py: 2,
                     textAlign: 'center',
-                    minHeight: 64,
+                    minHeight: 110,
+                    height: 110,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexDirection: 'column',
+                    width: '100%'
                   }}
                 >
                   <Typography
-                    variant="body2"
-                    sx={{ display: 'block', fontWeight: 700, color: 'text.primary', lineHeight: 1.1 }}
+                    variant="subtitle1"
+                    sx={{
+                      display: 'block',
+                      fontWeight: 800,
+                      color: 'grey.900',
+                      lineHeight: 1.15,
+                      fontSize: '1.15rem',
+                      letterSpacing: 0.2,
+                      wordBreak: 'break-word'
+                    }}
                   >
-                    Mes {m}
+                    Mes {mi.monthNumber} · {mi.label}
                   </Typography>
                   <Typography
-                    variant="caption"
-                    sx={{ fontWeight: 700, color: getStatusColor(status), mt: 0.25 }}
+                    variant="body2"
+                    sx={{
+                      fontWeight: 800,
+                      color: getStatusColor(status),
+                      mt: 0.7,
+                      fontSize: '1.05rem',
+                      letterSpacing: 0.2
+                    }}
                   >
                     {getStatusLabel(status)}
                   </Typography>
@@ -215,18 +203,18 @@ export default function ContractDetailsModal({
           })}
         </Grid>
 
-        <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+        <Stack direction="row" spacing={3} sx={{ mt: 2 }}>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Box sx={{ width: 14, height: 14, bgcolor: getColor('PAID'), borderRadius: 0.5, border: '1px solid', borderColor: getBorderColor('PAID') }} />
-            <Typography variant="caption">Pagado</Typography>
+            <Box sx={{ width: 16, height: 16, bgcolor: getColor('PAID'), borderRadius: 0.6, border: '1px solid', borderColor: getBorderColor('PAID') }} />
+            <Typography variant="body2" sx={{ fontSize: '1rem' }}>Pagado</Typography>
           </Stack>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Box sx={{ width: 14, height: 14, bgcolor: getColor('DUE'), borderRadius: 0.5, border: '1px solid', borderColor: getBorderColor('DUE') }} />
-            <Typography variant="caption">Impago</Typography>
+            <Box sx={{ width: 16, height: 16, bgcolor: getColor('DUE'), borderRadius: 0.6, border: '1px solid', borderColor: getBorderColor('DUE') }} />
+            <Typography variant="body2" sx={{ fontSize: '1rem' }}>Impago</Typography>
           </Stack>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Box sx={{ width: 14, height: 14, bgcolor: getColor('FUTURE'), borderRadius: 0.5, border: '1px solid', borderColor: getBorderColor('FUTURE') }} />
-            <Typography variant="caption">Futuro</Typography>
+            <Box sx={{ width: 16, height: 16, bgcolor: getColor('FUTURE'), borderRadius: 0.6, border: '1px solid', borderColor: getBorderColor('FUTURE') }} />
+            <Typography variant="body2" sx={{ fontSize: '1rem' }}>Futuro</Typography>
           </Stack>
         </Stack>
       </DialogContent>

@@ -300,20 +300,16 @@ async function main() {
 
     console.log(`✅ Contrato creado: ID ${contract.id} para ${firstTenant.firstName} ${firstTenant.lastName}`);
 
-    // Crear los 12 pagos mensuales para el contrato
-    console.log('💰 Creando 12 pagos mensuales para el contrato...');
-    for (let month = 1; month <= 12; month++) {
+    // Crear pagos solo para los primeros 2 meses (el resto se infiere como impago/futuro)
+    console.log('💰 Creando pagos de meses pagados para el contrato...');
+    for (let month = 1; month <= 2; month++) {
       const dueDate = new Date(startDate);
       dueDate.setMonth(dueDate.getMonth() + month - 1);
       dueDate.setDate(5); // Vencimiento el día 5 de cada mes
 
-      // Los primeros 2 meses ya están pagados (contrato inició hace 2 meses)
-      let paymentDate: Date | null = null;
-      
-      if (month <= 2) {
-        paymentDate = new Date(dueDate);
-        paymentDate.setDate(paymentDate.getDate() + getRandomNumber(-5, 0)); // Pagado antes o en la fecha de vencimiento
-      }
+      // Mes pagado: alrededor de la fecha de vencimiento
+      const paymentDate = new Date(dueDate);
+      paymentDate.setDate(paymentDate.getDate() + getRandomNumber(-5, 0));
 
       await prisma.payment.create({
         data: {
@@ -324,15 +320,70 @@ async function main() {
           tenantFullName: `${firstTenant.firstName} ${firstTenant.lastName}`,
           tenantPhone: firstTenant.phone,
           amount: firstProperty.monthlyRent,
-          paymentDate: paymentDate || new Date(),
+          paymentDate,
           dueDate,
           paymentMethod: getRandomPaymentMethod(), // Random payment method
         }
       });
     }
-    console.log('✅ 12 pagos mensuales creados para el contrato');
+    console.log('✅ Pagos registrados para meses pagados');
   }
 
+  // Crear contratos adicionales para variedad
+  console.log('📄 Creando contratos adicionales...');
+  if (tenants.length > 3 && properties.length > 3) {
+    const candidates = [1, 2, 3].map(i => ({
+      tenant: tenants[i],
+      property: properties.find(p => p.tenantId === tenants[i].id) || properties[(i + 2) % properties.length],
+      offset: [-5, -1, 1][i - 1], // inicio hace 5m, 1m o futuro +1m
+      monthsPaid: [3, 1, 0][i - 1] // cantidad de meses pagados
+    }));
+
+    for (const c of candidates) {
+      const startDate = new Date();
+      startDate.setMonth(startDate.getMonth() + c.offset);
+      const endDate = new Date(startDate);
+      endDate.setFullYear(endDate.getFullYear() + 1);
+
+      const contract = await prisma.contract.create({
+        data: {
+          tenantId: c.tenant.id,
+          propertyId: c.property.id,
+          tenantFullName: `${c.tenant.firstName} ${c.tenant.lastName}`,
+          startDate,
+          endDate,
+          monthlyRent: c.property.monthlyRent,
+          status: ContractStatus.ACTIVE,
+        }
+      });
+      console.log(`✅ Contrato creado: ID ${contract.id} para ${c.tenant.firstName} ${c.tenant.lastName}`);
+
+      // Crear solo pagos para meses pagados
+      for (let month = 1; month <= c.monthsPaid; month++) {
+        const dueDate = new Date(startDate);
+        dueDate.setMonth(dueDate.getMonth() + month - 1);
+        dueDate.setDate(5);
+        const paymentDate = new Date(dueDate);
+        paymentDate.setDate(paymentDate.getDate() + getRandomNumber(-3, 3));
+
+        await prisma.payment.create({
+          data: {
+            tenantId: c.tenant.id,
+            propertyId: c.property.id,
+            contractId: contract.id,
+            monthNumber: month,
+            tenantFullName: `${c.tenant.firstName} ${c.tenant.lastName}`,
+            tenantPhone: c.tenant.phone,
+            amount: c.property.monthlyRent,
+            paymentDate,
+            dueDate,
+            paymentMethod: getRandomPaymentMethod(),
+            notes: 'Pago de cuota'
+          }
+        });
+      }
+    }
+  }
   // Crear algunos pagos adicionales para otras propiedades (sin contrato)
   console.log('💰 Creando pagos adicionales...');
   for (const property of properties.slice(1)) { // Saltar la primera propiedad que ya tiene contrato

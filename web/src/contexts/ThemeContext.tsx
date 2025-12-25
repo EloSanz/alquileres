@@ -36,6 +36,11 @@ const kyotoTheme = createTheme({
   },
   typography: {
     fontFamily: 'Sawarabi Mincho, Noto Serif JP, serif',
+    fontSize: 16,
+    h4: { fontSize: '2.1rem' },
+    body1: { fontSize: '1.05rem' },
+    body2: { fontSize: '1rem' },
+    caption: { fontSize: '0.95rem' }
   },
 });
 
@@ -56,6 +61,11 @@ const tokyoTheme = createTheme({
   },
   typography: {
     fontFamily: 'M PLUS 1p, Noto Sans JP, sans-serif',
+    fontSize: 16,
+    h4: { fontSize: '2.1rem' },
+    body1: { fontSize: '1.05rem' },
+    body2: { fontSize: '1rem' },
+    caption: { fontSize: '0.95rem' }
   },
 });
 
@@ -76,7 +86,12 @@ const themes = {
       }
     },
     typography: {
-      fontFamily: 'Roboto, Arial, sans-serif'
+      fontFamily: 'Roboto, Arial, sans-serif',
+      fontSize: 16,
+      h4: { fontSize: '2.1rem' },
+      body1: { fontSize: '1.05rem' },
+      body2: { fontSize: '1rem' },
+      caption: { fontSize: '0.95rem' }
     }
   }),
   dark: createTheme({
@@ -87,7 +102,12 @@ const themes = {
       background: { default: '#1e1e1e', paper: '#2d2d2d' }
     },
     typography: {
-      fontFamily: 'Roboto, Arial, sans-serif'
+      fontFamily: 'Roboto, Arial, sans-serif',
+      fontSize: 16,
+      h4: { fontSize: '2.1rem' },
+      body1: { fontSize: '1.05rem' },
+      body2: { fontSize: '1rem' },
+      caption: { fontSize: '0.95rem' }
     }
   }),
   github: createTheme({
@@ -97,6 +117,14 @@ const themes = {
       secondary: { main: '#58a6ff', contrastText: '#000000' },
       background: { default: '#0d1117', paper: '#161b22' },
       text: { primary: '#c9d1d9', secondary: '#8b949e' }
+    },
+    typography: {
+      fontFamily: 'Roboto, Arial, sans-serif',
+      fontSize: 16,
+      h4: { fontSize: '2.1rem' },
+      body1: { fontSize: '1.05rem' },
+      body2: { fontSize: '1rem' },
+      caption: { fontSize: '0.95rem' }
     }
   }),
   tokyo: tokyoTheme,
