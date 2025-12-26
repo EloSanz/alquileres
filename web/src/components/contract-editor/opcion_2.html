@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrato de Arrendamiento Comercial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Times New Roman', Times, serif !important;
+            color: #000 !important;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 14pt;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 10pt;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #000;
+            margin: 20px 0;
+        }
+
+        p {
+            text-align: justify;
+            margin-bottom: 16px;
+            font-size: 11pt;
+            line-height: 1.4;
+        }
+
+        h2 {
+            font-weight: bold;
+            margin-bottom: 10px;
+            margin-top: 20px;
+            font-size: 12pt;
+        }
+
+        strong {
+            font-weight: bold;
+        }
+
+        .placeholder {
+            color: #d32f2f;
+            font-style: italic;
+            text-decoration: underline;
+        }
+
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+            margin-bottom: 20px;
+            gap: 40px;
+        }
+
+        .signature-box {
+            width: 40%;
+            text-align: center;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            padding-top: 8px;
+            margin-top: 60px;
+            font-weight: bold;
+            font-size: 10pt;
+        }
+
+        .signature-name {
+            font-size: 9pt;
+            margin-top: 5px;
+        }
+
+        .bullet-item {
+            margin-left: 20px;
+            margin-bottom: 10px;
+            text-align: justify;
+            font-size: 11pt;
+        }
+
+        @media print {
+            body {
+                background-color: #fff;
+                padding: 0;
+            }
+            .container {
+                max-width: 100%;
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Título -->
+        <h1>CONTRATO DE ARRENDAMIENTO COMERCIAL</h1>
+        <div class="subtitle">
+            Stand N.º <span id="stand_numero" class="placeholder">[Falta completar: Número de Stand]</span> - <span id="lugar_firma">Pucallpa</span>, Perú
+        </div>
+
+        <hr>
+
+        <!-- Introducción -->
+        <p>
+            Conste por el presente documento el Contrato de Arrendamiento que celebran de una parte 
+            <strong id="arrendador_nombre" class="placeholder">[Falta completar: Nombre del Arrendador]</strong>, identificada con RUC. Nº 
+            <span id="arrendador_ruc" class="placeholder">[Falta completar: RUC del Arrendador]</span>, debidamente representada por el 
+            <strong>GERENTE GENERAL Sr. <span id="gerente_nombre" class="placeholder">[Falta completar: Nombre del Gerente]</span></strong>, identificado con DNI Nº 
+            <span id="gerente_dni" class="placeholder">[Falta completar: DNI del Gerente]</span>, según poder inscrito en la partida electrónica Nº 
+            <span id="gerente_partida_registral" class="placeholder">[Falta completar: Partida Registral del Gerente]</span> del registro de personas jurídicas de la oficina registral de <span id="lugar_firma_2">Pucallpa</span>,
+            con domicilio fiscal sito en <span id="arrendador_domicilio">____</span>, del distrito de <span id="arrendador_distrito">____</span>,
+            provincia de <span id="arrendador_provincia">____</span>, departamento de <span id="arrendador_departamento">____</span>,
+            que en lo sucesivo se denominará <strong>EL ARRENDADOR</strong> y de la otra parte,
+            Doña <strong id="arrendatario_nombre" class="placeholder">[Falta completar: Nombre del Arrendatario]</strong>, identificado con D.N.I. Nº 
+            <span id="arrendatario_dni" class="placeholder">[Falta completar: DNI del Arrendatario]</span>, con domicilio en <span id="arrendatario_domicilio">____</span>,
+            distrito de <span id="arrendatario_distrito">____</span>, provincia de <span id="arrendatario_provincia">____</span> y
+            departamento de <span id="arrendatario_departamento">____</span>, a quien en adelante se le denominará 
+            <strong>EL ARRENDATARIO</strong> en los términos y condiciones de las cláusulas siguientes:
+        </p>
+
+        <hr>
+
+        <!-- Antecedentes -->
+        <h2>ANTECEDENTES</h2>
+        <p>
+            <strong>PRIMERA:</strong> <strong>EL ARRENDADOR</strong> es conductor del inmueble ubicado sito en 
+            <span id="inmueble_direccion">____</span>, distrito de <span id="inmueble_distrito">____</span>, 
+            provincia de <span id="inmueble_provincia">____</span>, departamento de <span id="inmueble_departamento">____</span>, 
+            el mismo que se encuentra inscrito en la Partida Registral Nº <strong id="inmueble_partida_registral">____</strong>, 
+            del Registro de la Propiedad Inmueble de la Zona Registral Nº <strong id="inmueble_zona_registral">____</strong>, 
+            en mérito al Contrato de Comodato, mediante la cual la empresa propietaria del bien 
+            <strong id="propietario_nombre">____</strong>, identificado con RUC Nº 
+            <strong id="propietario_ruc">____</strong>, con domicilio fiscal sito en <span id="propietario_domicilio">____</span>, 
+            debidamente representado por su Apoderado Legal <strong id="propietario_representante">____</strong>, 
+            identificado con DNI Nº <strong id="propietario_representante_dni">____</strong>, conforme consta en su 
+            Certificado de Vigencia, inscrito en la <strong>Partida Registral Nº <span id="propietario_partida_registral">____</span></strong>, 
+            del Registro de Personas Jurídicas de la Zona Registral Nº IX - Sede Lima, otorga el bien en 
+            <strong>COMODATO CON CLÁUSULA DE AUTORIZACIÓN DE SUBARRIENDO (ANEXO 01-B)</strong>, 
+            en favor de la empresa <strong id="arrendador_nombre_2">____</strong>.
+        </p>
+        <p>
+            Que, sobre el bien inmueble descrito en el párrafo anterior se ha construido 
+            <strong id="total_stands">____</strong> stands.
+        </p>
+
+        <hr>
+
+        <!-- Objeto del Contrato -->
+        <h2>OBJETO DEL CONTRATO</h2>
+        <p>
+            <strong>SEGUNDA:</strong> Por el Presente documento, <strong>EL ARRENDADOR</strong> da en arrendamiento a 
+            <strong>EL ARRENDATARIO</strong> <strong>EL INMUEBLE</strong> de su propiedad, referido en la cláusula primera 
+            anterior, a fin de que sea ocupado por <strong>EL ARRENDATARIO</strong>; el 
+            <strong>STAND Nº <span id="stand_numero_2">____</span></strong> siendo este mismo destinado para el desarrollo de la 
+            actividad comercial.
+        </p>
+        <p>
+            <strong>EL ARRENDATARIO</strong> declara conocer y reconoce que tanto <strong>EL INMUEBLE</strong> materia de 
+            este contrato como los accesorios que igualmente son objeto del presente arrendamiento, se encuentran en 
+            perfecto estado de conservación y funcionamiento, y en tal sentido se obliga a devolverlos en el estado en 
+            que los reciben y sin más deterioro que el ocasionado por el uso ordinario, cuidadoso y racional de los mismos.
+        </p>
+
+        <hr>
+
+        <!-- Plazo del Contrato -->
+        <h2>PLAZO DEL CONTRATO</h2>
+        <p>
+            <strong>TERCERA:</strong> El plazo del presente contrato de arrendamiento, pactado de común acuerdo por las
+            partes contratantes, es por el período de un <strong>(<span id="plazo_meses">12</span>) meses</strong>, que se inicia
+            el <strong id="fecha_inicio" class="placeholder">[Falta completar: Fecha de Inicio]</strong> y concluye indefectiblemente el 
+            <strong id="fecha_fin" class="placeholder">[Falta completar: Fecha de Fin]</strong>.
+        </p>
+        <p>
+            En caso de que <strong>EL ARRENDATARIO</strong> deseara prorrogar el plazo del presente contrato, deberá 
+            solicitarlo a <strong>EL ARRENDADOR</strong> con una anticipación no menor de TREINTA (30) días a la fecha de 
+            conclusión del arrendamiento.
+        </p>
+        <p>
+            En el supuesto que, a la terminación del presente contrato, por vencimiento del plazo o por resolución del 
+            contrato, <strong>EL ARRENDATARIO</strong> no cumliese con entregar <strong>EL INMUEBLE</strong> arrendado a 
+            <strong>EL ARRENDADOR</strong>, y sin perjuicio de entenderse que el presente contrato no continúa, 
+            <strong>EL ARRENDATARIO</strong> queda obligado a pagar a <strong>EL ARRENDADOR</strong> una penalidad de 
+            <strong>$ <span id="penalidad_diaria">____</span> (<span id="penalidad_texto">____</span>)</strong> por cada día de demora 
+            hasta la entrega efectiva de los inmuebles y sus accesorios a <strong>EL ARRENDADOR</strong>.
+        </p>
+
+        <hr>
+
+        <!-- Merced Conductiva -->
+        <h2>LA MERCED CONDUCTIVA: FORMA Y OPORTUNIDAD DE PAGO</h2>
+        <p>
+            <strong>SEXTA:</strong> El pago de la renta mensual, convenida de mutuo acuerdo por las partes contratantes,
+            es de <strong>S/ <span id="renta_mensual">____</span> (<span id="renta_texto">____</span>)</strong>, por el arrendamiento de 
+            <strong>EL INMUEBLE</strong> y de los accesorios.
+        </p>
+        <p>
+            Cabe señalar que el pago de la renta será abonado los de cada <strong id="dia_vencimiento">____</strong> de 
+            cada mes, con una tolerancia de <strong id="tolerancia_dias">____</strong> días calendarios siguientes a 
+            su vencimiento.
+        </p>
+        <p>
+            <strong>SETIMA:</strong> La renta será pagada por <strong>EL ARRENDATARIO</strong> mediante abono en la cuenta 
+            de Ahorros Soles del <strong id="banco_nombre">____</strong> Nº <strong id="banco_cuenta">____</strong>, con Código 
+            Interbancario Nº <strong id="banco_cci">____</strong>, de propiedad de <strong>EL ARRENDADOR</strong>.
+        </p>
+        <p>
+            El incumplimiento de pago oportuno de dos meses y 15 días consecutivos de renta constituye causal de resolución 
+            automática del presente contrato, sin necesidad de previo pronunciamiento judicial.
+        </p>
+
+        <hr>
+
+        <!-- Importes Pecuniarios -->
+        <h2>SOBRE LOS IMPORTES PECUNIARIOS</h2>
+        <p>
+            <strong>DÉCIMO SEXTA:</strong> A la firma del presente contrato, <strong>EL ARRENDATARIO</strong> hace entrega 
+            a <strong>EL ARRENDADOR</strong> los siguientes importes:
+        </p>
+        <div class="bullet-item">
+            • El importe de <strong>S/ <span id="adelanto_monto">____</span> (<span id="adelanto_texto">____</span>)</strong>, en calidad 
+            de <strong>ADELANTO</strong> que cubren el importe de un mes de renta.
+        </div>
+        <div class="bullet-item">
+            • El importe de <strong>S/ <span id="garantia_monto">____</span> (<span id="garantia_texto">____</span>)</strong> que 
+            equivalen a una mensualidad por concepto de <strong>depósito de garantía</strong>.
+        </div>
+
+        <hr>
+
+        <!-- Firma -->
+        <h2>FIRMA Y LEGALIZACIÓN</h2>
+        <p>
+            Hecho y firmado en <span id="lugar_firma_3">____</span>, bajo legalización notarial de las partes intervinientes, 
+            a los <span id="fecha_firma" class="placeholder">[Falta completar: Fecha de Firma]</span> en dos (2) ejemplares de idéntico tenor que obrarán en poder de 
+            <strong>EL ARRENDADOR</strong> y de <strong>EL ARRENDATARIO</strong>, respectivamente.
+        </p>
+
+        <!-- Firmas -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line">
+                    EL ARRENDATARIO
+                    <div class="signature-name" id="firma_arrendatario">________________________</div>
+                </div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">
+                    EL ARRENDADOR
+                    <div class="signature-name" id="firma_arrendador">________________________</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para formatear fecha a texto largo
+        function formatDateLong(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const day = String(date.getDate()).padStart(2, '0');
+            const months = [
+                'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+                'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+            ];
+            const month = months[date.getMonth()];
+            const year = date.getFullYear();
+            return `${day} de ${month} del ${year}`;
+        }
+
+        // Función para llenar un campo con placeholder
+        function fillField(elementId, value, placeholder) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            
+            const stringValue = String(value || '').trim();
+            if (!stringValue) {
+                el.innerHTML = `<span class="placeholder">[Falta completar: ${placeholder}]</span>`;
+            } else {
+                el.textContent = stringValue;
+                el.classList.remove('placeholder');
+            }
+        }
+
+        // Función para llenar fechas
+        function fillDateField(elementId, dateStr, placeholder) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            
+            if (!dateStr) {
+                el.innerHTML = `<span class="placeholder">[Falta completar: ${placeholder}]</span>`;
+            } else {
+                el.textContent = formatDateLong(dateStr);
+                el.classList.remove('placeholder');
+            }
+        }
+
+        // Datos de ejemplo (reemplazar con datos reales)
+        const contractData = {
+            stand_numero: '12',
+            lugar_firma: 'Pucallpa',
+            arrendador_nombre: 'EMPRESA COMERCIAL S.A.C.',
+            arrendador_ruc: '20123456789',
+            gerente_nombre: 'Juan Pérez García',
+            gerente_dni: '12345678',
+            gerente_partida_registral: '11001234',
+            arrendador_domicilio: 'Calle Principal 123',
+            arrendador_distrito: 'Pucallpa',
+            arrendador_provincia: 'Coronel Portillo',
+            arrendador_departamento: 'Ucayali',
+            arrendatario_nombre: 'María López Rodríguez',
+            arrendatario_dni: '87654321',
+            arrendatario_domicilio: 'Av. Secundaria 456',
+            arrendatario_distrito: 'Pucallpa',
+            arrendatario_provincia: 'Coronel Portillo',
+            arrendatario_departamento: 'Ucayali',
+            inmueble_direccion: 'Calle Principal 123, Lote 5',
+            inmueble_partida_registral: '50001500',
+            inmueble_zona_registral: 'VIII',
+            propietario_nombre: 'INMOBILIARIA PERÚ S.A.',
+            propietario_ruc: '20987654321',
+            propietario_domicilio: 'Av. Lima 999',
+            propietario_representante: 'Carlos Díaz López',
+            propietario_representante_dni: '11223344',
+            propietario_partida_registral: '11005678',
+            total_stands: '50',
+            plazo_meses: '12',
+            fecha_inicio: '2024-01-15',
+            fecha_fin: '2025-01-15',
+            penalidad_diaria: '50.00',
+            penalidad_texto: 'Cincuenta dólares americanos',
+            renta_mensual: '1500.00',
+            renta_texto: 'Mil quinientos soles',
+            dia_vencimiento: '15',
+            tolerancia_dias: '5',
+            banco_nombre: 'Banco de Crédito del Perú',
+            banco_cuenta: '1234567890',
+            banco_cci: '002191234567890123',
+            adelanto_monto: '1500.00',
+            adelanto_texto: 'Mil quinientos soles',
+            garantia_monto: '1500.00',
+            garantia_texto: 'Mil quinientos soles',
+            fecha_firma: '2024-01-15'
+        };
+
+        // Llenar campos
+        fillField('stand_numero', contractData.stand_numero, 'Número de Stand');
+        fillField('lugar_firma', contractData.lugar_firma, 'Lugar de Firma');
+        fillField('lugar_firma_2', contractData.lugar_firma, 'Lugar de Firma');
+        fillField('lugar_firma_3', contractData.lugar_firma, 'Lugar de Firma');
+        fillField('arrendador_nombre', contractData.arrendador_nombre, 'Nombre del Arrendador');
+        fillField('arrendador_ruc', contractData.arrendador_ruc, 'RUC del Arrendador');
+        fillField('gerente_nombre', contractData.gerente_nombre, 'Nombre del Gerente');
+        fillField('gerente_dni', contractData.gerente_dni, 'DNI del Gerente');
+        fillField('gerente_partida_registral', contractData.gerente_partida_registral, 'Partida Registral');
+        fillField('arrendador_domicilio', contractData.arrendador_domicilio, 'Domicilio');
+        fillField('arrendador_distrito', contractData.arrendador_distrito, 'Distrito');
+        fillField('arrendador_provincia', contractData.arrendador_provincia, 'Provincia');
+        fillField('arrendador_departamento', contractData.arrendador_departamento, 'Departamento');
+        fillField('arrendatario_nombre', contractData.arrendatario_nombre, 'Nombre del Arrendatario');
+        fillField('arrendatario_dni', contractData.arrendatario_dni, 'DNI del Arrendatario');
+        fillField('arrendatario_domicilio', contractData.arrendatario_domicilio, 'Domicilio');
+        fillField('arrendatario_distrito', contractData.arrendatario_distrito, 'Distrito');
+        fillField('arrendatario_provincia', contractData.arrendatario_provincia, 'Provincia');
+        fillField('arrendatario_departamento', contractData.arrendatario_departamento, 'Departamento');
+        fillField('inmueble_direccion', contractData.inmueble_direccion, 'Dirección del Inmueble');
+        fillField('inmueble_partida_registral', contractData.inmueble_partida_registral, 'Partida Registral');
+        fillField('inmueble_zona_registral', contractData.inmueble_zona_registral, 'Zona Registral');
+        fillField('propietario_nombre', contractData.propietario_nombre, 'Nombre del Propietario');
+        fillField('propietario_ruc', contractData.propietario_ruc, 'RUC del Propietario');
+        fillField('propietario_domicilio', contractData.propietario_domicilio, 'Domicilio del Propietario');
+        fillField('propietario_representante', contractData.propietario_representante, 'Representante');
+        fillField('propietario_representante_dni', contractData.propietario_representante_dni, 'DNI del Representante');
+        fillField('propietario_partida_registral', contractData.propietario_partida_registral, 'Partida Registral');
+        fillField('arrendador_nombre_2', contractData.arrendador_nombre, 'Nombre del Arrendador');
+        fillField('total_stands', contractData.total_stands, 'Total de Stands');
+        fillField('stand_numero_2', contractData.stand_numero, 'Número de Stand');
+        fillField('plazo_meses', contractData.plazo_meses, 'Plazo en Meses');
+        fillDateField('fecha_inicio', contractData.fecha_inicio, 'Fecha de Inicio');
+        fillDateField('fecha_fin', contractData.fecha_fin, 'Fecha de Fin');
+        fillField('penalidad_diaria', contractData.penalidad_diaria, 'Penalidad Diaria');
+        fillField('penalidad_texto', contractData.penalidad_texto, 'Penalidad en Texto');
+        fillField('renta_mensual', contractData.renta_mensual, 'Renta Mensual');
+        fillField('renta_texto', contractData.renta_texto, 'Renta en Texto');
+        fillField('dia_vencimiento', contractData.dia_vencimiento, 'Día de Vencimiento');
+        fillField('tolerancia_dias', contractData.tolerancia_dias, 'Días de Tolerancia');
+        fillField('banco_nombre', contractData.banco_nombre, 'Nombre del Banco');
+        fillField('banco_cuenta', contractData.banco_cuenta, 'Número de Cuenta');
+        fillField('banco_cci', contractData.banco_cci, 'Código Interbancario');
+        fillField('adelanto_monto', contractData.adelanto_monto, 'Monto Adelanto');
+        fillField('adelanto_texto', contractData.adelanto_texto, 'Adelanto en Texto');
+        fillField('garantia_monto', contractData.garantia_monto, 'Monto Garantía');
+        fillField('garantia_texto', contractData.garantia_texto, 'Garantía en Texto');
+        fillDateField('fecha_firma', contractData.fecha_firma, 'Fecha de Firma');
+        fillField('firma_arrendatario', contractData.arrendatario_nombre, 'Nombre del Arrendatario');
+        fillField('firma_arrendador', contractData.arrendador_nombre, 'Nombre del Arrendador');
+    </script>
+</body>
+</html>

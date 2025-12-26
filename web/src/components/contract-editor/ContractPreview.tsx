@@ -1,24 +1,9 @@
 import { memo } from 'react';
-import { Box, Typography, Divider } from '@mui/material';
 import type { ContractData } from '../../services/contractDraftService';
 
 interface ContractPreviewProps {
   data: ContractData;
   fullPage?: boolean;
-}
-
-// Formato de fecha a texto largo
-function formatDateLong(dateStr: string): string {
-  if (!dateStr) return '____';
-  const date = new Date(dateStr);
-  const day = date.getDate().toString().padStart(2, '0');
-  const months = [
-    'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
-    'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
-  ];
-  const month = months[date.getMonth()];
-  const year = date.getFullYear();
-  return `${day} de ${month} del ${year}`;
 }
 
 // Componente para mostrar placeholders con mensajes de campos faltantes
@@ -38,64 +23,108 @@ function PlaceholderText({ value, placeholder }: { value: string | number | null
   return <strong>{stringValue}</strong>;
 }
 
+// Formato de fecha a texto largo
+function formatDateLong(dateStr: string): string {
+  if (!dateStr) return '____';
+  const date = new Date(dateStr);
+  const day = date.getDate().toString().padStart(2, '0');
+  const months = [
+    'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+    'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+  ];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day} de ${month} del ${year}`;
+}
+
 function ContractPreview({ data, fullPage }: ContractPreviewProps) {
   const fontSize = fullPage ? '11pt' : '10pt';
+  const titleSize = fullPage ? '14pt' : '12pt';
+  const subtitleSize = fullPage ? '12pt' : '11pt';
 
-  // Estilos para mejor renderizado PDF
-  const pdfStyles = fullPage ? {
-    maxWidth: '170mm', // Limitar ancho para evitar cortes
-    margin: '0 auto',
+  // Estilos nativos para mejor compatibilidad con PDF
+  const containerStyle = {
+    fontFamily: 'Times, "Times New Roman", serif',
+    fontSize,
+    lineHeight: '1.4',
+    color: '#000',
+    backgroundColor: '#fff',
+    maxWidth: fullPage ? '170mm' : 'none',
+    margin: fullPage ? '0 auto' : '0',
+    padding: fullPage ? '0 5mm' : '0',
     textAlign: 'justify' as const,
-    hyphens: 'auto',
     wordWrap: 'break-word' as const,
     overflowWrap: 'break-word' as const,
-    padding: '0 5mm',
-  } : {};
+  };
+
+  const titleStyle = {
+    textAlign: 'center' as const,
+    fontWeight: 'bold',
+    marginBottom: '8px',
+    fontSize: titleSize,
+  };
+
+  const subtitleStyle = {
+    textAlign: 'center' as const,
+    marginBottom: '12px',
+  };
+
+  const sectionTitleStyle = {
+    fontWeight: 'bold',
+    marginBottom: '4px',
+    fontSize: subtitleSize,
+  };
+
+  const paragraphStyle = {
+    textAlign: 'justify' as const,
+    marginBottom: '8px',
+  };
+
+  const dividerStyle = {
+    borderTop: '1px solid #000',
+    margin: '8px 0',
+  };
+
+  const signatureContainerStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginTop: fullPage ? '24px' : '16px',
+    marginBottom: '8px',
+  };
+
+  const signatureBoxStyle = {
+    width: '40%',
+    textAlign: 'center' as const,
+  };
+
+  const signatureLineStyle = {
+    borderTop: '1px solid #000',
+    paddingTop: '4px',
+    marginTop: '32px',
+  };
+
+  const signatureTextStyle = {
+    fontWeight: 'bold',
+  };
+
+  const signatureNameStyle = {
+    fontSize: '9pt',
+  };
 
   return (
-    <Box sx={{
-      fontFamily: 'Times, "Times New Roman", serif',
-      fontSize,
-      lineHeight: 1.4,
-      color: '#000',
-      backgroundColor: '#fff',
-      ...pdfStyles,
-      // Estilos optimizados para conversión PDF (texto seleccionable)
-      '& *': {
-        fontFamily: 'inherit !important',
-        color: '#000 !important',
-        backgroundColor: 'transparent !important',
-        boxShadow: 'none !important',
-        textShadow: 'none !important',
-        border: 'none !important',
-      },
-      // Asegurar que los elementos Material-UI no interfieran
-      '& .MuiTypography-root': {
-        fontFamily: 'inherit !important',
-        color: '#000 !important',
-        backgroundColor: 'transparent !important',
-      },
-      '& .MuiBox-root': {
-        backgroundColor: 'transparent !important',
-        boxShadow: 'none !important',
-      }
-    }}>
+    <div style={containerStyle}>
       {/* Título */}
-      <Typography
-        variant="h5"
-        component="h1"
-        sx={{ textAlign: 'center', fontWeight: 'bold', mb: 2, fontFamily: 'inherit', fontSize: fullPage ? '14pt' : '12pt' }}
-      >
+      <h1 style={titleStyle}>
         CONTRATO DE ARRENDAMIENTO COMERCIAL
-      </Typography>
-      <Typography sx={{ textAlign: 'center', mb: 3, fontFamily: 'inherit' }}>
+      </h1>
+      <p style={subtitleStyle}>
         Stand N.º <PlaceholderText value={data.stand_numero} placeholder="Número de Stand" /> - {data.lugar_firma || 'Pucallpa'}, Perú
-      </Typography>
+      </p>
 
-      <Divider sx={{ my: 2 }} />
+      <hr style={dividerStyle} />
 
       {/* Introducción */}
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+      <p style={paragraphStyle}>
         Conste por el presente documento el Contrato de Arrendamiento que celebran de una parte{' '}
         <PlaceholderText value={data.arrendador_nombre} placeholder="Nombre del Arrendador" />, identificada con RUC. Nº{' '}
         <PlaceholderText value={data.arrendador_ruc} placeholder="RUC del Arrendador" />, debidamente representada por el{' '}
@@ -110,160 +139,159 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
         distrito de {data.arrendatario_distrito || '____'}, provincia de {data.arrendatario_provincia || '____'} y
         departamento de {data.arrendatario_departamento || '____'}, a quien en adelante se le denominará{' '}
         <strong>EL ARRENDATARIO</strong> en los términos y condiciones de las cláusulas siguientes:
-      </Typography>
+      </p>
 
-      <Divider sx={{ my: 2 }} />
+      <hr style={dividerStyle} />
 
       {/* Antecedentes */}
-      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+      <h2 style={sectionTitleStyle}>
         ANTECEDENTES
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+      </h2>
+      <p style={paragraphStyle}>
         <strong>PRIMERA:</strong> <strong>EL ARRENDADOR</strong> es conductor del inmueble ubicado sito en{' '}
-        {data.inmueble_direccion || '____'}, distrito de {data.arrendador_distrito || '____'}, 
-        provincia de {data.arrendador_provincia || '____'}, departamento de {data.arrendador_departamento || '____'}, 
-        el mismo que se encuentra inscrito en la Partida Registral Nº <strong>{data.inmueble_partida_registral || '____'}</strong>, 
-        del Registro de la Propiedad Inmueble de la Zona Registral Nº <strong>{data.inmueble_zona_registral || '____'}</strong>, 
+        {data.inmueble_direccion || '____'}, distrito de {data.arrendador_distrito || '____'},
+        provincia de {data.arrendador_provincia || '____'}, departamento de {data.arrendador_departamento || '____'},
+        el mismo que se encuentra inscrito en la Partida Registral Nº <strong>{data.inmueble_partida_registral || '____'}</strong>,
+        del Registro de la Propiedad Inmueble de la Zona Registral Nº <strong>{data.inmueble_zona_registral || '____'}</strong>,
         en mérito al Contrato de Comodato, mediante la cual la empresa propietaria del bien{' '}
         <strong>{data.propietario_nombre || '____'}</strong>, identificado con RUC Nº{' '}
-        <strong>{data.propietario_ruc || '____'}</strong>, con domicilio fiscal sito en {data.propietario_domicilio || '____'}, 
-        debidamente representado por su Apoderado Legal <strong>{data.propietario_representante || '____'}</strong>, 
-        identificado con DNI Nº <strong>{data.propietario_representante_dni || '____'}</strong>, conforme consta en su 
-        Certificado de Vigencia, inscrito en la <strong>Partida Registral Nº {data.propietario_partida_registral || '____'}</strong>, 
+        <strong>{data.propietario_ruc || '____'}</strong>, con domicilio fiscal sito en {data.propietario_domicilio || '____'},
+        debidamente representado por su Apoderado Legal <strong>{data.propietario_representante || '____'}</strong>,
+        identificado con DNI Nº <strong>{data.propietario_representante_dni || '____'}</strong>, conforme consta en su
+        Certificado de Vigencia, inscrito en la <strong>Partida Registral Nº {data.propietario_partida_registral || '____'}</strong>,
         del Registro de Personas Jurídicas de la Zona Registral Nº IX - Sede Lima, otorga el bien en{' '}
-        <strong>COMODATO CON CLÁUSULA DE AUTORIZACIÓN DE SUBARRIENDO (ANEXO 01-B)</strong>, 
+        <strong>COMODATO CON CLÁUSULA DE AUTORIZACIÓN DE SUBARRIENDO (ANEXO 01-B)</strong>,
         en favor de la empresa <strong>{data.arrendador_nombre || '____'}</strong>.
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+      </p>
+      <p style={paragraphStyle}>
         Que, sobre el bien inmueble descrito en el párrafo anterior se ha construido{' '}
         <strong>{data.total_stands || '____'}</strong> stands.
-      </Typography>
+      </p>
 
-      <Divider sx={{ my: 2 }} />
+      <hr style={dividerStyle} />
 
       {/* Objeto del Contrato */}
-      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+      <h2 style={sectionTitleStyle}>
         OBJETO DEL CONTRATO
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+      </h2>
+      <p style={paragraphStyle}>
         <strong>SEGUNDA:</strong> Por el Presente documento, <strong>EL ARRENDADOR</strong> da en arrendamiento a{' '}
-        <strong>EL ARRENDATARIO</strong> <strong>EL INMUEBLE</strong> de su propiedad, referido en la cláusula primera 
+        <strong>EL ARRENDATARIO</strong> <strong>EL INMUEBLE</strong> de su propiedad, referido en la cláusula primera
         anterior, a fin de que sea ocupado por <strong>EL ARRENDATARIO</strong>; el{' '}
-        <strong>STAND Nº {data.stand_numero || '____'}</strong> siendo este mismo destinado para el desarrollo de la 
+        <strong>STAND Nº {data.stand_numero || '____'}</strong> siendo este mismo destinado para el desarrollo de la
         actividad comercial.
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
-        <strong>EL ARRENDATARIO</strong> declara conocer y reconoce que tanto <strong>EL INMUEBLE</strong> materia de 
-        este contrato como los accesorios que igualmente son objeto del presente arrendamiento, se encuentran en 
-        perfecto estado de conservación y funcionamiento, y en tal sentido se obliga a devolverlos en el estado en 
+      </p>
+      <p style={paragraphStyle}>
+        <strong>EL ARRENDATARIO</strong> declara conocer y reconoce que tanto <strong>EL INMUEBLE</strong> materia de
+        este contrato como los accesorios que igualmente son objeto del presente arrendamiento, se encuentran en
+        perfecto estado de conservación y funcionamiento, y en tal sentido se obliga a devolverlos en el estado en
         que los reciben y sin más deterioro que el ocasionado por el uso ordinario, cuidadoso y racional de los mismos.
-      </Typography>
+      </p>
 
-      <Divider sx={{ my: 2 }} />
+      <hr style={dividerStyle} />
 
       {/* Plazo del Contrato */}
-      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+      <h2 style={sectionTitleStyle}>
         PLAZO DEL CONTRATO
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+      </h2>
+      <p style={paragraphStyle}>
         <strong>TERCERA:</strong> El plazo del presente contrato de arrendamiento, pactado de común acuerdo por las
         partes contratantes, es por el período de un <strong>({data.plazo_meses || '12'}) meses</strong>, que se inicia
         el <strong>{data.fecha_inicio ? formatDateLong(data.fecha_inicio) : <PlaceholderText value="" placeholder="Fecha de Inicio" />}</strong> y concluye indefectiblemente el{' '}
         <strong>{data.fecha_fin ? formatDateLong(data.fecha_fin) : <PlaceholderText value="" placeholder="Fecha de Fin" />}</strong>.
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
-        En caso de que <strong>EL ARRENDATARIO</strong> deseara prorrogar el plazo del presente contrato, deberá 
-        solicitarlo a <strong>EL ARRENDADOR</strong> con una anticipación no menor de TREINTA (30) días a la fecha de 
+      </p>
+      <p style={paragraphStyle}>
+        En caso de que <strong>EL ARRENDATARIO</strong> deseara prorrogar el plazo del presente contrato, deberá
+        solicitarlo a <strong>EL ARRENDADOR</strong> con una anticipación no menor de TREINTA (30) días a la fecha de
         conclusión del arrendamiento.
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
-        En el supuesto que, a la terminación del presente contrato, por vencimiento del plazo o por resolución del 
-        contrato, <strong>EL ARRENDATARIO</strong> no cumliese con entregar <strong>EL INMUEBLE</strong> arrendado a{' '}
+      </p>
+      <p style={paragraphStyle}>
+        En el supuesto que, a la terminación del presente contrato, por vencimiento del plazo o por resolución del
+        contrato, <strong>EL ARRENDATARIO</strong> no cumpliese con entregar <strong>EL INMUEBLE</strong> arrendado a{' '}
         <strong>EL ARRENDADOR</strong>, y sin perjuicio de entenderse que el presente contrato no continúa,{' '}
         <strong>EL ARRENDATARIO</strong> queda obligado a pagar a <strong>EL ARRENDADOR</strong> una penalidad de{' '}
-        <strong>$ {data.penalidad_diaria || '____'} ({data.penalidad_texto || '____'})</strong> por cada día de demora 
+        <strong>$ {data.penalidad_diaria || '____'} ({data.penalidad_texto || '____'})</strong> por cada día de demora
         hasta la entrega efectiva de los inmuebles y sus accesorios a <strong>EL ARRENDADOR</strong>.
-      </Typography>
+      </p>
 
-      <Divider sx={{ my: 2 }} />
+      <hr style={dividerStyle} />
 
       {/* Merced Conductiva */}
-      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+      <h2 style={sectionTitleStyle}>
         LA MERCED CONDUCTIVA: FORMA Y OPORTUNIDAD DE PAGO
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
+      </h2>
+      <p style={paragraphStyle}>
         <strong>SEXTA:</strong> El pago de la renta mensual, convenida de mutuo acuerdo por las partes contratantes,
         es de <strong>S/<PlaceholderText value={data.renta_mensual} placeholder="Renta Mensual" /> ({data.renta_texto || '____'})</strong>, por el arrendamiento de{' '}
         <strong>EL INMUEBLE</strong> y de los accesorios.
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
-        Cabe señalar que el pago de la renta será abonado los de cada <strong>{data.dia_vencimiento || '____'}</strong> de 
-        cada mes, con una tolerancia de <strong>{data.tolerancia_dias || '____'}</strong> días calendarios siguientes a 
+      </p>
+      <p style={paragraphStyle}>
+        Cabe señalar que el pago de la renta será abonado los de cada <strong>{data.dia_vencimiento || '____'}</strong> de
+        cada mes, con una tolerancia de <strong>{data.tolerancia_dias || '____'}</strong> días calendarios siguientes a
         su vencimiento.
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
-        <strong>SETIMA:</strong> La renta será pagada por <strong>EL ARRENDATARIO</strong> mediante abono en la cuenta 
-        de Ahorros Soles del <strong>{data.banco_nombre || '____'} Nº {data.banco_cuenta || '____'}</strong>, con Código 
+      </p>
+      <p style={paragraphStyle}>
+        <strong>SETIMA:</strong> La renta será pagada por <strong>EL ARRENDATARIO</strong> mediante abono en la cuenta
+        de Ahorros Soles del <strong>{data.banco_nombre || '____'} Nº {data.banco_cuenta || '____'}</strong>, con Código
         Interbancario Nº <strong>{data.banco_cci || '____'}</strong>, de propiedad de <strong>EL ARRENDADOR</strong>.
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
-        El incumplimiento de pago oportuno de dos meses y 15 días consecutivos de renta constituye causal de resolución 
+      </p>
+      <p style={paragraphStyle}>
+        El incumplimiento de pago oportuno de dos meses y 15 días consecutivos de renta constituye causal de resolución
         automática del presente contrato, sin necesidad de previo pronunciamiento judicial.
-      </Typography>
+      </p>
 
-      <Divider sx={{ my: 2 }} />
+      <hr style={dividerStyle} />
 
       {/* Importes Pecuniarios */}
-      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+      <h2 style={sectionTitleStyle}>
         SOBRE LOS IMPORTES PECUNIARIOS
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 2, fontFamily: 'inherit' }}>
-        <strong>DÉCIMO SEXTA:</strong> A la firma del presente contrato, <strong>EL ARRENDATARIO</strong> hace entrega 
+      </h2>
+      <p style={paragraphStyle}>
+        <strong>DÉCIMO SEXTA:</strong> A la firma del presente contrato, <strong>EL ARRENDATARIO</strong> hace entrega
         a <strong>EL ARRENDADOR</strong> los siguientes importes:
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 1, ml: 2, fontFamily: 'inherit' }}>
-        • El importe de <strong>S/ {data.adelanto_monto || '____'} ({data.adelanto_texto || '____'})</strong>, en calidad 
+      </p>
+      <p style={{...paragraphStyle, marginLeft: '16px'}}>
+        • El importe de <strong>S/ {data.adelanto_monto || '____'} ({data.adelanto_texto || '____'})</strong>, en calidad
         de <strong>ADELANTO</strong> que cubren el importe de un mes de renta.
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 1, ml: 2, fontFamily: 'inherit' }}>
-        • El importe de <strong>S/ {data.garantia_monto || '____'} ({data.garantia_texto || '____'})</strong> que 
+      </p>
+      <p style={{...paragraphStyle, marginLeft: '16px'}}>
+        • El importe de <strong>S/ {data.garantia_monto || '____'} ({data.garantia_texto || '____'})</strong> que
         equivalen a una mensualidad por concepto de <strong>depósito de garantía</strong>.
-      </Typography>
+      </p>
 
-      <Divider sx={{ my: 2 }} />
+      <hr style={dividerStyle} />
 
       {/* Firma */}
-      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontFamily: 'inherit', fontSize: fullPage ? '12pt' : '11pt' }}>
+      <h2 style={sectionTitleStyle}>
         FIRMA Y LEGALIZACIÓN
-      </Typography>
-      <Typography sx={{ textAlign: 'justify', mb: 4, fontFamily: 'inherit' }}>
-        Hecho y firmado en {data.lugar_firma || '____'}, bajo legalización notarial de las partes intervinientes, 
+      </h2>
+      <p style={{...paragraphStyle, marginBottom: '16px'}}>
+        Hecho y firmado en {data.lugar_firma || '____'}, bajo legalización notarial de las partes intervinientes,
         a los {formatDateLong(data.fecha_firma)} en dos (2) ejemplares de idéntico tenor que obrarán en poder de{' '}
         <strong>EL ARRENDADOR</strong> y de <strong>EL ARRENDATARIO</strong>, respectivamente.
-      </Typography>
+      </p>
 
       {/* Firmas */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: fullPage ? 6 : 4, mb: 2 }}>
-        <Box sx={{ width: '40%', textAlign: 'center' }}>
-          <Box sx={{ borderTop: '1px solid #000', pt: 1, mt: 8 }}>
-            <Typography sx={{ fontFamily: 'inherit', fontWeight: 'bold' }}>EL ARRENDATARIO</Typography>
-            <Typography sx={{ fontFamily: 'inherit', fontSize: '9pt' }}>
+      <div style={signatureContainerStyle}>
+        <div style={signatureBoxStyle}>
+          <div style={signatureLineStyle}>
+            <p style={signatureTextStyle}>EL ARRENDATARIO</p>
+            <p style={signatureNameStyle}>
               {data.arrendatario_nombre || '________________________'}
-            </Typography>
-          </Box>
-        </Box>
-        <Box sx={{ width: '40%', textAlign: 'center' }}>
-          <Box sx={{ borderTop: '1px solid #000', pt: 1, mt: 8 }}>
-            <Typography sx={{ fontFamily: 'inherit', fontWeight: 'bold' }}>EL ARRENDADOR</Typography>
-            <Typography sx={{ fontFamily: 'inherit', fontSize: '9pt' }}>
+            </p>
+          </div>
+        </div>
+        <div style={signatureBoxStyle}>
+          <div style={signatureLineStyle}>
+            <p style={signatureTextStyle}>EL ARRENDADOR</p>
+            <p style={signatureNameStyle}>
               {data.arrendador_nombre || '________________________'}
-            </Typography>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
 export default memo(ContractPreview);
-

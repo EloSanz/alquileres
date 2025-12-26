@@ -21,11 +21,8 @@ import type { ContractData } from '../../services/contractDraftService';
 
 interface ContractFormSectionProps {
   data: ContractData;
-  draftName: string;
-  nameError?: string;
   fieldErrors?: Record<string, string>;
   onChange: (field: keyof ContractData, value: string) => void;
-  onNameChange: (name: string) => void;
 }
 
 interface FormFieldProps {
@@ -86,24 +83,9 @@ const SectionCard = ({ title, icon, color, children }: SectionCardProps) => (
   </Card>
 );
 
-function ContractFormSection({ data, draftName, nameError, fieldErrors = {}, onChange, onNameChange }: ContractFormSectionProps) {
+function ContractFormSection({ data, fieldErrors = {}, onChange }: ContractFormSectionProps) {
   return (
     <Box>
-      {/* Draft Name */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <TextField
-            fullWidth
-            label="Nombre del borrador"
-            value={draftName}
-            onChange={(e) => onNameChange(e.target.value)}
-            size="small"
-            error={!!nameError}
-            helperText={nameError}
-          />
-        </CardContent>
-      </Card>
-
       {/* Arrendador Section */}
       <SectionCard title="ARRENDADOR" icon={<BusinessIcon />} color="primary.main">
         <FormField label="Nombre de la empresa" field="arrendador_nombre" data={data} error={fieldErrors.arrendador_nombre} onChange={onChange} md={12} />

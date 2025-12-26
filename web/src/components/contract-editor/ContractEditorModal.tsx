@@ -11,263 +11,11 @@ import {
   Typography,
   IconButton,
   Alert,
-  CircularProgress,
   Snackbar,
 } from '@mui/material';
-import { Close as CloseIcon, Print as PrintIcon, Save as SaveIcon } from '@mui/icons-material';
-import { useContractDraftService, type ContractData, type ContractDraft, defaultContractData } from '../../services/contractDraftService';
+import { Close as CloseIcon, Print as PrintIcon } from '@mui/icons-material';
+import { type ContractData, type ContractDraft, defaultContractData } from '../../services/contractDraftService';
 
- // Función para generar PDF usando jsPDF puro (texto nativo seleccionable)
-async function generateContractPDF(contractData: ContractData, _previewRef: React.RefObject<HTMLDivElement>, fileName: string): Promise<void> {
-  const { jsPDF } = await import('jspdf');
-
-  // Crear documento PDF con configuración optimizada
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4',
-    compress: true
-  });
-
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const leftMargin = 25;
-  const rightMargin = 25;
-  const topMargin = 30;
-  const bottomMargin = 25;
-  const contentWidth = pageWidth - leftMargin - rightMargin;
-  let yPosition = topMargin;
-
-  // Configurar fuente por defecto (Times New Roman)
-  pdf.setFont('times', 'normal');
-
-  // Función helper para agregar texto con formato automático
-  const addText = (text: string, options: {
-    fontSize?: number;
-    fontStyle?: 'normal' | 'bold' | 'italic';
-    align?: 'left' | 'center' | 'right';
-    indent?: number;
-    lineSpacing?: number;
-  } = {}) => {
-    const {
-      fontSize = 11,
-      fontStyle = 'normal',
-      align = 'left',
-      indent = 0,
-      lineSpacing = 1.3
-    } = options;
-
-    pdf.setFont('times', fontStyle);
-    pdf.setFontSize(fontSize);
-
-    // Dividir texto en líneas que quepan
-    const lines = pdf.splitTextToSize(text, contentWidth - indent);
-    const lineHeight = fontSize * 0.4 * lineSpacing;
-
-    for (const line of lines) {
-      // Verificar si necesitamos nueva página
-      if (yPosition > pageHeight - bottomMargin - 10) {
-        pdf.addPage();
-        yPosition = topMargin;
-      }
-
-      // Calcular posición X según alineación
-      let xPosition = leftMargin + indent;
-      if (align === 'center') {
-        xPosition = pageWidth / 2;
-      } else if (align === 'right') {
-        xPosition = pageWidth - rightMargin;
-      }
-
-      // Dibujar el texto (esto crea TEXTO REAL, no imagen)
-      pdf.text(line, xPosition, yPosition, { align });
-      yPosition += lineHeight;
-    }
-
-    // Espacio adicional después del párrafo
-    yPosition += fontSize * 0.2;
-  };
-
-  // Función para agregar línea divisoria
-  const addDivider = () => {
-    yPosition += 5;
-    pdf.setLineWidth(0.3);
-    pdf.line(leftMargin, yPosition, pageWidth - rightMargin, yPosition);
-    yPosition += 8;
-  };
-
-  // Función para formato de fecha
-  const formatDate = (dateStr?: string | null) => {
-    if (!dateStr) return '[FECHA PENDIENTE]';
-    try {
-      const date = new Date(dateStr);
-      const day = date.getDate().toString().padStart(2, '0');
-      const months = [
-        'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
-        'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
-      ];
-      const month = months[date.getMonth()];
-      const year = date.getFullYear();
-      return `${day} de ${month} del ${year}`;
-    } catch {
-      return '[FECHA INVÁLIDA]';
-    }
-  };
-
-  // Título principal
-  addText('CONTRATO DE ARRENDAMIENTO COMERCIAL', {
-    fontSize: 16,
-    fontStyle: 'bold',
-    align: 'center'
-  });
-
-  addText(`Stand N.° ${contractData.stand_numero || '[PENDIENTE]'} - ${contractData.lugar_firma || 'Pucallpa'}, Perú`, {
-    fontSize: 12,
-    align: 'center'
-  });
-
-  yPosition += 5;
-  addDivider();
-
-  // Introducción del contrato
-  addText(`Conste por el presente documento el Contrato de Arrendamiento que celebran de una parte ` +
-    `${contractData.arrendador_nombre || '[NOMBRE ARRENDADOR PENDIENTE]'}, identificado con RUC N.° ` +
-    `${contractData.arrendador_ruc || '[RUC PENDIENTE]'}, debidamente representada por el ` +
-    `GERENTE GENERAL Sr. ${contractData.gerente_nombre || '[NOMBRE GERENTE PENDIENTE]'}, identificado con DNI N.° ` +
-    `${contractData.gerente_dni || '[DNI GERENTE PENDIENTE]'}` +
-    `${contractData.gerente_partida_registral ? `, según poder inscrito en la partida electrónica N.° ${contractData.gerente_partida_registral} del registro de personas jurídicas` : ''}, ` +
-    `con domicilio fiscal sito en ${contractData.arrendador_domicilio || '[DOMICILIO PENDIENTE]'}, del distrito de ` +
-    `${contractData.arrendador_distrito || '[DISTRITO]'}, provincia de ` +
-    `${contractData.arrendador_provincia || '[PROVINCIA]'}, departamento de ` +
-    `${contractData.arrendador_departamento || '[DEPARTAMENTO]'}` +
-    `${contractData.arrendador_distrito && contractData.arrendador_provincia && contractData.arrendador_departamento ? ', que en lo sucesivo se denominará EL ARRENDADOR' : ''} y de la otra parte, ` +
-    `Doña ${contractData.arrendatario_nombre || '[NOMBRE ARRENDATARIO PENDIENTE]'}, identificado con D.N.I. N.° ` +
-    `${contractData.arrendatario_dni || '[DNI ARRENDATARIO PENDIENTE]'}, ` +
-    `con domicilio en ${contractData.arrendatario_domicilio || '[DOMICILIO PENDIENTE]'}, distrito de ` +
-    `${contractData.arrendatario_distrito || '[DISTRITO]'}, provincia de ` +
-    `${contractData.arrendatario_provincia || '[PROVINCIA]'} y departamento de ` +
-    `${contractData.arrendatario_departamento || '[DEPARTAMENTO]'}` +
-    `${contractData.arrendatario_distrito && contractData.arrendatario_provincia && contractData.arrendatario_departamento ? ', a quien en adelante se le denominará EL ARRENDATARIO' : ''} en los términos y condiciones de las cláusulas siguientes.`);
-
-  addDivider();
-
-  // ANTECEDENTES
-  addText('ANTECEDENTES', { fontSize: 12, fontStyle: 'bold' });
-  yPosition += 3;
-
-  addText(`PRIMERA: ${contractData.arrendador_nombre || '[ARRENDADOR]'} es conductor del inmueble ubicado sito en ` +
-    `${contractData.inmueble_direccion || '[DIRECCIÓN PENDIENTE]'}, distrito de ` +
-    `${contractData.arrendador_distrito || '[DISTRITO]'}, provincia de ` +
-    `${contractData.arrendador_provincia || '[PROVINCIA]'}, departamento de ` +
-    `${contractData.arrendador_departamento || '[DEPARTAMENTO]'}` +
-    `${contractData.inmueble_partida_registral ? `, el mismo que se encuentra inscrito en la Partida Registral N.° ${contractData.inmueble_partida_registral}` : ''}` +
-    `${contractData.inmueble_zona_registral ? `, del Registro de la Propiedad Inmueble de la Zona Registral N.° ${contractData.inmueble_zona_registral}` : ''}` +
-    `${contractData.propietario_nombre ? `, en mérito al Contrato de Comodato, mediante la cual la empresa propietaria del bien ${contractData.propietario_nombre}, identificado con RUC N.° ${contractData.propietario_ruc || '[RUC]'}` : ''}` +
-    `${contractData.propietario_domicilio ? `, con domicilio fiscal sito en ${contractData.propietario_domicilio}` : ''}` +
-    `${contractData.propietario_representante ? `, debidamente representado por su Apoderado Legal ${contractData.propietario_representante}, identificado con DNI N.° ${contractData.propietario_representante_dni || '[DNI]'}` : ''}` +
-    `${contractData.propietario_partida_registral ? `, conforme consta en su Certificado de Vigencia, inscrito en la Partida Registral N.° ${contractData.propietario_partida_registral}, del Registro de Personas Jurídicas` : ''}` +
-    `${contractData.propietario_representante ? ', otorga el bien en COMODATO CON CLÁUSULA DE AUTORIZACIÓN DE SUBARRIENDO (ANEXO 01-B), en favor de la empresa LA EMPRESA INMOBILIARIA PENTA MONT S.A..' : ''}`);
-
-  if (contractData.total_stands) {
-    addText(`Que, sobre el bien inmueble descrito en el párrafo anterior se ha construido ${contractData.total_stands} stands.`);
-  }
-
-  addDivider();
-
-  // OBJETO DEL CONTRATO
-  addText('OBJETO DEL CONTRATO', { fontSize: 12, fontStyle: 'bold' });
-  yPosition += 3;
-
-  addText(`SEGUNDA: Por el Presente documento, ${contractData.arrendador_nombre || '[ARRENDADOR]'} da en arrendamiento a ` +
-    `${contractData.arrendatario_nombre || '[ARRENDATARIO]'} EL INMUEBLE de su propiedad, referido en la cláusula primera ` +
-    `anterior, a fin de que sea ocupado por ${contractData.arrendatario_nombre || '[ARRENDATARIO]'}; el ` +
-    `STAND N.° ${contractData.stand_numero || '[NÚMERO]'} siendo este mismo destinado para el desarrollo de la actividad comercial.`);
-
-  addText(`${contractData.arrendatario_nombre || '[ARRENDATARIO]'} declara conocer y reconocer que tanto EL INMUEBLE materia de ` +
-    `este contrato como los accesorios que igualmente son objeto del presente arrendamiento, se encuentran en perfecto ` +
-    `estado de conservación y funcionamiento, y en tal sentido se obliga a devolverlos en el estado en que los recibe.`);
-
-  addDivider();
-
-  // PLAZO DEL CONTRATO
-  addText('PLAZO DEL CONTRATO', { fontSize: 12, fontStyle: 'bold' });
-  yPosition += 3;
-
-  addText(`TERCERA: El plazo del presente contrato de arrendamiento, pactado de común acuerdo por las partes ` +
-    `contratantes, es por el período de ${contractData.plazo_meses || '[MESES]'} meses, que se inicia el ${formatDate(contractData.fecha_inicio)} ` +
-    `y concluye el ${formatDate(contractData.fecha_fin)}.`);
-
-  if (contractData.arrendatario_nombre) {
-    addText(`En caso de que ${contractData.arrendatario_nombre} deseara prorrogar el plazo del presente ` +
-      `contrato, deberá solicitarlo a ${contractData.arrendador_nombre || '[ARRENDADOR]'} con una anticipación no menor ` +
-      `de TREINTA (30) días a la fecha de conclusión del arrendamiento.`);
-
-    addText(`En el supuesto que, a la terminación del presente contrato, por vencimiento del plazo o por resolución del contrato, ` +
-      `${contractData.arrendatario_nombre} no cumpliese con entregar EL INMUEBLE arrendado a ${contractData.arrendador_nombre || '[ARRENDADOR]'}, ` +
-      `y sin perjuicio de entenderse que el presente contrato no continúa, ${contractData.arrendatario_nombre} queda obligado a pagar a ` +
-      `${contractData.arrendador_nombre || '[ARRENDADOR]'} una penalidad de ${contractData.penalidad_diaria ? 'S/ ' + contractData.penalidad_diaria : '$ [MONTO]'} ` +
-      `(${contractData.penalidad_texto || '[MONTO EN LETRAS]'}) por cada día de demora hasta la entrega efectiva de los inmuebles y sus accesorios a ` +
-      `${contractData.arrendador_nombre || '[ARRENDADOR]'}.`);
-  }
-
-  addDivider();
-
-  // LA MERCED CONDUCTIVA
-  addText('LA MERCED CONDUCTIVA: FORMA Y OPORTUNIDAD DE PAGO', { fontSize: 12, fontStyle: 'bold' });
-  yPosition += 3;
-
-  addText(`SEXTA: El pago de la renta mensual, convenida de mutuo acuerdo por las partes contratantes, es de ` +
-    `S/${contractData.renta_mensual || '[MONTO]'} (${contractData.renta_texto || '[MONTO EN LETRAS]'}), por el arrendamiento de EL INMUEBLE.`);
-
-  if (contractData.dia_vencimiento || contractData.tolerancia_dias) {
-    addText(`Cabe señalar que el pago de la renta será abonado los ${contractData.dia_vencimiento || '[DÍA]'} de cada mes, ` +
-      `con una tolerancia de ${contractData.tolerancia_dias || '[DÍAS]'} días calendarios siguientes a su vencimiento.`);
-  }
-
-  if (contractData.banco_nombre || contractData.banco_cuenta) {
-    addText(`SÉTIMA: La renta será pagada por ${contractData.arrendatario_nombre || '[ARRENDATARIO]'} mediante abono en la cuenta de ` +
-      `Ahorros Soles del ${contractData.banco_nombre || '[BANCO]'} N.° ${contractData.banco_cuenta || '[CUENTA]'}` +
-      `${contractData.banco_cci ? `, con Código Interbancario N.° ${contractData.banco_cci}` : ''}, de propiedad de ` +
-      `${contractData.arrendador_nombre || '[ARRENDADOR]'}.`);
-  }
-
-  if (contractData.arrendatario_nombre) {
-    addText(`El incumplimiento de pago oportuno de dos meses y 15 días consecutivos de renta constituye causal de resolución automática del presente contrato, ` +
-      `sin necesidad de previo pronunciamiento judicial.`);
-  }
-
-  // Espacio para firmas si hay suficiente espacio
-  if (yPosition > pageHeight - bottomMargin - 80) {
-    pdf.addPage();
-    yPosition = topMargin;
-  }
-
-  yPosition += 15;
-
-  // Firmas
-  const firmaY = yPosition + 40;
-  const leftX = leftMargin + 20;
-  const rightX = pageWidth - rightMargin - 60;
-
-  // Líneas de firma
-  pdf.setLineWidth(0.2);
-  pdf.line(leftX, firmaY, leftX + 60, firmaY);
-  pdf.line(rightX, firmaY, rightX + 60, firmaY);
-
-  // Texto de firmas
-  pdf.setFontSize(10);
-  pdf.text(`${contractData.arrendatario_nombre || '[ARRENDATARIO]'}`, leftX + 30, firmaY + 15, { align: 'center' });
-  pdf.text('ARRENDATARIO', leftX + 30, firmaY + 25, { align: 'center' });
-
-  pdf.text(`${contractData.arrendador_nombre || '[ARRENDADOR]'}`, rightX + 30, firmaY + 15, { align: 'center' });
-  pdf.text('ARRENDADOR', rightX + 30, firmaY + 25, { align: 'center' });
-
-  // Fecha y lugar
-  pdf.text(`${contractData.lugar_firma || 'Pucallpa'}, ${formatDate(contractData.fecha_firma)}`, pageWidth / 2, firmaY + 45, { align: 'center' });
-
-  // Descargar el PDF
-  pdf.save(`${fileName}.pdf`);
-}
 import ContractFormSection from './ContractFormSection';
 import ContractPreview from './ContractPreview';
 
@@ -297,28 +45,20 @@ export interface ContractEditorModalProps {
   open: boolean;
   draft?: ContractDraft | null;
   onClose: () => void;
-  onSaved?: (draft: ContractDraft) => void;
 }
 
 export default function ContractEditorModal({
   open,
   draft,
-  onClose,
-  onSaved
+  onClose
 }: ContractEditorModalProps) {
-  const contractDraftService = useContractDraftService();
   const previewRef = useRef<HTMLDivElement>(null);
   
   const [tabValue, setTabValue] = useState(0);
   const [contractData, setContractData] = useState<ContractData>(defaultContractData);
-  const [draftName, setDraftName] = useState('');
-  const [draftId, setDraftId] = useState<number | null>(null);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [nameError, setNameError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
-  const [hasChanges, setHasChanges] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [previewReady, setPreviewReady] = useState(false);
 
@@ -328,12 +68,8 @@ export default function ContractEditorModal({
       let initialData: ContractData;
       if (draft) {
         initialData = draft.data;
-        setDraftName(draft.name);
-        setDraftId(draft.id);
       } else {
         initialData = { ...defaultContractData };
-        setDraftName(`Contrato - ${new Date().toLocaleDateString('es-PE')}`);
-        setDraftId(null);
       }
 
       setContractData(initialData);
@@ -352,24 +88,11 @@ export default function ContractEditorModal({
       if (!initialData.stand_numero?.trim()) missing.push('Número de Stand');
       setMissingFields(missing);
 
-      setHasChanges(false);
       setError('');
-      setNameError('');
       setFieldErrors({});
       setTabValue(0);
     }
   }, [open, draft]);
-
-  // Auto-save every 30 seconds if there are changes
-  useEffect(() => {
-    if (!open || !hasChanges) return;
-
-    const timer = setTimeout(() => {
-      handleSave(true);
-    }, 30000);
-
-    return () => clearTimeout(timer);
-  }, [open, hasChanges, contractData]);
 
   // Mark preview as ready when tab changes to preview tab
   useEffect(() => {
@@ -384,10 +107,6 @@ export default function ContractEditorModal({
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
-    // Auto-save on tab change if there are changes
-    if (hasChanges) {
-      handleSave(true);
-    }
   };
 
   const handleDataChange = useCallback((field: keyof ContractData, value: string) => {
@@ -426,7 +145,6 @@ export default function ContractEditorModal({
 
       return newData;
     });
-    setHasChanges(true);
 
     // Validación en tiempo real
     const newFieldErrors = { ...fieldErrors };
@@ -495,70 +213,6 @@ export default function ContractEditorModal({
     setFieldErrors(newFieldErrors);
   }, [contractData.fecha_inicio, fieldErrors]);
 
-  const handleNameChange = (name: string) => {
-    setDraftName(name);
-    setHasChanges(true);
-
-    // Real-time validation
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setNameError('El nombre del borrador es requerido');
-    } else if (trimmed.length < 3) {
-      setNameError('El nombre debe tener al menos 3 caracteres');
-    } else {
-      setNameError('');
-    }
-  };
-
-  const handleSave = async (silent = false) => {
-    const trimmedName = draftName.trim();
-    if (!trimmedName) {
-      if (!silent) setError('El nombre del borrador es requerido');
-      return;
-    }
-    if (trimmedName.length < 3) {
-      if (!silent) setError('El nombre del borrador debe tener al menos 3 caracteres');
-      return;
-    }
-
-    try {
-      setSaving(true);
-      setError('');
-
-      if (draftId) {
-        // Update existing draft
-        const updated = await contractDraftService.updateDraft(draftId, {
-          name: trimmedName,
-          data: contractData
-        });
-        setDraftName(trimmedName); // Update the state with trimmed name
-        if (!silent) {
-          setSnackbar({ open: true, message: 'Borrador actualizado correctamente' });
-        }
-        onSaved?.(updated);
-      } else {
-        // Create new draft
-        const created = await contractDraftService.createDraft({
-          name: trimmedName,
-          data: contractData
-        });
-        setDraftId(created.id);
-        setDraftName(trimmedName); // Update the state with trimmed name
-        if (!silent) {
-          setSnackbar({ open: true, message: 'Borrador creado correctamente' });
-        }
-        onSaved?.(created);
-      }
-      setHasChanges(false);
-    } catch (err: any) {
-      if (!silent) {
-        setError(err.message || 'Error al guardar el borrador');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const validateRequiredFields = (): string[] => {
     return missingFields;
   };
@@ -625,7 +279,6 @@ export default function ContractEditorModal({
   };
 
   const handleExportPDF = async () => {
-    let fallbackPrintContent: HTMLElement | null = null;
 
     try {
       console.log('🚀 Iniciando exportación PDF...');
@@ -664,149 +317,45 @@ export default function ContractEditorModal({
         });
       }
 
-      // Método programático: Generar PDF usando el componente ContractPreview renderizado
-      try {
-        await generateContractPDF(contractData, previewRef, draftName || 'Contrato de Arrendamiento');
-        setSnackbar({ open: true, message: 'PDF generado correctamente' });
-
-      } catch (programmaticError) {
-        console.warn('Método programático falló, usando html2canvas:', programmaticError);
-
-        // Fallback a html2pdf con configuración optimizada
-        const html2pdf = (await import('html2pdf.js')).default;
-
-        fallbackPrintContent = previewRef.current;
-        if (!fallbackPrintContent) {
-          setError('Error interno: No se pudo acceder al contenido del contrato.');
-          return;
-        }
-
-        // Configure options for PDF generation - Optimizado para texto
-        const options = {
-          margin: [25, 20, 25, 20] as [number, number, number, number],
-          filename: `${draftName || 'Contrato de Arrendamiento'}.pdf`,
-          html2canvas: {
-            scale: 1,
-            useCORS: true,
-            allowTaint: false,
-            backgroundColor: '#ffffff',
-            logging: false,
-            ignoreElements: (element: any) => {
-              // Ignorar elementos que puedan causar problemas
-              return element.tagName === 'SCRIPT' || element.tagName === 'STYLE';
-            }
-          },
-          jsPDF: {
-            unit: 'mm' as const,
-            format: 'a4' as const,
-            orientation: 'portrait' as const
-          }
-        };
-
-        // Generate and download PDF
-        await html2pdf().set(options).from(fallbackPrintContent).save();
-
-        setSnackbar({ open: true, message: 'PDF exportado correctamente' });
+      // Exportación nativa por impresión para máxima fidelidad
+      const contentRoot = previewRef.current;
+      if (!contentRoot) {
+        setError('Error interno: No se pudo acceder al contenido del contrato.');
+        return;
       }
+
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        setError('No se pudo abrir la ventana de impresión. Verifica que no estén bloqueados los pop-ups.');
+        return;
+      }
+
+      const html = contentRoot.outerHTML;
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Contrato de Arrendamiento</title>
+            <style>
+              @page { size: A4; margin: 20mm; }
+              body { margin: 0; padding: 0; }
+            </style>
+          </head>
+          <body>${html}</body>
+        </html>
+      `);
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, 300);
+      setSnackbar({ open: true, message: 'Documento listo para imprimir/guardar como PDF' });
     } catch (err: any) {
-      console.error('html2pdf falló, intentando método alternativo:', err);
-
-      try {
-        // Método alternativo: abrir en nueva ventana con estilos de impresión
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-          setError('No se pudo abrir la ventana de impresión. Verifica que no estén bloqueados los pop-ups.');
-          return;
-        }
-
-        const content = fallbackPrintContent ? (fallbackPrintContent as HTMLElement).innerHTML : '';
-        printWindow.document.write(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>${draftName || 'Contrato de Arrendamiento'}</title>
-              <style>
-                @page {
-                  size: A4;
-                  margin: 2cm;
-                }
-                @media print {
-                  body {
-                    font-family: 'Times New Roman', Times, serif !important;
-                    font-size: 11pt !important;
-                    line-height: 1.6 !important;
-                    color: #000 !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    max-width: 170mm !important;
-                    margin: 0 auto !important;
-                  }
-                  * {
-                    -webkit-print-color-adjust: exact !important;
-                    color-adjust: exact !important;
-                  }
-                }
-                body {
-                  font-family: 'Times New Roman', Times, serif;
-                  font-size: 11pt;
-                  line-height: 1.6;
-                  color: #000;
-                  margin: 0;
-                  padding: 20px;
-                  max-width: 170mm;
-                  margin: 0 auto;
-                }
-                h1 {
-                  text-align: center;
-                  font-size: 14pt;
-                  margin-bottom: 0.5cm;
-                  font-weight: bold;
-                }
-                h2 {
-                  font-size: 12pt;
-                  margin-top: 0.5cm;
-                  margin-bottom: 0.3cm;
-                  border-bottom: 1px solid #000;
-                  font-weight: bold;
-                }
-                p {
-                  text-align: justify;
-                  margin-bottom: 0.3cm;
-                  hyphens: auto;
-                  word-wrap: break-word;
-                }
-                strong {
-                  font-weight: bold;
-                }
-              </style>
-            </head>
-            <body>
-              ${content}
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-
-        // Esperar a que cargue y mostrar diálogo de impresión
-        setTimeout(() => {
-          printWindow.focus();
-          printWindow.print();
-          setSnackbar({ open: true, message: 'Documento listo para impresión/imprimir como PDF' });
-        }, 500);
-
-      } catch (fallbackError: any) {
-        console.error('Método alternativo también falló:', fallbackError);
-        setError('Error al generar el PDF. Intente nuevamente o use la función de impresión del navegador.');
-      }
+      setError('Error al generar el PDF. Intente nuevamente o use la función de impresión del navegador.');
     }
   };
 
   const handleClose = () => {
-    if (hasChanges) {
-      if (window.confirm('Tienes cambios sin guardar. ¿Deseas guardarlos antes de salir?')) {
-        handleSave();
-      }
-    }
     onClose();
   };
 
@@ -826,12 +375,6 @@ export default function ContractEditorModal({
             <Typography variant="h6" component="span">
               Editor de Contrato
             </Typography>
-            {saving && <CircularProgress size={20} />}
-            {hasChanges && !saving && (
-              <Typography variant="caption" color="text.secondary">
-                (sin guardar)
-              </Typography>
-            )}
           </Box>
           <IconButton onClick={handleClose} size="small">
             <CloseIcon />
@@ -883,11 +426,8 @@ export default function ContractEditorModal({
                   )}
                   <ContractFormSection
                     data={contractData}
-                    draftName={draftName}
-                    nameError={nameError}
                     fieldErrors={fieldErrors}
                     onChange={handleDataChange}
-                    onNameChange={handleNameChange}
                   />
                 </Box>
               </TabPanel>
@@ -937,14 +477,6 @@ export default function ContractEditorModal({
             Cerrar
           </Button>
           <Box sx={{ flex: 1 }} />
-          <Button
-            onClick={() => handleSave()}
-            variant="outlined"
-            startIcon={<SaveIcon />}
-            disabled={saving || !hasChanges}
-          >
-            {saving ? 'Guardando...' : 'Guardar'}
-          </Button>
           <Button
             onClick={tabValue === 0 ? () => setTabValue(1) : handleExportPDF}
             variant="contained"
