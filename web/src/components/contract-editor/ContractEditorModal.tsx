@@ -61,6 +61,7 @@ export default function ContractEditorModal({
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [previewReady, setPreviewReady] = useState(false);
+  const [splitView, setSplitView] = useState(false);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -107,6 +108,9 @@ export default function ContractEditorModal({
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+    if (newValue !== 0) {
+      setSplitView(false);
+    }
   };
 
   const handleDataChange = useCallback((field: keyof ContractData, value: string) => {
@@ -320,43 +324,44 @@ export default function ContractEditorModal({
       // Exportación nativa por impresión para máxima fidelidad
       const contentRoot = previewRef.current;
       if (!contentRoot) {
-        setError('Error interno: No se pudo acceder al contenido del contrato.');
-        return;
-      }
+          setError('Error interno: No se pudo acceder al contenido del contrato.');
+          return;
+        }
 
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        setError('No se pudo abrir la ventana de impresión. Verifica que no estén bloqueados los pop-ups.');
-        return;
-      }
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+          setError('No se pudo abrir la ventana de impresión. Verifica que no estén bloqueados los pop-ups.');
+          return;
+        }
 
       const html = contentRoot.outerHTML;
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
             <title>Contrato de Arrendamiento</title>
-            <style>
+              <style>
               @page { size: A4; margin: 20mm; }
               body { margin: 0; padding: 0; }
-            </style>
-          </head>
+              </style>
+            </head>
           <body>${html}</body>
-        </html>
-      `);
-      printWindow.document.close();
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
+          </html>
+        `);
+        printWindow.document.close();
+        setTimeout(() => {
+          printWindow.focus();
+          printWindow.print();
       }, 300);
       setSnackbar({ open: true, message: 'Documento listo para imprimir/guardar como PDF' });
     } catch (err: any) {
-      setError('Error al generar el PDF. Intente nuevamente o use la función de impresión del navegador.');
+        setError('Error al generar el PDF. Intente nuevamente o use la función de impresión del navegador.');
     }
   };
 
   const handleClose = () => {
     onClose();
+    setSplitView(false);
   };
 
   return (
@@ -396,6 +401,79 @@ export default function ContractEditorModal({
 
             <DialogContent sx={{ flex: 1, overflow: 'hidden', p: 0 }}>
               <TabPanel value={tabValue} index={0}>
+                {splitView ? (
+                  <Box sx={{ height: '100%', display: 'flex', gap: 2, overflow: 'hidden', p: 0 }}>
+                    <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+                      {missingFields.length > 0 && (
+                        <Box
+                          sx={{
+                            position: 'sticky',
+                            top: 0,
+                            zIndex: 10,
+                            mb: 2,
+                            p: 2,
+                            borderRadius: 2,
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            backdropFilter: 'blur(8px)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                          }}
+                        >
+                          <Typography
+                            variant="body1"
+                            color="white"
+                            fontWeight="bold"
+                            sx={{ fontSize: '1.1rem' }}
+                          >
+                            ⚠️ Campos requeridos pendientes: {missingFields.join(', ')}
+                          </Typography>
+                        </Box>
+                      )}
+                      <ContractFormSection
+                        stacked
+                        data={contractData}
+                        fieldErrors={fieldErrors}
+                        onChange={handleDataChange}
+                      />
+                    </Box>
+                    <Box sx={{
+                      flex: 1,
+                      overflow: 'auto',
+                      bgcolor: '#f5f5f5',
+                      p: 0,
+                      '@media print': {
+                        bgcolor: 'white !important',
+                        p: '0 !important'
+                      }
+                    }}>
+                      <Box
+                        ref={previewRef}
+                        sx={{
+                          bgcolor: 'white',
+                          width: '210mm',
+                          minHeight: '297mm',
+                          mx: 'auto',
+                          my: 0,
+                          p: '20mm',
+                          boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                          fontFamily: '"Times New Roman", Times, serif',
+                          lineHeight: 1.5,
+                          fontSize: '11pt',
+                          color: '#000',
+                          '@media print': {
+                            width: 'auto !important',
+                            minHeight: 'auto !important',
+                            boxShadow: 'none !important',
+                            margin: '0 !important',
+                            padding: '15mm 20mm !important'
+                          }
+                        }}
+                      >
+                        <ContractPreview data={contractData} fullPage />
+                      </Box>
+                    </Box>
+                  </Box>
+                ) : (
                 <Box sx={{ height: '100%', overflow: 'auto', p: 3 }}>
                   {missingFields.length > 0 && (
                     <Box
@@ -416,9 +494,7 @@ export default function ContractEditorModal({
                         variant="body1"
                         color="white"
                         fontWeight="bold"
-                        sx={{
-                          fontSize: '1.1rem'
-                        }}
+                          sx={{ fontSize: '1.1rem' }}
                       >
                         ⚠️ Campos requeridos pendientes: {missingFields.join(', ')}
                       </Typography>
@@ -430,6 +506,7 @@ export default function ContractEditorModal({
                     onChange={handleDataChange}
                   />
                 </Box>
+                )}
               </TabPanel>
 
           <TabPanel value={tabValue} index={1}>
@@ -477,6 +554,14 @@ export default function ContractEditorModal({
             Cerrar
           </Button>
           <Box sx={{ flex: 1 }} />
+          {tabValue === 0 && (
+          <Button
+              onClick={() => setSplitView(v => !v)}
+            variant="outlined"
+          >
+              {splitView ? 'Cerrar vista paralela' : 'Vista previa en paralelo'}
+          </Button>
+          )}
           <Button
             onClick={tabValue === 0 ? () => setTabValue(1) : handleExportPDF}
             variant="contained"
