@@ -12,6 +12,7 @@ import PropertyPage from './pages/PropertyPage';
 import TenantPage from './pages/TenantPage';
 import PaymentPage from './pages/PaymentPage';
 import ContractPage from './pages/ContractPage';
+import ServicePage from './pages/ServicePage';
 
 // Component to protect authenticated routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -96,6 +97,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <ContractPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/services"
+            element={
+              <ProtectedRoute>
+                <ServicePage />
               </ProtectedRoute>
             }
           />

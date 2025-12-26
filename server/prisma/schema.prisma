@@ -117,6 +117,7 @@ model Contract {
   tenant       Tenant?        @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   property     Property?      @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   payments     Payment[]
+  services     Service[]
 
   @@map("contracts")
 }
@@ -149,6 +150,27 @@ model Payment {
 
   @@unique([contractId, monthNumber]) // Una cuota por mes por contrato
   @@map("payments")
+}
+
+// Service (Servicio) model - Agua, Luz, Arbitrios
+model Service {
+  id          Int          @id @default(autoincrement())
+  propertyId  Int?         // Nullable para permitir eliminación de propiedades
+  contractId  Int?         // Nullable para permitir eliminación de contratos
+  serviceType ServiceType  @default(AGUA)
+  amount      Decimal
+  dueDate     DateTime
+  paidDate    DateTime?    // Fecha de pago
+  isPaid      Boolean      @default(false)
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  property    Property?    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  contract    Contract?    @relation(fields: [contractId], references: [id], onDelete: SetNull)
+
+  @@map("services")
 }
 
 // Enums
@@ -197,6 +219,12 @@ enum PaymentMethod {
   YAPE
   DEPOSITO
   TRANSFERENCIA_VIRTUAL
+}
+
+enum ServiceType {
+  AGUA
+  LUZ
+  ARBITRIOS
 }
 
 // ContractDraft - Borradores de contratos para el editor WYSIWYG
