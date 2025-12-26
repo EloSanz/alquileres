@@ -46,6 +46,8 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     const data = entity.toPrisma();
     // Remove id for creation since it's auto-generated
     delete (data as any).id;
+    // Exclude receiptImageUrl - not in Prisma schema yet (will be added in future migration)
+    delete (data as any).receiptImageUrl;
 
     const payment = await prisma.payment.create({
       data: data as any
@@ -57,6 +59,12 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     const data = entity.toPrisma();
     delete (data as any).id; // Don't update id
     delete (data as any).createdAt; // Don't update createdAt
+    // Exclude relation fields - Prisma handles these through relations, not direct field updates
+    delete (data as any).tenantId;
+    delete (data as any).propertyId;
+    delete (data as any).contractId;
+    // Exclude receiptImageUrl - not in Prisma schema yet (will be added in future migration)
+    delete (data as any).receiptImageUrl;
     const payment = await prisma.payment.update({
       where: { id: entity.id! },
       data: data as any // Allow null values

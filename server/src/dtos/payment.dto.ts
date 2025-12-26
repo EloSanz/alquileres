@@ -12,6 +12,7 @@ export interface PaymentDTO {
   paymentMethod: string;
   pentamontSettled: boolean;
   notes: string | null;
+  receiptImageUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }

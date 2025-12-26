@@ -31,6 +31,7 @@ import { usePropertyService, type Property } from '../services/propertyService';
 import { usePaymentService, type Payment, type CreatePaymentData } from '../services/paymentService';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { FilterConfig } from '../components/FilterBar';
+import PaymentDetailsModal from '../components/PaymentDetailsModal';
 
 const PaymentPage = () => {
   const propertyService = usePropertyService()
@@ -82,6 +83,8 @@ const PaymentPage = () => {
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
   // Toggle Pentamont persisted in backend
   const handleTogglePentamont = async (payment: Payment) => {
@@ -257,8 +260,8 @@ const PaymentPage = () => {
   };
 
   const handleViewDetails = (payment: Payment) => {
-    // TODO: Navigate to payment details page
-    console.log('View details for payment:', payment.id);
+    setSelectedPayment(payment);
+    setDetailsModalOpen(true);
   };
 
   const handleEdit = (payment: Payment) => {
@@ -393,13 +396,23 @@ const PaymentPage = () => {
             </TableHead>
             <TableBody>
               {filteredPayments.map((payment) => (
-                <TableRow key={payment.id} hover>
+                <TableRow 
+                  key={payment.id} 
+                  hover
+                  onClick={() => handleViewDetails(payment)}
+                  sx={{ 
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'action.hover'
+                    }
+                  }}
+                >
                   <TableCell>{payment.id}</TableCell>
                   <TableCell>{payment.tenantFullName || `ID: ${payment.tenantId}`}</TableCell>
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
                   <TableCell>{formatDate(payment.paymentDate)}</TableCell>
                   <TableCell>{formatDate(payment.dueDate)}</TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography variant="body2">
                         {payment.paymentMethod === 'YAPE' ? 'Yape' :
@@ -415,24 +428,35 @@ const PaymentPage = () => {
                             <Switch
                               size="small"
                               checked={!!payment.pentamontSettled}
-                              onChange={() => handleTogglePentamont(payment)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleTogglePentamont(payment);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
                             />
                           }
+                          onClick={(e) => e.stopPropagation()}
                         />
                       )}
                     </Box>
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="center" onClick={(e) => e.stopPropagation()}>
                     <IconButton
                       size="small"
-                      onClick={() => handleViewDetails(payment)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewDetails(payment);
+                      }}
                       title="Ver detalles"
                     >
                       <VisibilityIcon />
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => handleEdit(payment)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(payment);
+                      }}
                       title="Editar"
                       color="primary"
                     >
@@ -440,7 +464,10 @@ const PaymentPage = () => {
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => handleDelete(payment)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(payment);
+                      }}
                       title="Eliminar"
                       color="error"
                     >
@@ -683,6 +710,16 @@ const PaymentPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Payment Details Modal */}
+      <PaymentDetailsModal
+        open={detailsModalOpen}
+        payment={selectedPayment}
+        onClose={() => {
+          setDetailsModalOpen(false);
+          setSelectedPayment(null);
+        }}
+      />
     </Container>
   );
 };

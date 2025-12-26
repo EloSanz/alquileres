@@ -14,6 +14,7 @@ export interface Payment {
   paymentMethod: string
   pentamontSettled?: boolean
   notes?: string | null
+  receiptImageUrl?: string | null
   createdAt: string
 }
 

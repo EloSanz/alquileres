@@ -16,6 +16,7 @@ export class PaymentEntity {
     public paymentMethod: PaymentMethod,
     public pentamontSettled: boolean,
     public notes: string | null,
+    public receiptImageUrl: string | null,
     public createdAt: Date,
     public updatedAt: Date
   ) {  }
@@ -33,6 +34,7 @@ export class PaymentEntity {
     paymentMethod?: string;
     pentamontSettled?: boolean;
     notes?: string;
+    receiptImageUrl?: string | null;
   }): PaymentEntity {
     return new PaymentEntity(
       null, // id
@@ -48,6 +50,7 @@ export class PaymentEntity {
       (data.paymentMethod as PaymentMethod) || PaymentMethod.YAPE,
       data.pentamontSettled ?? false,
       data.notes || null,
+      data.receiptImageUrl || null,
       new Date(), // createdAt
       new Date()  // updatedAt
     );
@@ -66,6 +69,7 @@ export class PaymentEntity {
     paymentMethod?: string;
     pentamontSettled?: boolean;
     notes?: string;
+    receiptImageUrl?: string | null;
   }): PaymentEntity {
     if (data.tenantId !== undefined) this.tenantId = data.tenantId;
     if (data.propertyId !== undefined) this.propertyId = data.propertyId;
@@ -79,6 +83,7 @@ export class PaymentEntity {
     if (data.paymentMethod !== undefined) this.paymentMethod = data.paymentMethod as PaymentMethod;
     if (data.pentamontSettled !== undefined) this.pentamontSettled = data.pentamontSettled;
     if (data.notes !== undefined) this.notes = data.notes;
+    if (data.receiptImageUrl !== undefined) this.receiptImageUrl = data.receiptImageUrl;
     this.updatedAt = new Date();
     this.validate();
     return this;
@@ -99,6 +104,7 @@ export class PaymentEntity {
       prismaData.paymentMethod,
       prismaData.pentamontSettled ?? false,
       prismaData.notes,
+      prismaData.receiptImageUrl || null,
       prismaData.createdAt,
       prismaData.updatedAt
     );
@@ -125,6 +131,7 @@ export class PaymentEntity {
       paymentMethod: this.paymentMethod,
       pentamontSettled: this.pentamontSettled,
       notes: this.notes,
+      receiptImageUrl: this.receiptImageUrl,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };
@@ -145,6 +152,9 @@ export class PaymentEntity {
       paymentMethod: this.paymentMethod,
       pentamontSettled: this.pentamontSettled,
       notes: this.notes,
+      // Por ahora, todos los pagos devuelven la misma URL de imagen
+      // En el futuro, se puede usar this.receiptImageUrl si está disponible
+      receiptImageUrl: this.receiptImageUrl || '/comprobante.png',
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
     };
@@ -175,6 +185,7 @@ export interface PaymentDTO {
   paymentMethod: string;
   pentamontSettled: boolean;
   notes: string | null;
+  receiptImageUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
