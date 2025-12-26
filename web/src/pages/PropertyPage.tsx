@@ -62,10 +62,9 @@ const PropertyPage = () => {
   ];
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
-    name: '',
     localNumber: '',
-    state: 'Lima',
-    propertyType: 'APARTMENT',
+    ubicacion: 'BOULEVARD',
+    propertyType: 'INSIDE',
     monthlyRent: '',
     bedrooms: '',
     bathrooms: '',
@@ -78,10 +77,9 @@ const PropertyPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [editForm, setEditForm] = useState({
-    name: '',
     localNumber: '',
-    state: '',
-        propertyType: 'INSIDE',
+    ubicacion: 'BOULEVARD',
+    propertyType: 'INSIDE',
     monthlyRent: '',
     bedrooms: '',
     bathrooms: '',
@@ -120,9 +118,8 @@ const PropertyPage = () => {
       if (query.trim()) {
         const lowerQuery = query.toLowerCase();
         const matchesQuery =
-          property.name.toLowerCase().includes(lowerQuery) ||
           property.localNumber.toString().includes(lowerQuery) ||
-          property.state.toLowerCase().includes(lowerQuery) ||
+          property.ubicacion.toLowerCase().includes(lowerQuery) ||
           property.description?.toLowerCase().includes(lowerQuery) ||
           (property.propertyType === 'INSIDE' ? 'adentro' : 'afuera').includes(lowerQuery) ||
           property.tenant?.firstName.toLowerCase().includes(lowerQuery) ||
@@ -175,9 +172,8 @@ const PropertyPage = () => {
   const handleCreateProperty = async () => {
     try {
       const propertyData: CreatePropertyData = {
-        name: createForm.name,
         localNumber: parseInt(createForm.localNumber),
-        state: createForm.state,
+        ubicacion: createForm.ubicacion as 'BOULEVARD' | 'SAN_MARTIN',
         propertyType: createForm.propertyType,
         monthlyRent: parseFloat(createForm.monthlyRent),
         bedrooms: createForm.bedrooms ? parseInt(createForm.bedrooms) : undefined,
@@ -193,10 +189,9 @@ const PropertyPage = () => {
 
       setCreateDialogOpen(false);
       setCreateForm({
-        name: '',
         localNumber: '',
-        state: 'Lima',
-        propertyType: 'APARTMENT',
+        ubicacion: 'BOULEVARD',
+        propertyType: 'INSIDE',
         monthlyRent: '',
         bedrooms: '',
         bathrooms: '',
@@ -230,9 +225,8 @@ const PropertyPage = () => {
   const handleEdit = (property: Property) => {
     setEditingProperty(property);
     setEditForm({
-      name: property.name,
       localNumber: property.localNumber?.toString() || '',
-      state: property.state,
+      ubicacion: property.ubicacion || 'BOULEVARD',
       propertyType: property.propertyType,
       monthlyRent: property.monthlyRent?.toString() || '',
       bedrooms: property.bedrooms?.toString() || '',
@@ -268,9 +262,8 @@ const PropertyPage = () => {
 
     try {
       const propertyData: UpdatePropertyData = {
-        name: editForm.name,
         localNumber: parseInt(editForm.localNumber),
-        state: editForm.state,
+        ubicacion: editForm.ubicacion as 'BOULEVARD' | 'SAN_MARTIN' | undefined,
         propertyType: editForm.propertyType,
         monthlyRent: parseFloat(editForm.monthlyRent),
         bedrooms: editForm.bedrooms ? parseInt(editForm.bedrooms) : undefined,
@@ -286,10 +279,9 @@ const PropertyPage = () => {
       setEditDialogOpen(false);
       setEditingProperty(null);
       setEditForm({
-        name: '',
         localNumber: '',
-        state: 'Lima',
-        propertyType: 'APARTMENT',
+        ubicacion: 'BOULEVARD',
+        propertyType: 'INSIDE',
         monthlyRent: '',
         bedrooms: '',
         bathrooms: '',
@@ -318,7 +310,7 @@ const PropertyPage = () => {
               searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
               onClearSearch={handleClearSearch}
-              placeholder="Buscar por nombre, dirección, ciudad..."
+              placeholder="Buscar por número de local, ubicación..."
               label="Buscar propiedades"
             />
           </Box>
@@ -350,9 +342,8 @@ const PropertyPage = () => {
             <TableHead>
               <TableRow>
                 <TableCell><strong>ID</strong></TableCell>
-                <TableCell><strong>Nombre</strong></TableCell>
                 <TableCell><strong>N° Local</strong></TableCell>
-                <TableCell><strong>Estado</strong></TableCell>
+                <TableCell><strong>Ubicación</strong></TableCell>
                 <TableCell><strong>Tipo</strong></TableCell>
                 <TableCell align="right"><strong>Renta Mensual</strong></TableCell>
                 <TableCell align="center"><strong>Disponible</strong></TableCell>
@@ -361,11 +352,27 @@ const PropertyPage = () => {
             </TableHead>
             <TableBody>
               {filteredProperties.map((property) => (
-                <TableRow key={property.id} hover>
+                <TableRow
+                  key={property.id}
+                  hover
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                    },
+                  }}
+                >
                   <TableCell>{property.id}</TableCell>
-                  <TableCell>{property.name}</TableCell>
                   <TableCell>{property.localNumber}</TableCell>
-                  <TableCell>{property.state}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={property.ubicacion === 'BOULEVARD' ? 'Boulevard' :
+                             property.ubicacion === 'SAN_MARTIN' ? 'San Martin' :
+                             property.ubicacion}
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                    />
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label={property.propertyType === 'INSIDE' ? 'Adentro' :
@@ -414,7 +421,7 @@ const PropertyPage = () => {
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
-                      No hay propiedades registradas
+                      No hay locales registrados
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -427,27 +434,27 @@ const PropertyPage = () => {
       {/* Floating Action Button for creating new property */}
       <Fab
         color="primary"
+        variant="extended"
+        size="large"
         aria-label="add"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          px: 3,
+          py: 1.5
+        }}
         onClick={() => setCreateDialogOpen(true)}
       >
-        <AddIcon />
+        <AddIcon sx={{ mr: 1 }} />
+        Agregar Local
       </Fab>
 
       {/* Create Property Dialog */}
       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Crear Nuevo Local</DialogTitle>
+        <DialogTitle>Agregar Local</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Nombre de la Propiedad"
-                value={createForm.name}
-                onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                required
-              />
-            </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -471,16 +478,17 @@ const PropertyPage = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-            </Grid>
-            <Grid item xs={12} sm={6}>
               <TextField
+                select
                 fullWidth
-                label="Provincia"
-                value={createForm.state}
-                onChange={(e) => setCreateForm({ ...createForm, state: e.target.value })}
-                defaultValue="Lima"
+                label="Ubicación"
+                value={createForm.ubicacion}
+                onChange={(e) => setCreateForm({ ...createForm, ubicacion: e.target.value })}
                 required
-              />
+              >
+                <MenuItem value="BOULEVARD">Boulevard</MenuItem>
+                <MenuItem value="SAN_MARTIN">San Martin</MenuItem>
+              </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -499,10 +507,8 @@ const PropertyPage = () => {
                 onChange={(e) => setCreateForm({ ...createForm, propertyType: e.target.value })}
                 required
               >
-                <MenuItem value="HOUSE">Casa</MenuItem>
-                <MenuItem value="APARTMENT">Apartamento</MenuItem>
-                <MenuItem value="CONDO">Condominio</MenuItem>
-                <MenuItem value="TOWNHOUSE">Townhouse</MenuItem>
+                <MenuItem value="INSIDE">Adentro</MenuItem>
+                <MenuItem value="OUTSIDE">Afuera</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -582,15 +588,6 @@ const PropertyPage = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Nombre de la Propiedad"
-                value={editForm.name}
-                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
                 label="Número de Local"
                 type="number"
                 value={editForm.localNumber}
@@ -600,12 +597,16 @@ const PropertyPage = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
+                select
                 fullWidth
-                label="Estado/Provincia"
-                value={editForm.state}
-                onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
+                label="Ubicación"
+                value={editForm.ubicacion}
+                onChange={(e) => setEditForm({ ...editForm, ubicacion: e.target.value })}
                 required
-              />
+              >
+                <MenuItem value="BOULEVARD">Boulevard</MenuItem>
+                <MenuItem value="SAN_MARTIN">San Martin</MenuItem>
+              </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -624,10 +625,8 @@ const PropertyPage = () => {
                 onChange={(e) => setEditForm({ ...editForm, propertyType: e.target.value })}
                 required
               >
-                <MenuItem value="HOUSE">Casa</MenuItem>
-                <MenuItem value="APARTMENT">Apartamento</MenuItem>
-                <MenuItem value="CONDO">Condominio</MenuItem>
-                <MenuItem value="TOWNHOUSE">Townhouse</MenuItem>
+                <MenuItem value="INSIDE">Adentro</MenuItem>
+                <MenuItem value="OUTSIDE">Afuera</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -704,8 +703,8 @@ const PropertyPage = () => {
         <DialogTitle>Confirmar Eliminación</DialogTitle>
         <DialogContent>
           <Typography>
-            ¿Estás seguro de que quieres eliminar la propiedad{' '}
-            <strong>{propertyToDelete?.name}</strong>?
+            ¿Estás seguro de que quieres eliminar el local{' '}
+            <strong>N° {propertyToDelete?.localNumber}</strong>?
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             Esta acción no se puede deshacer.

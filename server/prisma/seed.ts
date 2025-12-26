@@ -1,5 +1,5 @@
-import { PrismaClient, PropertyType, RentalStatus, EstadoPago, Rubro, ContractStatus } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { PrismaClient, PropertyType, UbicacionType, RentalStatus, EstadoPago, Rubro, ContractStatus, PaymentMethod } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -81,15 +81,15 @@ function generatePhone(): string {
   return `${prefix}${number}`;
 }
 
-function getRandomPaymentMethod(): string {
+function getRandomPaymentMethod(): PaymentMethod {
   // Distribución realista de medios de pago en Perú (basado en estadísticas reales)
   // Yape: 45% (muy popular en pagos diarios y alquileres)
   // Depósito bancario: 35% (tradicional pero aún común)
   // Transferencia Virtual: 20% (creciente pero menos usado para alquileres)
   const random = Math.random();
-  if (random < 0.45) return 'YAPE';
-  if (random < 0.8) return 'DEPOSITO';
-  return 'TRANSFERENCIA_VIRTUAL';
+  if (random < 0.45) return PaymentMethod.YAPE;
+  if (random < 0.8) return PaymentMethod.DEPOSITO;
+  return PaymentMethod.TRANSFERENCIA_VIRTUAL;
 }
 
 function getRandomDate(start: Date, end: Date): Date {
@@ -217,10 +217,8 @@ async function main() {
   console.log('🏠 Creando propiedades...');
   const properties: {
     id: number;
-    name: string;
-    address: string;
-    city: string;
-    state: string;
+    localNumber: number;
+    ubicacion: UbicacionType;
     zipCode: string | null;
     propertyType: PropertyType;
     bedrooms: number | null;
@@ -250,11 +248,13 @@ async function main() {
       // Calculate bathrooms as number (some have .5 for half bathrooms)
       const calculatedBathrooms = bathrooms + (Math.random() > 0.7 ? 0.5 : 0);
 
+      // Distribuir ubicaciones: 50% BOULEVARD, 50% SAN_MARTIN
+      const ubicacion = Math.random() < 0.5 ? UbicacionType.BOULEVARD : UbicacionType.SAN_MARTIN;
+
       const property = await prisma.property.create({
         data: {
-          name: `${getRandomElement(propertyNames)} ${getRandomNumber(1, 999)}`,
           localNumber: getRandomNumber(1, 999),
-          state: 'Lima',
+          ubicacion,
           zipCode: `LIMA${getRandomNumber(1, 43).toString().padStart(2, '0')}`,
           propertyType,
           bedrooms,

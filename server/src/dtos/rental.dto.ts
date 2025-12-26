@@ -18,8 +18,8 @@ export interface RentalDTO {
   };
   property?: {
     id: number;
-    name: string;
-    address: string;
+    ubicacion: string;
+    localNumber: number;
   };
 }
 

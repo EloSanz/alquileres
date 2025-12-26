@@ -1,8 +1,7 @@
 export interface PropertyDTO {
   id: number;
-  name: string;
   localNumber: number;
-  state: string;
+  ubicacion: string;
   zipCode: string | null;
   propertyType: string;
   bedrooms: number | null;
@@ -24,9 +23,8 @@ export interface PropertyDTO {
 }
 
 export interface CreatePropertyDTO {
-  name: string;
   localNumber: number;
-  state: string;
+  ubicacion: string;
   zipCode?: string;
   propertyType: string;
   bedrooms?: number;
@@ -39,9 +37,8 @@ export interface CreatePropertyDTO {
 }
 
 export interface UpdatePropertyDTO {
-  name?: string;
   localNumber?: number;
-  state?: string;
+  ubicacion?: string;
   zipCode?: string;
   propertyType?: string;
   bedrooms?: number;

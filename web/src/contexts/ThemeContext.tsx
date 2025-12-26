@@ -92,7 +92,18 @@ const themes = {
       body1: { fontSize: '1.05rem' },
       body2: { fontSize: '1rem' },
       caption: { fontSize: '0.95rem' }
-    }
+    },
+    components: {
+      MuiTableRow: {
+        styleOverrides: {
+          root: {
+            '&:hover': {
+              backgroundColor: 'rgba(25, 118, 210, 0.15) !important', // More visible primary color with !important
+            },
+          },
+        },
+      },
+    },
   }),
   dark: createTheme({
     palette: {

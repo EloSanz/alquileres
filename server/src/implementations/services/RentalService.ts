@@ -39,7 +39,7 @@ export class RentalService implements IRentalService {
           if (property) {
             dto.property = {
               id: property.id,
-              name: property.name,
+              ubicacion: property.ubicacion,
               localNumber: property.localNumber,
             };
           }
@@ -79,7 +79,7 @@ export class RentalService implements IRentalService {
       if (property) {
         dto.property = {
           id: property.id,
-          name: property.name,
+          ubicacion: property.ubicacion,
           localNumber: property.localNumber,
         };
       }

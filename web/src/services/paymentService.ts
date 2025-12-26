@@ -27,6 +27,9 @@ export interface CreatePaymentData {
   paymentMethod?: string
   pentamontSettled?: boolean
   notes?: string
+  // TODO: En el futuro, este campo se usará para el upload real de la imagen
+  // Por ahora, se ignora y siempre se usa comprobante.png como mock
+  receiptImage?: File | null
 }
 
 export interface UpdatePaymentData {
@@ -73,7 +76,23 @@ export const usePaymentService = () => {
     },
     
     createPayment: async (paymentData: CreatePaymentData): Promise<Payment> => {
-      const response = await api.api.payments.post(paymentData as any)
+      // TODO: En el futuro, aquí se haría el upload real de la imagen
+      // Por ahora, ignoramos receiptImage y siempre usamos comprobante.png (mockeado en el backend)
+      // if (paymentData.receiptImage) {
+      //   const formData = new FormData();
+      //   formData.append('image', paymentData.receiptImage);
+      //   const uploadResponse = await fetch('/api/payments/upload', {
+      //     method: 'POST',
+      //     body: formData,
+      //   });
+      //   const uploadData = await uploadResponse.json();
+      //   paymentData.receiptImageUrl = uploadData.url;
+      // }
+      
+      // Remover receiptImage del payload ya que no se envía al backend por ahora
+      const { receiptImage, ...payload } = paymentData;
+      
+      const response = await api.api.payments.post(payload as any)
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 

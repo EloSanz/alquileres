@@ -14,6 +14,9 @@ import {
   Payment as PaymentIcon,
   Description as ContractIcon,
   Build as ServiceIcon,
+  AccountBalance as TaxIcon,
+  Security as GuaranteeIcon,
+  BuildCircle as MaintenanceIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
@@ -142,8 +145,8 @@ const HomePage = () => {
           </Card>
         </Grid>
 
-        {/* Segunda fila: 2 columnas */}
-        <Grid item xs={12} sm={6} md={6}>
+        {/* Segunda fila: 3 columnas */}
+        <Grid item xs={12} sm={6} md={4}>
           <Card
             sx={{
               cursor: 'pointer',
@@ -170,7 +173,7 @@ const HomePage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={6}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card
             sx={{
               cursor: 'pointer',
@@ -196,6 +199,88 @@ const HomePage = () => {
             </CardContent>
           </Card>
         </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            sx={{
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 200,
+              '&:hover': { transform: 'translateY(-4px)' }
+            }}
+            onClick={() => navigate('/taxes')}
+          >
+            <CardContent sx={{ textAlign: 'center', py: 4, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 2 }}>
+                <TaxIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                <Typography variant="h6">
+                  Impuestos
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Gestiona impuestos municipales y prediales
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Tercera fila: 2 columnas */}
+        <Grid item xs={12} sm={6} md={6}>
+          <Card
+            sx={{
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 200,
+              '&:hover': { transform: 'translateY(-4px)' }
+            }}
+            onClick={() => navigate('/guarantees')}
+          >
+            <CardContent sx={{ textAlign: 'center', py: 4, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 2 }}>
+                <GuaranteeIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                <Typography variant="h6">
+                  Garantías
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Gestiona depósitos y garantías de alquiler
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={6}>
+          <Card
+            sx={{
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 200,
+              '&:hover': { transform: 'translateY(-4px)' }
+            }}
+            onClick={() => navigate('/maintenances')}
+          >
+            <CardContent sx={{ textAlign: 'center', py: 4, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 2 }}>
+                <MaintenanceIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                <Typography variant="h6">
+                  Mantenimiento
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Gestiona trabajos de mantenimiento y reparaciones
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
 
       {/* Quick Actions */}
@@ -204,7 +289,7 @@ const HomePage = () => {
           Acciones Rápidas
         </Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={2.4}>
             <Button
               fullWidth
               variant="outlined"
@@ -215,7 +300,7 @@ const HomePage = () => {
               Nuevo Inquilino
             </Button>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={2.4}>
             <Button
               fullWidth
               variant="outlined"
@@ -226,7 +311,7 @@ const HomePage = () => {
               Nuevo Local
             </Button>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={2.4}>
             <Button
               fullWidth
               variant="outlined"
@@ -237,7 +322,7 @@ const HomePage = () => {
               Nuevo Pago
             </Button>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={2.4}>
             <Button
               fullWidth
               variant="outlined"
@@ -246,6 +331,17 @@ const HomePage = () => {
               sx={{ py: 2 }}
             >
               Ver Contratos
+            </Button>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<TaxIcon />}
+              onClick={() => navigate('/taxes')}
+              sx={{ py: 2 }}
+            >
+              Nuevo Impuesto
             </Button>
           </Grid>
         </Grid>

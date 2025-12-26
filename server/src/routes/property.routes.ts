@@ -22,9 +22,8 @@ const idParamsSchema = t.Object({
 });
 
 const createPropertyBodySchema = t.Object({
-  name: t.String({ minLength: 2 }),
   localNumber: t.Number({ minimum: 1 }),
-  state: t.String({ minLength: 2 }),
+  ubicacion: t.Union([t.Literal('BOULEVARD'), t.Literal('SAN_MARTIN')]),
   zipCode: t.Optional(t.String()),
   propertyType: t.String(),
   bedrooms: t.Optional(t.Number()),
@@ -37,9 +36,8 @@ const createPropertyBodySchema = t.Object({
 });
 
 const updatePropertyBodySchema = t.Object({
-  name: t.Optional(t.String({ minLength: 2 })),
   localNumber: t.Optional(t.Number({ minimum: 1 })),
-  state: t.Optional(t.String({ minLength: 2 })),
+  ubicacion: t.Optional(t.Union([t.Literal('BOULEVARD'), t.Literal('SAN_MARTIN')])),
   zipCode: t.Optional(t.String()),
   propertyType: t.Optional(t.String()),
   bedrooms: t.Optional(t.Number()),

@@ -11,6 +11,9 @@ import {
   Payment as PaymentIcon,
   Description as ContractIcon,
   Build as ServiceIcon,
+  AccountBalance as TaxIcon,
+  Security as GuaranteeIcon,
+  BuildCircle as MaintenanceIcon,
 } from '@mui/icons-material';
 
 const NavigationTabs: React.FC = () => {
@@ -24,6 +27,9 @@ const NavigationTabs: React.FC = () => {
     if (location.pathname === '/payments') return 'payments';
     if (location.pathname === '/contracts') return 'contracts';
     if (location.pathname === '/services') return 'services';
+    if (location.pathname === '/taxes') return 'taxes';
+    if (location.pathname === '/guarantees') return 'guarantees';
+    if (location.pathname === '/maintenances') return 'maintenances';
     if (location.pathname === '/' || location.pathname.startsWith('/#')) return 'home';
     return 'home'; // Default
   };
@@ -37,8 +43,9 @@ const NavigationTabs: React.FC = () => {
 
   return (
     <Box mb={4}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={2.4}>
+      {/* Primera fila */}
+      <Grid container spacing={2} mb={2}>
+        <Grid item xs={12} md={3}>
           <Button
             fullWidth
             variant={activeSection === 'tenants' ? 'contained' : 'outlined'}
@@ -49,7 +56,7 @@ const NavigationTabs: React.FC = () => {
             Inquilinos
           </Button>
         </Grid>
-        <Grid item xs={12} md={2.4}>
+        <Grid item xs={12} md={3}>
           <Button
             fullWidth
             variant={activeSection === 'properties' ? 'contained' : 'outlined'}
@@ -60,7 +67,7 @@ const NavigationTabs: React.FC = () => {
             Locales
           </Button>
         </Grid>
-        <Grid item xs={12} md={2.4}>
+        <Grid item xs={12} md={3}>
           <Button
             fullWidth
             variant={activeSection === 'payments' ? 'contained' : 'outlined'}
@@ -71,7 +78,7 @@ const NavigationTabs: React.FC = () => {
             Pagos
           </Button>
         </Grid>
-        <Grid item xs={12} md={2.4}>
+        <Grid item xs={12} md={3}>
           <Button
             fullWidth
             variant={activeSection === 'contracts' ? 'contained' : 'outlined'}
@@ -82,7 +89,11 @@ const NavigationTabs: React.FC = () => {
             Contratos
           </Button>
         </Grid>
-        <Grid item xs={12} md={2.4}>
+      </Grid>
+
+      {/* Segunda fila */}
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={3}>
           <Button
             fullWidth
             variant={activeSection === 'services' ? 'contained' : 'outlined'}
@@ -91,6 +102,39 @@ const NavigationTabs: React.FC = () => {
             sx={{ py: 2 }}
           >
             Servicios
+          </Button>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Button
+            fullWidth
+            variant={activeSection === 'taxes' ? 'contained' : 'outlined'}
+            startIcon={<TaxIcon />}
+            onClick={() => handleNavigate('/taxes')}
+            sx={{ py: 2 }}
+          >
+            Impuestos
+          </Button>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Button
+            fullWidth
+            variant={activeSection === 'guarantees' ? 'contained' : 'outlined'}
+            startIcon={<GuaranteeIcon />}
+            onClick={() => handleNavigate('/guarantees')}
+            sx={{ py: 2 }}
+          >
+            Garantías
+          </Button>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Button
+            fullWidth
+            variant={activeSection === 'maintenances' ? 'contained' : 'outlined'}
+            startIcon={<MaintenanceIcon />}
+            onClick={() => handleNavigate('/maintenances')}
+            sx={{ py: 2 }}
+          >
+            Mantenimiento
           </Button>
         </Grid>
       </Grid>

@@ -5,12 +5,11 @@ import { userRoutes } from './routes/user.routes'
 import { protectedRoutes } from './routes/protected.routes'
 import { authRoutes } from './routes/auth.routes'
 import { errorPlugin } from './plugins/error.plugin'
-import { logRequest, logResponse, logError, requestLogger } from './utils/logger'
+import { logRequest, logResponse, logError } from './utils/logger'
 
 // Initialize app
 const app = new Elysia()
   .use(errorPlugin)
-  .use(requestLogger)
   .use(cors({
     origin: true,
     credentials: true,
@@ -30,6 +29,7 @@ const server = createServer(async (req, res) => {
   const method = req.method || 'GET'
   const url = req.url || '/'
 
+  // Log request (one time per request)
   logRequest(method, url)
 
   try {
@@ -39,11 +39,11 @@ const server = createServer(async (req, res) => {
       for await (const chunk of req) {
         body += chunk
       }
-      // Don't log auth route bodies (sensitive data)
+      // Log request body for POST/PUT/PATCH (excluding auth routes for security)
       const isAuthRoute = url.startsWith('/api/auth')
-      if (body && !isAuthRoute) {
+      if (!isAuthRoute) {
         console.log(`[${new Date().toISOString()}] ${method} ${url} - Request body:`, body.substring(0, 200) + (body.length > 200 ? '...' : ''))
-      } else if (body && isAuthRoute) {
+      } else {
         console.log(`[${new Date().toISOString()}] ${method} ${url} - Request body: [REDACTED - Auth route]`)
       }
     }
@@ -59,7 +59,11 @@ const server = createServer(async (req, res) => {
     const response = await app.fetch(request)
 
     const duration = Date.now() - startTime
-    logResponse(method, url, response.status, duration)
+
+    // Only log responses for errors or very slow requests (>1000ms)
+    if (response.status >= 400 || duration > 1000) {
+      logResponse(method, url, response.status, duration)
+    }
 
     res.statusCode = response.status
     response.headers.forEach((value, key) => {

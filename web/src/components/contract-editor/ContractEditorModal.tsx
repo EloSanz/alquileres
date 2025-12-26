@@ -62,6 +62,8 @@ export default function ContractEditorModal({
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [previewReady, setPreviewReady] = useState(false);
   const [splitView, setSplitView] = useState(false);
+  const [exportWarningOpen, setExportWarningOpen] = useState(false);
+  const [exportWarningFields, setExportWarningFields] = useState<string[]>([]);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -217,10 +219,6 @@ export default function ContractEditorModal({
     setFieldErrors(newFieldErrors);
   }, [contractData.fecha_inicio, fieldErrors]);
 
-  const validateRequiredFields = (): string[] => {
-    return missingFields;
-  };
-
   const validateFieldFormats = (): string[] => {
     const formatErrors: string[] = [];
 
@@ -282,15 +280,146 @@ export default function ContractEditorModal({
     return formatErrors;
   };
 
+  const handleConfirmExportPDF = async () => {
+    setExportWarningOpen(false);
+
+    try {
+      // Continuar con la validación normal
+      const formatErrors = validateFieldFormats();
+
+      if (formatErrors.length > 0) {
+        console.log('❌ Errores de formato:', formatErrors);
+        setError(`Errores de formato: ${formatErrors.join(', ')}`);
+        return;
+      }
+
+      console.log('✅ Validaciones pasaron, cambiando a vista previa...');
+
+      // Cambiar a la tab de preview si no estamos ahí
+      if (tabValue !== 1) {
+        setTabValue(1);
+        // Esperar a que el preview esté listo
+        await new Promise<void>((resolve) => {
+          const checkReady = () => {
+            if (previewReady && previewRef.current) {
+              console.log('✅ Preview listo, procediendo con exportación');
+              resolve();
+            } else {
+              setTimeout(checkReady, 50);
+            }
+          };
+          setTimeout(checkReady, 50);
+        });
+      }
+
+      // Exportación nativa por impresión para máxima fidelidad
+      const contentRoot = previewRef.current;
+      if (!contentRoot) {
+          setError('Error interno: No se pudo acceder al contenido del contrato.');
+          return;
+        }
+
+      // Crear un nuevo documento con solo el contenido del contrato
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        setError('No se pudo abrir la ventana de impresión. Verifica que no estén bloqueados los pop-ups.');
+        return;
+      }
+
+      // Copiar estilos CSS
+      const styles = Array.from(document.styleSheets)
+        .map(styleSheet => {
+          try {
+            return Array.from(styleSheet.cssRules)
+              .map(rule => rule.cssText)
+              .join('\n');
+          } catch (e) {
+            return '';
+          }
+        })
+        .join('\n');
+
+      // Crear el HTML para impresión
+      const printHTML = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Contrato de Arrendamiento</title>
+            <meta charset="UTF-8">
+            <style>
+              ${styles}
+              @page {
+                size: A4;
+                margin: 1cm;
+              }
+              body {
+                font-family: 'Arial', sans-serif;
+                line-height: 1.6;
+                color: #000;
+                margin: 0;
+                padding: 20px;
+              }
+              .contract-content {
+                max-width: none;
+                margin: 0;
+                padding: 0;
+              }
+              .no-print {
+                display: none !important;
+              }
+              @media print {
+                body { margin: 0; }
+                .page-break { page-break-before: always; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="contract-content">
+              ${contentRoot.innerHTML}
+            </div>
+          </body>
+        </html>
+      `;
+
+      printWindow.document.write(printHTML);
+      printWindow.document.close();
+
+      // Esperar a que se cargue y mostrar diálogo de impresión
+      printWindow.onload = () => {
+        printWindow.print();
+        // Cerrar después de un tiempo prudencial
+        setTimeout(() => {
+          printWindow.close();
+        }, 1000);
+      };
+
+      console.log('✅ PDF exportado exitosamente');
+
+    } catch (error) {
+      console.error('❌ Error en exportación PDF:', error);
+      setError('Error al generar el PDF. Intente nuevamente o use la función de impresión del navegador.');
+    }
+  };
+
   const handleExportPDF = async () => {
 
     try {
       console.log('🚀 Iniciando exportación PDF...');
 
-      // Validar campos requeridos
-      const missingFields = validateRequiredFields();
-      if (missingFields.length > 0) {
-        setError(`Faltan completar los siguientes campos: ${missingFields.join(', ')}`);
+      // Validar campos requeridos para exportación PDF
+      const exportRequiredFields = [
+        { key: 'arrendatario_nombre', label: 'Nombre del Arrendatario' },
+        { key: 'arrendatario_dni', label: 'DNI del Arrendatario' },
+        { key: 'stand_numero', label: 'Número de Stand' }
+      ];
+
+      const missingExportFields = exportRequiredFields
+        .filter(field => !contractData[field.key as keyof typeof contractData]?.trim())
+        .map(field => field.label);
+
+      if (missingExportFields.length > 0) {
+        setExportWarningFields(missingExportFields);
+        setExportWarningOpen(true);
         return;
       }
 
@@ -421,7 +550,7 @@ export default function ContractEditorModal({
                         >
                           <Typography
                             variant="body1"
-                            color="white"
+                            color="primary.main"
                             fontWeight="bold"
                             sx={{ fontSize: '1.1rem' }}
                           >
@@ -492,7 +621,7 @@ export default function ContractEditorModal({
                     >
                       <Typography
                         variant="body1"
-                        color="white"
+                        color="primary.main"
                         fontWeight="bold"
                           sx={{ fontSize: '1.1rem' }}
                       >
@@ -568,6 +697,41 @@ export default function ContractEditorModal({
             startIcon={tabValue === 0 ? undefined : <PrintIcon />}
           >
             {tabValue === 0 ? 'Vista Previa' : 'Exportar PDF'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de advertencia para exportación PDF */}
+      <Dialog
+        open={exportWarningOpen}
+        onClose={() => setExportWarningOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          ⚠️ Campos requeridos faltantes
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Faltan completar los siguientes campos para exportar el PDF:
+          </Typography>
+          <Box component="ul" sx={{ pl: 3, m: 0 }}>
+            {exportWarningFields.map((field, index) => (
+              <Typography key={index} component="li" variant="body2">
+                {field}
+              </Typography>
+            ))}
+          </Box>
+          <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+            ¿Desea continuar con la exportación de todos modos?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setExportWarningOpen(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleConfirmExportPDF} variant="contained" color="primary">
+            Continuar con exportación
           </Button>
         </DialogActions>
       </Dialog>

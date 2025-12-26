@@ -3,9 +3,8 @@ import { useApi } from '../contexts/ApiContext'
 // Types inferred from backend DTOs
 export interface Property {
   id: number
-  name: string
   localNumber: number
-  state: string
+  ubicacion: 'BOULEVARD' | 'SAN_MARTIN'
   propertyType: string
   monthlyRent: number
   bedrooms?: number | null
@@ -26,9 +25,8 @@ export interface Property {
 }
 
 export interface CreatePropertyData {
-  name: string
   localNumber: number
-  state: string
+  ubicacion: 'BOULEVARD' | 'SAN_MARTIN'
   propertyType: string
   monthlyRent: number
   bedrooms?: number
@@ -41,9 +39,8 @@ export interface CreatePropertyData {
 }
 
 export interface UpdatePropertyData {
-  name?: string
   localNumber?: number
-  state?: string
+  ubicacion?: 'BOULEVARD' | 'SAN_MARTIN'
   propertyType?: string
   monthlyRent?: number
   bedrooms?: number
@@ -70,7 +67,7 @@ export const usePropertyService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch properties')
       }
-      return response.data.data
+      return response.data.data as Property[]
     },
     
     getPropertyById: async (id: number): Promise<Property> => {
@@ -84,7 +81,7 @@ export const usePropertyService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch property')
       }
-      return response.data.data
+      return response.data.data as Property
     },
     
     createProperty: async (propertyData: CreatePropertyData): Promise<Property> => {
@@ -98,7 +95,7 @@ export const usePropertyService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to create property')
       }
-      return response.data.data
+      return response.data.data as Property
     },
     
     updateProperty: async (id: number, propertyData: UpdatePropertyData): Promise<Property> => {
@@ -112,7 +109,7 @@ export const usePropertyService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to update property')
       }
-      return response.data.data
+      return response.data.data as Property
     },
     
     deleteProperty: async (id: number): Promise<void> => {
@@ -139,7 +136,7 @@ export const usePropertyService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to release property')
       }
-      return response.data.data
+      return response.data.data as Property
     }
   }
 }

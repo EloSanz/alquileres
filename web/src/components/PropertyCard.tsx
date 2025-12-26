@@ -11,9 +11,8 @@ import {
 
 interface Property {
   id: number;
-  name: string;
   localNumber: number;
-  state: string;
+  ubicacion: string;
   propertyType: string;
   monthlyRent: number;
   bedrooms?: number;
@@ -46,11 +45,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, on
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardContent sx={{ flexGrow: 1 }}>
         <Typography variant="h6" component="h2" gutterBottom>
-          {property.name}
+          Local N° {property.localNumber}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Local N° {property.localNumber}, {property.state}
-          {property.zipCode && ` ${property.zipCode}`}
+          {property.ubicacion === 'BOULEVARD' ? 'Boulevard' : property.ubicacion === 'SAN_MARTIN' ? 'San Martin' : property.ubicacion}
+          {property.zipCode && `, ${property.zipCode}`}
         </Typography>
         <Typography variant="h5" color="primary" sx={{ mb: 2 }}>
           ${property.monthlyRent.toLocaleString()}/mes

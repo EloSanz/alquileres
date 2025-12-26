@@ -374,7 +374,15 @@ const TenantPage = () => {
             </TableHead>
             <TableBody>
               {filteredTenants.map((tenant) => (
-                <TableRow key={tenant.id} hover>
+                <TableRow
+                  key={tenant.id}
+                  hover
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                    },
+                  }}
+                >
                   <TableCell>{tenant.id}</TableCell>
                   <TableCell>
                     {tenant.firstName} {tenant.lastName}
@@ -435,16 +443,25 @@ const TenantPage = () => {
       {/* Floating Action Button for creating new tenant */}
       <Fab
         color="primary"
+        variant="extended"
+        size="large"
         aria-label="add"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          px: 3,
+          py: 1.5
+        }}
         onClick={() => setCreateDialogOpen(true)}
       >
-        <AddIcon />
+        <AddIcon sx={{ mr: 1 }} />
+        Agregar Inquilino
       </Fab>
 
       {/* Create Tenant Dialog */}
       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Crear Nuevo Inquilino</DialogTitle>
+        <DialogTitle>Agregar Inquilino</DialogTitle>
         <DialogContent>
           <Box component="form" sx={{ mt: 2 }}>
             <TextField

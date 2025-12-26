@@ -25,7 +25,7 @@ import {
   Switch,
   FormControlLabel,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
 import { usePropertyService, type Property } from '../services/propertyService';
 import { usePaymentService, type Payment, type CreatePaymentData } from '../services/paymentService';
@@ -85,6 +85,8 @@ const PaymentPage = () => {
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [receiptImageFile, setReceiptImageFile] = useState<File | null>(null);
+  const [receiptImagePreview, setReceiptImagePreview] = useState<string | null>(null);
 
   // Toggle Pentamont persisted in backend
   const handleTogglePentamont = async (payment: Payment) => {
@@ -206,13 +208,18 @@ const PaymentPage = () => {
         dueDate: createForm.dueDate,
         paymentMethod: createForm.paymentMethod,
         notes: createForm.notes || undefined,
+        // TODO: En el futuro, aquí se haría el upload real de la imagen
+        // Por ahora, siempre usamos comprobante.png como mock (se ignora en el servicio)
+        receiptImage: receiptImageFile || null,
       };
-
+      
       await paymentService.createPayment(paymentData);
 
       setCreateDialogOpen(false);
       setSelectedProperty(null);
       setAmountError('');
+      setReceiptImageFile(null);
+      setReceiptImagePreview(null);
       setCreateForm({
         tenantId: '',
         propertyId: '',
@@ -257,6 +264,24 @@ const PaymentPage = () => {
     setCreateForm({ ...createForm, amount: value });
     const error = validateAmount(value);
     setAmountError(error);
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setReceiptImageFile(file);
+      // Crear preview de la imagen seleccionada
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReceiptImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setReceiptImageFile(null);
+    setReceiptImagePreview(null);
   };
 
   const handleViewDetails = (payment: Payment) => {
@@ -400,10 +425,10 @@ const PaymentPage = () => {
                   key={payment.id} 
                   hover
                   onClick={() => handleViewDetails(payment)}
-                  sx={{ 
+                  sx={{
                     cursor: 'pointer',
                     '&:hover': {
-                      backgroundColor: 'action.hover'
+                      backgroundColor: 'rgba(25, 118, 210, 0.12)'
                     }
                   }}
                 >
@@ -493,23 +518,41 @@ const PaymentPage = () => {
       {/* Floating Action Button for creating new payment */}
       <Fab
         color="primary"
+        variant="extended"
+        size="large"
         aria-label="add"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          px: 3,
+          py: 1.5
+        }}
         onClick={() => setCreateDialogOpen(true)}
       >
-        <AddIcon />
+        <AddIcon sx={{ mr: 1 }} />
+        Agregar Pago
       </Fab>
 
       {/* Create Payment Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Crear Nuevo Pago</DialogTitle>
+      <Dialog 
+        open={createDialogOpen} 
+        onClose={() => {
+          setCreateDialogOpen(false);
+          setReceiptImageFile(null);
+          setReceiptImagePreview(null);
+        }} 
+        maxWidth="md" 
+        fullWidth
+      >
+        <DialogTitle>Agregar Pago</DialogTitle>
         <DialogContent>
           <Box component="form" sx={{ mt: 2 }}>
             <Autocomplete
               fullWidth
               options={properties}
               getOptionLabel={(property) =>
-                `${property.name} - Local N° ${property.localNumber}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
+                `Local N° ${property.localNumber} - ${property.ubicacion === 'BOULEVARD' ? 'Boulevard' : property.ubicacion === 'SAN_MARTIN' ? 'San Martin' : property.ubicacion}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
               }
               value={selectedProperty}
               onChange={(_, newValue) => {
@@ -593,7 +636,71 @@ const PaymentPage = () => {
               onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
               multiline
               rows={2}
+              sx={{ mb: 2 }}
             />
+            
+            {/* Upload de Comprobante */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                Comprobante de Pago
+              </Typography>
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="receipt-image-upload"
+                type="file"
+                onChange={handleImageChange}
+                key={receiptImageFile ? receiptImageFile.name : 'file-input'}
+              />
+              <label htmlFor="receipt-image-upload">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<CloudUploadIcon />}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                >
+                  {receiptImageFile ? receiptImageFile.name : 'Seleccionar Imagen del Comprobante'}
+                </Button>
+              </label>
+              
+              {/* Preview de la imagen */}
+              {receiptImagePreview && (
+                <Box sx={{ mt: 2, position: 'relative' }}>
+                  <Box
+                    component="img"
+                    src={receiptImagePreview}
+                    alt="Preview del comprobante"
+                    sx={{
+                      maxWidth: '100%',
+                      maxHeight: '200px',
+                      objectFit: 'contain',
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      p: 1,
+                      bgcolor: 'grey.50',
+                    }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={handleRemoveImage}
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      bgcolor: 'background.paper',
+                      '&:hover': { bgcolor: 'error.light', color: 'error.contrastText' }
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              )}
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                Por ahora, cualquier imagen seleccionada será mockeada y se usará la imagen de prueba
+              </Typography>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>

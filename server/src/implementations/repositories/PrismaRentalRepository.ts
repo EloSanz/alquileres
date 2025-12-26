@@ -17,7 +17,7 @@ export class PrismaRentalRepository implements IRentalRepository {
         property: {
           select: {
             id: true,
-            name: true,
+            ubicacion: true,
             localNumber: true
           }
         }
@@ -42,7 +42,7 @@ export class PrismaRentalRepository implements IRentalRepository {
         property: {
           select: {
             id: true,
-            name: true,
+            ubicacion: true,
             localNumber: true
           }
         }
@@ -66,7 +66,7 @@ export class PrismaRentalRepository implements IRentalRepository {
         property: {
           select: {
             id: true,
-            name: true,
+            ubicacion: true,
             localNumber: true
           }
         }
@@ -91,7 +91,7 @@ export class PrismaRentalRepository implements IRentalRepository {
         property: {
           select: {
             id: true,
-            name: true,
+            ubicacion: true,
             localNumber: true
           }
         }

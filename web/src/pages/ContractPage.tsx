@@ -214,7 +214,12 @@ const ContractPage = () => {
                     key={contract.id}
                     hover
                     onClick={() => handleRowClick(contract)}
-                    sx={{ cursor: 'pointer' }}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: 'rgba(25, 118, 210, 0.12)'
+                      }
+                    }}
                   >
                     <TableCell>{contract.id}</TableCell>
                     <TableCell>
@@ -279,15 +284,20 @@ const ContractPage = () => {
       <Tooltip title="Generar nuevo contrato" placement="left">
         <Fab
           color="primary"
+          variant="extended"
+          size="large"
           aria-label="generar contrato"
           onClick={() => setEditorOpen(true)}
           sx={{
             position: 'fixed',
             bottom: 32,
             right: 32,
+            px: 3,
+            py: 1.5
           }}
         >
-          <AddIcon />
+          <AddIcon sx={{ mr: 1 }} />
+          Agregar Contrato
         </Fab>
       </Tooltip>
     </Container>
