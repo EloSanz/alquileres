@@ -24,13 +24,8 @@ const idParamsSchema = t.Object({
 const createPropertyBodySchema = t.Object({
   localNumber: t.Number({ minimum: 1 }),
   ubicacion: t.Union([t.Literal('BOULEVARD'), t.Literal('SAN_MARTIN')]),
-  zipCode: t.Optional(t.String()),
   propertyType: t.String(),
-  bedrooms: t.Optional(t.Number()),
-  bathrooms: t.Optional(t.Number()),
-  areaSqm: t.Optional(t.Number()),
   monthlyRent: t.Number({ minimum: 0 }),
-  description: t.Optional(t.String()),
   isAvailable: t.Optional(t.Boolean()),
   tenantId: t.Number({ minimum: 1 })
 });
@@ -38,13 +33,8 @@ const createPropertyBodySchema = t.Object({
 const updatePropertyBodySchema = t.Object({
   localNumber: t.Optional(t.Number({ minimum: 1 })),
   ubicacion: t.Optional(t.Union([t.Literal('BOULEVARD'), t.Literal('SAN_MARTIN')])),
-  zipCode: t.Optional(t.String()),
   propertyType: t.Optional(t.String()),
-  bedrooms: t.Optional(t.Number()),
-  bathrooms: t.Optional(t.Number()),
-  areaSqm: t.Optional(t.Number()),
   monthlyRent: t.Optional(t.Number({ minimum: 0 })),
-  description: t.Optional(t.String()),
   isAvailable: t.Optional(t.Boolean())
 });
 

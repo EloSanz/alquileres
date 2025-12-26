@@ -26,7 +26,7 @@ import {
   FormControl,
   InputLabel,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
@@ -236,11 +236,6 @@ const TenantPage = () => {
     setFilteredTenants(filtered);
   }, [searchQuery, filterValues, tenants]);
 
-  const handleViewDetails = (tenant: Tenant) => {
-    // TODO: Navigate to tenant details page
-    console.log('View details for tenant:', tenant.id);
-  };
-
   const handleEdit = (tenant: Tenant) => {
     setEditingTenant(tenant);
     setEditForm({
@@ -377,7 +372,9 @@ const TenantPage = () => {
                 <TableRow
                   key={tenant.id}
                   hover
+                  onClick={() => handleEdit(tenant)}
                   sx={{
+                    cursor: 'pointer',
                     '&:hover': {
                       backgroundColor: 'rgba(25, 118, 210, 0.12)',
                     },
@@ -399,14 +396,7 @@ const TenantPage = () => {
                     />
                   </TableCell>
                   <TableCell>{tenant.fechaInicioContrato ? formatDate(tenant.fechaInicioContrato) : '-'}</TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleViewDetails(tenant)}
-                      title="Ver detalles"
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
+                  <TableCell align="center" onClick={(e) => e.stopPropagation()}>
                     <IconButton
                       size="small"
                       onClick={() => handleEdit(tenant)}
@@ -497,16 +487,16 @@ const TenantPage = () => {
             />
             <TextField
               fullWidth
-              label="Número de Local"
+              label="Número de Local (opcional)"
               value={createForm.numeroLocal}
               onChange={(e) => setCreateForm({ ...createForm, numeroLocal: e.target.value })}
               sx={{ mb: 2 }}
             />
             <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Rubro</InputLabel>
+              <InputLabel>Rubro - Pedicure o Tipeo</InputLabel>
               <Select
                 value={createForm.rubro}
-                label="Rubro"
+                label="Rubro - Pedicure o Tipeo"
                 onChange={(e) => setCreateForm({ ...createForm, rubro: e.target.value })}
               >
                 <MenuItem value="TIPEO">Tipeo</MenuItem>

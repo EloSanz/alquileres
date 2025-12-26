@@ -53,13 +53,8 @@ model Property {
   id          Int         @id @default(autoincrement())
   localNumber Int         // Número de local
   ubicacion   UbicacionType @default(BOULEVARD)
-  zipCode     String?
   propertyType PropertyType
-  bedrooms    Int?
-  bathrooms   Float?
-  areaSqm     Float?
   monthlyRent Decimal
-  description String?
   isAvailable Boolean     @default(true)
   status      PropertyStatus @default(ACTIVE) // Property status
   deletedAt   DateTime?    // Soft delete timestamp

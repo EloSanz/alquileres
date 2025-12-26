@@ -7,11 +7,6 @@ export interface Property {
   ubicacion: 'BOULEVARD' | 'SAN_MARTIN'
   propertyType: string
   monthlyRent: number
-  bedrooms?: number | null
-  bathrooms?: number | null
-  areaSqm?: number | null
-  description?: string | null
-  zipCode?: string | null
   isAvailable?: boolean
   tenantId?: number | null
   tenant?: {
@@ -29,11 +24,6 @@ export interface CreatePropertyData {
   ubicacion: 'BOULEVARD' | 'SAN_MARTIN'
   propertyType: string
   monthlyRent: number
-  bedrooms?: number
-  bathrooms?: number
-  areaSqm?: number
-  description?: string
-  zipCode?: string
   isAvailable?: boolean
   tenantId: number
 }
@@ -43,11 +33,6 @@ export interface UpdatePropertyData {
   ubicacion?: 'BOULEVARD' | 'SAN_MARTIN'
   propertyType?: string
   monthlyRent?: number
-  bedrooms?: number
-  bathrooms?: number
-  areaSqm?: number
-  description?: string
-  zipCode?: string
   isAvailable?: boolean
   status?: string
 }

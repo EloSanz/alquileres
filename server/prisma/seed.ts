@@ -190,9 +190,9 @@ async function main() {
     const district = getRandomElement(limaDistricts);
     const street = getRandomElement(streets);
 
-    // Generar datos comerciales aleatorios - TODOS los tenants tienen negocio
-    const numeroLocal = getRandomNumber(1, 999).toString();
-    const rubro = getRandomElement(businessRubros);
+    // Generar datos comerciales - TODOS los tenants tienen negocio
+    const numeroLocal = (i + 1).toString(); // Incremental: 1, 2, 3, 4, 5
+    const rubro = businessRubros[i % businessRubros.length]; // Alternar entre rubros
 
     // Fecha de inicio de contrato (últimos 2 años) - TODOS los tenants tienen contrato
     const fechaInicioContrato = getRandomDate(new Date(2022, 0, 1), new Date());
@@ -219,50 +219,35 @@ async function main() {
     id: number;
     localNumber: number;
     ubicacion: UbicacionType;
-    zipCode: string | null;
     propertyType: PropertyType;
-    bedrooms: number | null;
-    bathrooms: number | null;
-    areaSqm: number | null;
     monthlyRent: any;
     description: string | null;
     isAvailable: boolean;
-    tenantId: number;
+    tenantId: number | null;
     createdAt: Date;
     updatedAt: Date;
   }[] = [];
 
-  // Asignar propiedades a inquilinos (cada inquilino puede tener 1-3 propiedades)
+  // Asignar propiedades a inquilinos (cada inquilino tiene 2 propiedades)
+  let localNumberCounter = 1; // Contador incremental para números de local
   for (const tenant of tenants) {
-    const numProperties = getRandomNumber(1, 3); // 1-3 propiedades por inquilino
+    const numProperties = 2; // 2 propiedades por inquilino
 
     for (let i = 0; i < numProperties; i++) {
-      const district = getRandomElement(limaDistricts);
-      const street = getRandomElement(streets);
-      const monthlyRent = getRandomNumber(700, 2500);
-      const propertyType = getRandomElement([PropertyType.INSIDE, PropertyType.OUTSIDE]);
-      const bedrooms = null; // Los locales comerciales no tienen dormitorios
-      const bathrooms = 1; // Los locales comerciales tienen 1 baño
-      const areaSqm = getRandomNumber(45, 180);
+      const currentLocalNumber = localNumberCounter++;
+      const monthlyRent = 1000 + (currentLocalNumber * 100); // Incremental: 1100, 1200, 1300...
+      const propertyType = i % 2 === 0 ? PropertyType.INSIDE : PropertyType.OUTSIDE; // Alternar tipo
 
-      // Calculate bathrooms as number (some have .5 for half bathrooms)
-      const calculatedBathrooms = bathrooms + (Math.random() > 0.7 ? 0.5 : 0);
-
-      // Distribuir ubicaciones: 50% BOULEVARD, 50% SAN_MARTIN
-      const ubicacion = Math.random() < 0.5 ? UbicacionType.BOULEVARD : UbicacionType.SAN_MARTIN;
+      // Distribuir ubicaciones alternadamente: BOULEVARD, SAN_MARTIN, BOULEVARD...
+      const ubicacion = currentLocalNumber % 2 === 1 ? UbicacionType.BOULEVARD : UbicacionType.SAN_MARTIN;
 
       const property = await prisma.property.create({
         data: {
-          localNumber: getRandomNumber(1, 999),
+          localNumber: currentLocalNumber, // Incremental: 1, 2, 3, 4...
           ubicacion,
-          zipCode: `LIMA${getRandomNumber(1, 43).toString().padStart(2, '0')}`,
           propertyType,
-          bedrooms,
-          bathrooms: calculatedBathrooms,
-          areaSqm,
           monthlyRent,
-          description: getRandomElement(propertyDescriptions),
-          isAvailable: Math.random() > 0.3, // 70% disponibles
+          isAvailable: currentLocalNumber % 3 !== 0, // 2 de cada 3 disponibles
           tenantId: tenant.id, // Asignar propiedad al inquilino
         }
       });
@@ -307,9 +292,9 @@ async function main() {
       dueDate.setMonth(dueDate.getMonth() + month - 1);
       dueDate.setDate(5); // Vencimiento el día 5 de cada mes
 
-      // Mes pagado: alrededor de la fecha de vencimiento
+      // Mes pagado: 2 días antes del vencimiento
       const paymentDate = new Date(dueDate);
-      paymentDate.setDate(paymentDate.getDate() + getRandomNumber(-5, 0));
+      paymentDate.setDate(paymentDate.getDate() - 2);
 
       await prisma.payment.create({
         data: {
@@ -322,8 +307,8 @@ async function main() {
           amount: firstProperty.monthlyRent,
           paymentDate,
           dueDate,
-          paymentMethod: getRandomPaymentMethod(), // Random payment method
-          pentamontSettled: Math.random() > 0.5
+          paymentMethod: PaymentMethod.YAPE, // Simplificado a YAPE
+          pentamontSettled: month % 2 === 0 // Alternar entre true/false
         }
       });
     }
@@ -365,7 +350,7 @@ async function main() {
         dueDate.setMonth(dueDate.getMonth() + month - 1);
         dueDate.setDate(5);
         const paymentDate = new Date(dueDate);
-        paymentDate.setDate(paymentDate.getDate() + getRandomNumber(-3, 3));
+        paymentDate.setDate(paymentDate.getDate() - 2); // Pagado 2 días antes
 
         await prisma.payment.create({
           data: {
@@ -378,8 +363,8 @@ async function main() {
             amount: c.property.monthlyRent,
             paymentDate,
             dueDate,
-            paymentMethod: getRandomPaymentMethod(),
-            pentamontSettled: Math.random() > 0.5,
+            paymentMethod: PaymentMethod.YAPE, // Simplificado a YAPE
+            pentamontSettled: month % 2 === 0, // Alternar entre true/false
             notes: 'Pago de cuota'
           }
         });
@@ -389,7 +374,7 @@ async function main() {
   // Crear algunos pagos adicionales para otras propiedades (sin contrato)
   console.log('💰 Creando pagos adicionales...');
   for (const property of properties.slice(1)) { // Saltar la primera propiedad que ya tiene contrato
-    const numPayments = getRandomNumber(1, 3); // 1-3 pagos por propiedad
+    const numPayments = 2; // 2 pagos por propiedad
 
     for (let i = 0; i < numPayments; i++) {
       // Crear fechas de pago basadas en la fecha de creación de la propiedad
@@ -399,31 +384,20 @@ async function main() {
       const dueDate = new Date(paymentDate);
       dueDate.setDate(5); // Vencimiento el día 5 de cada mes
 
-
-      const random = Math.random();
-      let paymentDateValue: Date | null = null;
-      let notes: string | null = null;
-      
-      // Si el pago está completado (70% probabilidad), asignar fecha de pago
-      if (random < 0.7) {
-        paymentDateValue = new Date(paymentDate);
-        paymentDateValue.setDate(paymentDateValue.getDate() + getRandomNumber(-5, 5)); // Pagado alrededor de la fecha
-      } else if (random < 0.95) {
-        // 25% probabilidad de pago retrasado (con nota)
-        notes = 'Pago retrasado';
-      }
-
+      // Pagos completados (todos pagados)
+      const paymentDateValue = new Date(paymentDate);
+      paymentDateValue.setDate(paymentDateValue.getDate() - 2); // Pagado 2 días antes del vencimiento
 
       await prisma.payment.create({
         data: {
           tenantId: property.tenantId,
           propertyId: property.id,
           amount: property.monthlyRent,
-          paymentDate: paymentDateValue || paymentDate,
+          paymentDate: paymentDateValue,
           dueDate,
-          paymentMethod: getRandomPaymentMethod(),
-          pentamontSettled: Math.random() > 0.5,
-          notes,
+          paymentMethod: PaymentMethod.YAPE, // Simplificado a YAPE
+          pentamontSettled: i % 2 === 0, // Alternar entre true/false
+          notes: null,
         }
       });
     }

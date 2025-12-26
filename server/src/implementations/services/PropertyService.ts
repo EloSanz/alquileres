@@ -68,6 +68,12 @@ export class PropertyService implements IPropertyService {
   }
 
   async createProperty(data: CreatePropertyDTO, _userId: number): Promise<PropertyDTO> {
+    // Validar que no exista un local con el mismo número
+    const existingProperty = await this.propertyRepository.findByLocalNumber(data.localNumber);
+    if (existingProperty) {
+      throw new Error(`Ya existe un local con el número ${data.localNumber}`);
+    }
+
     const entity = PropertyEntity.create(data);
     const savedEntity = await this.propertyRepository.create(entity);
     return savedEntity.toDTO();

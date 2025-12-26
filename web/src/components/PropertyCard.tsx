@@ -15,11 +15,6 @@ interface Property {
   ubicacion: string;
   propertyType: string;
   monthlyRent: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  areaSqm?: number;
-  description?: string;
-  zipCode?: string;
   isAvailable?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -49,16 +44,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, on
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {property.ubicacion === 'BOULEVARD' ? 'Boulevard' : property.ubicacion === 'SAN_MARTIN' ? 'San Martin' : property.ubicacion}
-          {property.zipCode && `, ${property.zipCode}`}
         </Typography>
         <Typography variant="h5" color="primary" sx={{ mb: 2 }}>
           ${property.monthlyRent.toLocaleString()}/mes
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-          {property.bedrooms && <Chip label={`${property.bedrooms} hab`} size="small" />}
-          {property.bathrooms && <Chip label={`${property.bathrooms} baños`} size="small" />}
-          {property.areaSqm && <Chip label={`${property.areaSqm}m²`} size="small" />}
-        </Box>
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
           <Chip label={property.propertyType === 'INSIDE' ? 'Adentro' : 'Afuera'} size="small" variant="outlined" />
           <Chip
@@ -67,11 +56,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, on
             color={getAvailabilityColor(property.isAvailable) as any}
           />
         </Box>
-        {property.description && (
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            {property.description}
-          </Typography>
-        )}
       </CardContent>
       <CardActions>
         <Button

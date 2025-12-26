@@ -28,7 +28,6 @@ const documentIdParamsSchema = t.Object({
 const createTenantBodySchema = t.Object({
   firstName: t.String({ minLength: 2 }),
   lastName: t.String({ minLength: 2 }),
-  email: t.String({ format: 'email' }),
   phone: t.Optional(t.String()),
   documentId: t.String({ minLength: 5 }),
   address: t.Optional(t.String()),
@@ -41,7 +40,6 @@ const createTenantBodySchema = t.Object({
 const updateTenantBodySchema = t.Object({
   firstName: t.Optional(t.String({ minLength: 2 })),
   lastName: t.Optional(t.String({ minLength: 2 })),
-  email: t.Optional(t.String({ format: 'email' })),
   phone: t.Optional(t.String()),
   address: t.Optional(t.String()),
   birthDate: t.Optional(t.String()),

@@ -25,7 +25,7 @@ import {
   Switch,
   FormControlLabel,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
 import { usePropertyService, type Property } from '../services/propertyService';
 import { usePaymentService, type Payment, type CreatePaymentData } from '../services/paymentService';
@@ -284,10 +284,6 @@ const PaymentPage = () => {
     setReceiptImagePreview(null);
   };
 
-  const handleViewDetails = (payment: Payment) => {
-    setSelectedPayment(payment);
-    setDetailsModalOpen(true);
-  };
 
   const handleEdit = (payment: Payment) => {
     setEditingPayment(payment);
@@ -424,7 +420,7 @@ const PaymentPage = () => {
                 <TableRow 
                   key={payment.id} 
                   hover
-                  onClick={() => handleViewDetails(payment)}
+                  onClick={() => handleEdit(payment)}
                   sx={{
                     cursor: 'pointer',
                     '&:hover': {
@@ -466,16 +462,6 @@ const PaymentPage = () => {
                     </Box>
                   </TableCell>
                   <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewDetails(payment);
-                      }}
-                      title="Ver detalles"
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
                     <IconButton
                       size="small"
                       onClick={(e) => {

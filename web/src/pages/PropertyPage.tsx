@@ -23,17 +23,21 @@ import {
   Chip,
   IconButton,
   Grid,
+  Autocomplete,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { usePropertyService, Property, CreatePropertyData, UpdatePropertyData } from '../services/propertyService';
+import { useTenantService, Tenant } from '../services/tenantService';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
 
 const PropertyPage = () => {
   const propertyService = usePropertyService()
+  const tenantService = useTenantService()
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,13 +70,8 @@ const PropertyPage = () => {
     ubicacion: 'BOULEVARD',
     propertyType: 'INSIDE',
     monthlyRent: '',
-    bedrooms: '',
-    bathrooms: '',
-    areaSqm: '',
-    description: '',
-    zipCode: '',
     isAvailable: true,
-    tenantId: '',
+    tenantId: null as number | null,
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
@@ -81,15 +80,11 @@ const PropertyPage = () => {
     ubicacion: 'BOULEVARD',
     propertyType: 'INSIDE',
     monthlyRent: '',
-    bedrooms: '',
-    bathrooms: '',
-    areaSqm: '',
-    description: '',
-    zipCode: '',
     isAvailable: true,
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
+  const [localNumberError, setLocalNumberError] = useState<string>('');
 
   const fetchProperties = async () => {
     try {
@@ -120,7 +115,6 @@ const PropertyPage = () => {
         const matchesQuery =
           property.localNumber.toString().includes(lowerQuery) ||
           property.ubicacion.toLowerCase().includes(lowerQuery) ||
-          property.description?.toLowerCase().includes(lowerQuery) ||
           (property.propertyType === 'INSIDE' ? 'adentro' : 'afuera').includes(lowerQuery) ||
           property.tenant?.firstName.toLowerCase().includes(lowerQuery) ||
           property.tenant?.lastName.toLowerCase().includes(lowerQuery);
@@ -171,18 +165,26 @@ const PropertyPage = () => {
 
   const handleCreateProperty = async () => {
     try {
+      // Validar que se haya seleccionado un inquilino
+      if (!createForm.tenantId) {
+        setError('Por favor seleccione un inquilino');
+        return;
+      }
+
+      // Validar que el número de local no exista (ya validado en tiempo real, pero verificamos por seguridad)
+      if (localNumberError) {
+        setError(localNumberError);
+        return;
+      }
+
+      const localNumber = parseInt(createForm.localNumber);
       const propertyData: CreatePropertyData = {
-        localNumber: parseInt(createForm.localNumber),
+        localNumber,
         ubicacion: createForm.ubicacion as 'BOULEVARD' | 'SAN_MARTIN',
         propertyType: createForm.propertyType,
         monthlyRent: parseFloat(createForm.monthlyRent),
-        bedrooms: createForm.bedrooms ? parseInt(createForm.bedrooms) : undefined,
-        bathrooms: createForm.bathrooms ? parseInt(createForm.bathrooms) : undefined,
-        areaSqm: createForm.areaSqm ? parseFloat(createForm.areaSqm) : undefined,
-        description: createForm.description || undefined,
-        zipCode: createForm.zipCode || undefined,
         isAvailable: createForm.isAvailable,
-        tenantId: parseInt(createForm.tenantId),
+        tenantId: createForm.tenantId,
       };
 
       await propertyService.createProperty(propertyData);
@@ -193,14 +195,11 @@ const PropertyPage = () => {
         ubicacion: 'BOULEVARD',
         propertyType: 'INSIDE',
         monthlyRent: '',
-        bedrooms: '',
-        bathrooms: '',
-        areaSqm: '',
-        description: '',
-        zipCode: '',
         isAvailable: true,
-        tenantId: '',
+        tenantId: null,
       });
+      setError('');
+      setLocalNumberError('');
       fetchProperties(); // Refresh the list
     } catch (err: any) {
       setError(err.message || 'Failed to create property');
@@ -209,7 +208,17 @@ const PropertyPage = () => {
 
   useEffect(() => {
     fetchProperties();
+    fetchTenants();
   }, []);
+
+  const fetchTenants = async () => {
+    try {
+      const data = await tenantService.getAllTenants();
+      setTenants(data);
+    } catch (err: any) {
+      console.error('Error fetching tenants:', err);
+    }
+  };
 
   // Aplicar filtros cuando cambien los criterios
   useEffect(() => {
@@ -217,10 +226,32 @@ const PropertyPage = () => {
     setFilteredProperties(filtered);
   }, [searchQuery, filterValues, properties]);
 
-  const handleViewDetails = (property: Property) => {
-    // TODO: Navigate to property details page
-    console.log('View details for property:', property.id);
-  };
+  // Validar número de local en tiempo real
+  useEffect(() => {
+    if (!createDialogOpen) {
+      setLocalNumberError('');
+      return;
+    }
+
+    const localNumber = createForm.localNumber.trim();
+    if (!localNumber) {
+      setLocalNumberError('');
+      return;
+    }
+
+    const numValue = parseInt(localNumber);
+    if (isNaN(numValue) || numValue <= 0) {
+      setLocalNumberError('');
+      return;
+    }
+
+    const existingProperty = properties.find(p => p.localNumber === numValue);
+    if (existingProperty) {
+      setLocalNumberError(`Ya existe un local con el número ${numValue}`);
+    } else {
+      setLocalNumberError('');
+    }
+  }, [createForm.localNumber, properties, createDialogOpen]);
 
   const handleEdit = (property: Property) => {
     setEditingProperty(property);
@@ -229,11 +260,6 @@ const PropertyPage = () => {
       ubicacion: property.ubicacion || 'BOULEVARD',
       propertyType: property.propertyType,
       monthlyRent: property.monthlyRent?.toString() || '',
-      bedrooms: property.bedrooms?.toString() || '',
-      bathrooms: property.bathrooms?.toString() || '',
-      areaSqm: property.areaSqm?.toString() || '',
-      description: property.description || '',
-      zipCode: property.zipCode || '',
       isAvailable: property.isAvailable ?? true,
     });
     setEditDialogOpen(true);
@@ -266,11 +292,6 @@ const PropertyPage = () => {
         ubicacion: editForm.ubicacion as 'BOULEVARD' | 'SAN_MARTIN' | undefined,
         propertyType: editForm.propertyType,
         monthlyRent: parseFloat(editForm.monthlyRent),
-        bedrooms: editForm.bedrooms ? parseInt(editForm.bedrooms) : undefined,
-        bathrooms: editForm.bathrooms ? parseInt(editForm.bathrooms) : undefined,
-        areaSqm: editForm.areaSqm ? parseFloat(editForm.areaSqm) : undefined,
-        description: editForm.description || undefined,
-        zipCode: editForm.zipCode || undefined,
         isAvailable: editForm.isAvailable,
       };
 
@@ -283,11 +304,6 @@ const PropertyPage = () => {
         ubicacion: 'BOULEVARD',
         propertyType: 'INSIDE',
         monthlyRent: '',
-        bedrooms: '',
-        bathrooms: '',
-        areaSqm: '',
-        description: '',
-        zipCode: '',
         isAvailable: true,
       });
       fetchProperties(); // Refresh the list
@@ -393,13 +409,6 @@ const PropertyPage = () => {
                   <TableCell align="center">
                     <IconButton
                       size="small"
-                      onClick={() => handleViewDetails(property)}
-                      title="Ver detalles"
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
-                    <IconButton
-                      size="small"
                       onClick={() => handleEdit(property)}
                       title="Editar"
                       color="primary"
@@ -451,7 +460,15 @@ const PropertyPage = () => {
       </Fab>
 
       {/* Create Property Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog 
+        open={createDialogOpen} 
+        onClose={() => {
+          setCreateDialogOpen(false);
+          setLocalNumberError('');
+        }} 
+        maxWidth="md" 
+        fullWidth
+      >
         <DialogTitle>Agregar Local</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -464,17 +481,34 @@ const PropertyPage = () => {
                 onChange={(e) => setCreateForm({ ...createForm, localNumber: e.target.value })}
                 placeholder="Ej: 123"
                 required
+                error={!!localNumberError}
+                helperText={localNumberError}
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="ID del Inquilino"
-                type="number"
-                value={createForm.tenantId}
-                onChange={(e) => setCreateForm({ ...createForm, tenantId: e.target.value })}
-                placeholder="ID del inquilino propietario"
-                required
+              <Autocomplete
+                options={tenants}
+                getOptionLabel={(option) => `${option.firstName} ${option.lastName}${option.documentId ? ` - DNI: ${option.documentId}` : ''}`}
+                value={tenants.find(t => t.id === createForm.tenantId) || null}
+                onChange={(_, newValue) => {
+                  setCreateForm({ ...createForm, tenantId: newValue?.id || null });
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Inquilino"
+                    placeholder="Buscar por nombre, apellido o DNI"
+                    required
+                  />
+                )}
+                filterOptions={(options, { inputValue }) => {
+                  const searchLower = inputValue.toLowerCase();
+                  return options.filter(option =>
+                    option.firstName.toLowerCase().includes(searchLower) ||
+                    option.lastName.toLowerCase().includes(searchLower) ||
+                    option.documentId?.toLowerCase().includes(searchLower)
+                  );
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -489,14 +523,6 @@ const PropertyPage = () => {
                 <MenuItem value="BOULEVARD">Boulevard</MenuItem>
                 <MenuItem value="SAN_MARTIN">San Martin</MenuItem>
               </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Código Postal"
-                value={createForm.zipCode}
-                onChange={(e) => setCreateForm({ ...createForm, zipCode: e.target.value })}
-              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -523,33 +549,6 @@ const PropertyPage = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
-                label="Área (m²)"
-                type="number"
-                value={createForm.areaSqm}
-                onChange={(e) => setCreateForm({ ...createForm, areaSqm: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Habitaciones"
-                type="number"
-                value={createForm.bedrooms}
-                onChange={(e) => setCreateForm({ ...createForm, bedrooms: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Baños"
-                type="number"
-                value={createForm.bathrooms}
-                onChange={(e) => setCreateForm({ ...createForm, bathrooms: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
                 select
                 fullWidth
                 label="Disponible"
@@ -560,21 +559,22 @@ const PropertyPage = () => {
                 <MenuItem value="false">No</MenuItem>
               </TextField>
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Descripción"
-                value={createForm.description}
-                onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-                multiline
-                rows={3}
-              />
-            </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
-          <Button onClick={handleCreateProperty} variant="contained">
+          <Button 
+            onClick={() => {
+              setCreateDialogOpen(false);
+              setLocalNumberError('');
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleCreateProperty} 
+            variant="contained"
+            disabled={!!localNumberError}
+          >
             Crear Local
           </Button>
         </DialogActions>
@@ -610,14 +610,6 @@ const PropertyPage = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
-                label="Código Postal"
-                value={editForm.zipCode}
-                onChange={(e) => setEditForm({ ...editForm, zipCode: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
                 select
                 fullWidth
                 label="Tipo de Propiedad"
@@ -641,33 +633,6 @@ const PropertyPage = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
-                label="Área (m²)"
-                type="number"
-                value={editForm.areaSqm}
-                onChange={(e) => setEditForm({ ...editForm, areaSqm: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Habitaciones"
-                type="number"
-                value={editForm.bedrooms}
-                onChange={(e) => setEditForm({ ...editForm, bedrooms: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Baños"
-                type="number"
-                value={editForm.bathrooms}
-                onChange={(e) => setEditForm({ ...editForm, bathrooms: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
                 select
                 fullWidth
                 label="Disponible"
@@ -677,16 +642,6 @@ const PropertyPage = () => {
                 <MenuItem value="true">Sí</MenuItem>
                 <MenuItem value="false">No</MenuItem>
               </TextField>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Descripción"
-                value={editForm.description}
-                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                multiline
-                rows={3}
-              />
             </Grid>
           </Grid>
         </DialogContent>
