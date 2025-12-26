@@ -1,6 +1,7 @@
 import { IAuthService } from '../../interfaces/services/IAuthService';
 import { IUserRepository } from '../../interfaces/repositories/IUserRepository';
-import { AuthUserDTO, CreateUserDTO, LoginDTO, UserDTO, UserEntity } from '../../entities/User.entity';
+import { AuthUserDTO, LoginDTO, UserEntity } from '../../entities/User.entity';
+import { CreateUserDTO, UserDTO } from '../../dtos/user.dto';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../../types/jwt.types';
 

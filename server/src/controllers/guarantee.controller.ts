@@ -1,5 +1,5 @@
 import { IGuaranteeService } from '../interfaces/services/IGuaranteeService';
-import { CreateGuaranteeDTO, UpdateGuaranteeDTO } from '../dtos/guarantee.dto';
+import { CreateGuarantee, UpdateGuarantee } from '../../../shared/types/Guarantee';
 
 export class GuaranteeController {
   constructor(private guaranteeService: IGuaranteeService) {}
@@ -32,10 +32,15 @@ export class GuaranteeController {
     body,
     userId,
   }: {
-    body: CreateGuaranteeDTO;
+    body: any;
     userId: number;
   }) => {
-    const guarantee = await this.guaranteeService.createGuarantee(body, userId);
+    const createGuarantee = CreateGuarantee.fromJSON(body);
+    const errors = createGuarantee.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const guarantee = await this.guaranteeService.createGuarantee(createGuarantee.toDTO(), userId);
     return {
       success: true,
       message: 'Guarantee created successfully',
@@ -49,10 +54,15 @@ export class GuaranteeController {
     userId,
   }: {
     params: { id: number };
-    body: UpdateGuaranteeDTO;
+    body: any;
     userId: number;
   }) => {
-    const guarantee = await this.guaranteeService.updateGuarantee(id, body, userId);
+    const updateGuarantee = UpdateGuarantee.fromJSON(body);
+    const errors = updateGuarantee.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const guarantee = await this.guaranteeService.updateGuarantee(id, updateGuarantee.toDTO(), userId);
     return {
       success: true,
       message: 'Guarantee updated successfully',

@@ -1,4 +1,5 @@
 import { ContractData, ContractDraftDTO, CreateContractDraftDTO, UpdateContractDraftDTO, defaultContractData } from '../dtos/contractDraft.dto';
+import { ContractDraft } from '../../../shared/types/ContractDraft';
 
 export class ContractDraftEntity {
   constructor(
@@ -47,13 +48,13 @@ export class ContractDraftEntity {
   }
 
   toDTO(): ContractDraftDTO {
-    return {
+    return ContractDraft.fromJSON({
       id: this.id!,
       name: this.name,
       data: this.data,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
-    };
+    });
   }
 
   validate(): void {

@@ -1,5 +1,5 @@
 import { IContractDraftService } from '../interfaces/services/IContractDraftService';
-import { CreateContractDraftDTO, UpdateContractDraftDTO } from '../dtos/contractDraft.dto';
+import { CreateContractDraft, UpdateContractDraft } from '../../../shared/types/ContractDraft';
 
 export class ContractDraftController {
   constructor(private contractDraftService: IContractDraftService) {}
@@ -22,8 +22,13 @@ export class ContractDraftController {
     };
   };
 
-  create = async ({ body, userId }: { body: CreateContractDraftDTO; userId: number }) => {
-    const draft = await this.contractDraftService.createDraft(body, userId);
+  create = async ({ body, userId }: { body: any; userId: number }) => {
+    const createDraft = CreateContractDraft.fromJSON(body);
+    const errors = createDraft.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const draft = await this.contractDraftService.createDraft(createDraft.toDTO(), userId);
     return {
       success: true,
       message: 'Contract draft created successfully',
@@ -31,8 +36,13 @@ export class ContractDraftController {
     };
   };
 
-  update = async ({ params, body, userId }: { params: { id: number }; body: UpdateContractDraftDTO; userId: number }) => {
-    const draft = await this.contractDraftService.updateDraft(params.id, body, userId);
+  update = async ({ params, body, userId }: { params: { id: number }; body: any; userId: number }) => {
+    const updateDraft = UpdateContractDraft.fromJSON(body);
+    const errors = updateDraft.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const draft = await this.contractDraftService.updateDraft(params.id, updateDraft.toDTO(), userId);
     return {
       success: true,
       message: 'Contract draft updated successfully',

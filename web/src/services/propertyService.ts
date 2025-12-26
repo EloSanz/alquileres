@@ -1,41 +1,5 @@
 import { useApi } from '../contexts/ApiContext'
-
-// Types inferred from backend DTOs
-export interface Property {
-  id: number
-  localNumber: number
-  ubicacion: 'BOULEVARD' | 'SAN_MARTIN'
-  propertyType: string
-  monthlyRent: number
-  isAvailable?: boolean
-  tenantId?: number | null
-  tenant?: {
-    id: number
-    firstName: string
-    lastName: string
-    email: string
-  }
-  createdAt: string
-  updatedAt: string
-}
-
-export interface CreatePropertyData {
-  localNumber: number
-  ubicacion: 'BOULEVARD' | 'SAN_MARTIN'
-  propertyType: string
-  monthlyRent: number
-  isAvailable?: boolean
-  tenantId: number
-}
-
-export interface UpdatePropertyData {
-  localNumber?: number
-  ubicacion?: 'BOULEVARD' | 'SAN_MARTIN'
-  propertyType?: string
-  monthlyRent?: number
-  isAvailable?: boolean
-  status?: string
-}
+import { Property, CreateProperty, UpdateProperty } from '../../../shared/types/Property'
 
 export const usePropertyService = () => {
   const api = useApi()
@@ -52,7 +16,7 @@ export const usePropertyService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch properties')
       }
-      return response.data.data as Property[]
+      return response.data.data.map((item: any) => Property.fromJSON(item))
     },
     
     getPropertyById: async (id: number): Promise<Property> => {
@@ -66,11 +30,15 @@ export const usePropertyService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch property')
       }
-      return response.data.data as Property
+      return Property.fromJSON(response.data.data)
     },
     
-    createProperty: async (propertyData: CreatePropertyData): Promise<Property> => {
-      const response = await api.api.properties.post(propertyData)
+    createProperty: async (propertyData: CreateProperty): Promise<Property> => {
+      const errors = propertyData.validate();
+      if (errors.length > 0) {
+        throw new Error(errors.join(', '));
+      }
+      const response = await api.api.properties.post(propertyData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -80,11 +48,15 @@ export const usePropertyService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to create property')
       }
-      return response.data.data as Property
+      return Property.fromJSON(response.data.data)
     },
     
-    updateProperty: async (id: number, propertyData: UpdatePropertyData): Promise<Property> => {
-      const response = await api.api.properties({ id }).put(propertyData)
+    updateProperty: async (id: number, propertyData: UpdateProperty): Promise<Property> => {
+      const errors = propertyData.validate();
+      if (errors.length > 0) {
+        throw new Error(errors.join(', '));
+      }
+      const response = await api.api.properties({ id }).put(propertyData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -94,7 +66,7 @@ export const usePropertyService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to update property')
       }
-      return response.data.data as Property
+      return Property.fromJSON(response.data.data)
     },
     
     deleteProperty: async (id: number): Promise<void> => {
@@ -121,7 +93,7 @@ export const usePropertyService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to release property')
       }
-      return response.data.data as Property
+      return Property.fromJSON(response.data.data)
     }
   }
 }

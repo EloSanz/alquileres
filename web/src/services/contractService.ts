@@ -1,34 +1,5 @@
 import { useApi } from '../contexts/ApiContext'
-
-export interface Contract {
-  id: number
-  tenantId: number | null
-  propertyId: number | null
-  tenantFullName?: string | null
-  propertyName?: string | null
-  propertyLocalNumber?: number
-  startDate: string
-  endDate: string
-  monthlyRent: number
-  status: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface CreateContractData {
-  tenantId: number
-  propertyId: number
-  startDate: string
-  monthlyRent: number
-}
-
-export interface UpdateContractData {
-  tenantId?: number | null
-  propertyId?: number | null
-  startDate?: string
-  monthlyRent?: number
-  status?: string
-}
+import { Contract, CreateContract, UpdateContract } from '../../../shared/types/Contract'
 
 export const useContractService = () => {
   const api = useApi()
@@ -45,7 +16,7 @@ export const useContractService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch contracts')
       }
-      return response.data.data || []
+      return (response.data.data || []).map((item: any) => Contract.fromJSON(item))
     },
     
     getContractById: async (id: number): Promise<Contract> => {
@@ -87,7 +58,7 @@ export const useContractService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch active contract')
       }
-      return response.data.data
+      return response.data.data ? Contract.fromJSON(response.data.data) : null
     },
     
     getActiveByProperty: async (propertyId: number): Promise<Contract | null> => {
@@ -101,11 +72,15 @@ export const useContractService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch active contract')
       }
-      return response.data.data
+      return response.data.data ? Contract.fromJSON(response.data.data) : null
     },
     
-    createContract: async (contractData: CreateContractData): Promise<Contract> => {
-      const response = await api.api.contracts.post(contractData)
+    createContract: async (contractData: CreateContract): Promise<Contract> => {
+      const errors = contractData.validate();
+      if (errors.length > 0) {
+        throw new Error(errors.join(', '));
+      }
+      const response = await api.api.contracts.post(contractData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -115,11 +90,15 @@ export const useContractService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to create contract')
       }
-      return response.data.data
+      return Contract.fromJSON(response.data.data)
     },
     
-    updateContract: async (id: number, contractData: UpdateContractData): Promise<Contract> => {
-      const response = await api.api.contracts({ id }).put(contractData as any)
+    updateContract: async (id: number, contractData: UpdateContract): Promise<Contract> => {
+      const errors = contractData.validate();
+      if (errors.length > 0) {
+        throw new Error(errors.join(', '));
+      }
+      const response = await api.api.contracts({ id }).put(contractData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -129,7 +108,7 @@ export const useContractService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to update contract')
       }
-      return response.data.data
+      return Contract.fromJSON(response.data.data)
     },
     
     deleteContract: async (id: number): Promise<void> => {

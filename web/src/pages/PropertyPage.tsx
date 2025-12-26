@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -26,8 +26,10 @@ import {
   Autocomplete,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { usePropertyService, Property, CreatePropertyData, UpdatePropertyData } from '../services/propertyService';
-import { useTenantService, Tenant } from '../services/tenantService';
+import { usePropertyService } from '../services/propertyService';
+import { Property, CreateProperty, UpdateProperty } from '../../../shared/types/Property';
+import { useTenantService } from '../services/tenantService';
+import { Tenant } from '../../../shared/types/Tenant';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
@@ -178,14 +180,14 @@ const PropertyPage = () => {
       }
 
       const localNumber = parseInt(createForm.localNumber);
-      const propertyData: CreatePropertyData = {
+      const propertyData = new CreateProperty(
         localNumber,
-        ubicacion: createForm.ubicacion as 'BOULEVARD' | 'SAN_MARTIN',
-        propertyType: createForm.propertyType,
-        monthlyRent: parseFloat(createForm.monthlyRent),
-        isAvailable: createForm.isAvailable,
-        tenantId: createForm.tenantId,
-      };
+        createForm.ubicacion as 'BOULEVARD' | 'SAN_MARTIN',
+        createForm.propertyType,
+        parseFloat(createForm.monthlyRent),
+        createForm.tenantId,
+        createForm.isAvailable
+      );
 
       await propertyService.createProperty(propertyData);
 
@@ -206,7 +208,11 @@ const PropertyPage = () => {
     }
   };
 
+  const hasFetchedRef = useRef(false);
+  
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchProperties();
     fetchTenants();
   }, []);
@@ -287,13 +293,13 @@ const PropertyPage = () => {
     if (!editingProperty) return;
 
     try {
-      const propertyData: UpdatePropertyData = {
-        localNumber: parseInt(editForm.localNumber),
-        ubicacion: editForm.ubicacion as 'BOULEVARD' | 'SAN_MARTIN' | undefined,
-        propertyType: editForm.propertyType,
-        monthlyRent: parseFloat(editForm.monthlyRent),
-        isAvailable: editForm.isAvailable,
-      };
+      const propertyData = new UpdateProperty(
+        parseInt(editForm.localNumber),
+        editForm.ubicacion as 'BOULEVARD' | 'SAN_MARTIN' | undefined,
+        editForm.propertyType,
+        parseFloat(editForm.monthlyRent),
+        editForm.isAvailable
+      );
 
       await propertyService.updateProperty(editingProperty.id, propertyData);
 

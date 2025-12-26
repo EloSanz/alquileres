@@ -21,15 +21,22 @@ const httpFormat = winston.format.combine(
   winston.format.errors({ stack: true }),
   winston.format.json(),
   winston.format.colorize({ all: true }),
-  winston.format.printf(({ timestamp, level, message, method, url, statusCode, duration, userId, ...meta }) => {
+  winston.format.printf(({ timestamp, level, message, method, url, statusCode, duration, userId, username, requestId, ip, ...meta }) => {
+    // Format: TIMESTAMP LEVEL [RequestID] METHOD URL → STATUS (DURATIONms) [User: USERNAME] [IP] MESSAGE
     let log = `${timestamp} ${level}:`;
 
+    // Request ID for correlation (short format for readability)
+    if (requestId && typeof requestId === 'string') {
+      log += ` [${requestId.substring(0, 8)}]`;
+    }
+
+    // Method and URL
     if (method && url) {
       log += ` ${method} ${url}`;
     }
 
+    // Status code with color coding
     if (typeof statusCode === 'number') {
-      // Color code status codes
       let statusColor = '\x1b[37m'; // white default
       if (statusCode >= 200 && statusCode < 300) statusColor = '\x1b[32m'; // green
       else if (statusCode >= 300 && statusCode < 400) statusColor = '\x1b[36m'; // cyan
@@ -39,18 +46,33 @@ const httpFormat = winston.format.combine(
       log += ` → ${statusColor}${statusCode}\x1b[0m`; // reset color
     }
 
+    // Duration
     if (duration) {
       log += ` (${duration}ms)`;
     }
 
-    if (userId) {
-      log += ` [User: ${userId}]`;
+    // User information (username preferred, fallback to userId)
+    if (username) {
+      log += ` [User: ${username}]`;
+    } else if (userId) {
+      log += ` [User ID: ${userId}]`;
     }
 
+    // IP address (if available)
+    if (ip) {
+      log += ` [IP: ${ip}]`;
+    }
+
+    // Message
     log += ` ${message}`;
 
-    if (Object.keys(meta).length > 0) {
-      log += ` ${JSON.stringify(meta)}`;
+    // Additional metadata (only if there's extra data beyond what we've already shown)
+    const shownKeys = ['method', 'url', 'statusCode', 'duration', 'userId', 'username', 'requestId', 'ip'];
+    const extraMeta = Object.keys(meta).filter(key => !shownKeys.includes(key));
+    if (extraMeta.length > 0) {
+      const extraData: any = {};
+      extraMeta.forEach(key => { extraData[key] = meta[key]; });
+      log += ` ${JSON.stringify(extraData)}`;
     }
 
     return log;
@@ -92,12 +114,17 @@ const logger = winston.createLogger({
 });
 
 // Helper functions for different types of logs
-export const logRequest = (method: string, url: string, userId?: number) => {
-  logger.http(`Request started`, { method, url, userId });
+export const logRequest = (method: string, url: string, userId?: number, username?: string, requestId?: string, ip?: string) => {
+  logger.http(`Request started`, { method, url, userId, username, requestId, ip });
 };
 
-export const logResponse = (method: string, url: string, statusCode: number, duration: number, userId?: number) => {
-  logger.http(`Response`, { method, url, statusCode, duration, userId });
+export const logResponse = (method: string, url: string, statusCode: number, duration: number, userId?: number, username?: string, requestId?: string, ip?: string) => {
+  logger.http(`Response`, { method, url, statusCode, duration, userId, username, requestId, ip });
+};
+
+export const logRequestBody = (method: string, url: string, body: string, requestId?: string, username?: string) => {
+  const truncatedBody = body.length > 500 ? body.substring(0, 500) + '...' : body;
+  logger.debug(`Request body`, { method, url, body: truncatedBody, requestId, username });
 };
 
 export const logError = (message: string, error?: any, meta?: any) => {

@@ -1,5 +1,5 @@
 import { IRentalService } from '../interfaces/services/IRentalService';
-import { CreateRentalDTO, UpdateRentalDTO } from '../dtos/rental.dto';
+import { CreateRental, UpdateRental } from '../../../shared/types/Rental';
 
 export class RentalController {
   constructor(private rentalService: IRentalService) {}
@@ -32,10 +32,15 @@ export class RentalController {
     body,
     userId,
   }: {
-    body: CreateRentalDTO;
+    body: any;
     userId: number;
   }) => {
-    const rental = await this.rentalService.createRental(body, userId);
+    const createRental = CreateRental.fromJSON(body);
+    const errors = createRental.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const rental = await this.rentalService.createRental(createRental.toDTO(), userId);
     return {
       success: true,
       message: 'Rental created successfully',
@@ -49,10 +54,15 @@ export class RentalController {
     userId,
   }: {
     params: { id: number };
-    body: UpdateRentalDTO;
+    body: any;
     userId: number;
   }) => {
-    const rental = await this.rentalService.updateRental(id, body, userId);
+    const updateRental = UpdateRental.fromJSON(body);
+    const errors = updateRental.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const rental = await this.rentalService.updateRental(id, updateRental.toDTO(), userId);
     return {
       success: true,
       message: 'Rental updated successfully',

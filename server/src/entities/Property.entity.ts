@@ -1,6 +1,7 @@
 // Import the enum
 import { PropertyStatus, UbicacionType } from '@prisma/client';
 import { PropertyDTO } from '../dtos/property.dto';
+import { Property } from '../../../shared/types/Property';
 
 export class PropertyEntity {
   constructor(
@@ -90,7 +91,7 @@ export class PropertyEntity {
   }
 
   toDTO(): PropertyDTO {
-    return {
+    return Property.fromJSON({
       id: this.id!,
       localNumber: this.localNumber,
       ubicacion: this.ubicacion,
@@ -101,7 +102,7 @@ export class PropertyEntity {
       tenantId: this.tenantId,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    };
+    });
   }
 
   validate(): void {

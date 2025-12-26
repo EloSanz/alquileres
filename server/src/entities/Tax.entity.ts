@@ -1,5 +1,7 @@
 // TaxType enum - matches Prisma enum
 export type TaxType = 'PREDIAL' | 'MUNICIPAL' | 'ALCABALA' | 'OTROS';
+import { TaxDTO } from '../dtos/tax.dto';
+import { Tax } from '../../../shared/types/Tax';
 
 export class TaxEntity {
   constructor(
@@ -97,11 +99,11 @@ export class TaxEntity {
   }
 
   toDTO(): TaxDTO {
-    return {
+    return Tax.fromJSON({
       id: this.id!,
       propertyId: this.propertyId,
       contractId: this.contractId,
-      taxType: this.taxType,
+      taxType: this.taxType.toString(),
       amount: this.amount,
       dueDate: this.dueDate.toISOString().split('T')[0],
       paidDate: this.paidDate ? this.paidDate.toISOString().split('T')[0] : null,
@@ -109,7 +111,7 @@ export class TaxEntity {
       notes: this.notes,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    };
+    });
   }
 
   validate(): void {
@@ -123,39 +125,3 @@ export class TaxEntity {
   }
 }
 
-// DTO types
-export interface TaxDTO {
-  id: number;
-  propertyId: number | null;
-  contractId: number | null;
-  taxType: string;
-  amount: number;
-  dueDate: string;
-  paidDate: string | null;
-  isPaid: boolean;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateTaxDTO {
-  propertyId: number | null;
-  contractId: number | null;
-  taxType: string;
-  amount: number;
-  dueDate: string;
-  paidDate?: string | null;
-  isPaid?: boolean;
-  notes?: string;
-}
-
-export interface UpdateTaxDTO {
-  propertyId?: number | null;
-  contractId?: number | null;
-  taxType?: string;
-  amount?: number;
-  dueDate?: string;
-  paidDate?: string | null;
-  isPaid?: boolean;
-  notes?: string;
-}

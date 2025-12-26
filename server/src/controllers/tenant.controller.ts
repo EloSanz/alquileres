@@ -1,5 +1,5 @@
 import { ITenantService } from '../interfaces/services/ITenantService';
-import { CreateTenantDTO, UpdateTenantDTO } from '../dtos/tenant.dto';
+import { CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
 
 export class TenantController {
   constructor(private tenantService: ITenantService) {}
@@ -48,10 +48,15 @@ export class TenantController {
     body,
     userId,
   }: {
-    body: CreateTenantDTO;
+    body: any;
     userId: number;
   }) => {
-    const tenant = await this.tenantService.createTenant(body, userId);
+    const createTenant = CreateTenant.fromJSON(body);
+    const errors = createTenant.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const tenant = await this.tenantService.createTenant(createTenant.toDTO(), userId);
     return {
       success: true,
       message: 'Tenant created successfully',
@@ -65,10 +70,15 @@ export class TenantController {
     userId,
   }: {
     params: { id: number };
-    body: UpdateTenantDTO;
+    body: any;
     userId: number;
   }) => {
-    const tenant = await this.tenantService.updateTenant(id, body, userId);
+    const updateTenant = UpdateTenant.fromJSON(body);
+    const errors = updateTenant.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const tenant = await this.tenantService.updateTenant(id, updateTenant.toDTO(), userId);
     return {
       success: true,
       message: 'Tenant updated successfully',

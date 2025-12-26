@@ -1,5 +1,5 @@
 import { ITaxService } from '../interfaces/services/ITaxService';
-import { CreateTaxDTO, UpdateTaxDTO } from '../dtos/tax.dto';
+import { CreateTax, UpdateTax } from '../../../shared/types/Tax';
 
 export class TaxController {
   constructor(private taxService: ITaxService) {}
@@ -32,10 +32,15 @@ export class TaxController {
     body,
     userId,
   }: {
-    body: CreateTaxDTO;
+    body: any;
     userId: number;
   }) => {
-    const tax = await this.taxService.createTax(body, userId);
+    const createTax = CreateTax.fromJSON(body);
+    const errors = createTax.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const tax = await this.taxService.createTax(createTax.toDTO(), userId);
     return {
       success: true,
       message: 'Tax created successfully',
@@ -49,10 +54,15 @@ export class TaxController {
     userId,
   }: {
     params: { id: number };
-    body: UpdateTaxDTO;
+    body: any;
     userId: number;
   }) => {
-    const tax = await this.taxService.updateTax(id, body, userId);
+    const updateTax = UpdateTax.fromJSON(body);
+    const errors = updateTax.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const tax = await this.taxService.updateTax(id, updateTax.toDTO(), userId);
     return {
       success: true,
       message: 'Tax updated successfully',

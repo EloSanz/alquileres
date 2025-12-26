@@ -1,5 +1,7 @@
 // Import the enum
 import { PaymentMethod } from '@prisma/client';
+import { PaymentDTO } from '../dtos/payment.dto';
+import { Payment } from '../../../shared/types/Payment';
 
 export class PaymentEntity {
   constructor(
@@ -138,7 +140,7 @@ export class PaymentEntity {
   }
 
   toDTO(): PaymentDTO {
-    return {
+    return Payment.fromJSON({
       id: this.id!,
       tenantId: this.tenantId,
       propertyId: this.propertyId,
@@ -149,15 +151,13 @@ export class PaymentEntity {
       amount: this.amount,
       paymentDate: this.paymentDate.toISOString().split('T')[0],
       dueDate: this.dueDate.toISOString().split('T')[0],
-      paymentMethod: this.paymentMethod,
+      paymentMethod: this.paymentMethod.toString(),
       pentamontSettled: this.pentamontSettled,
       notes: this.notes,
-      // Por ahora, todos los pagos devuelven la misma URL de imagen
-      // En el futuro, se puede usar this.receiptImageUrl si está disponible
       receiptImageUrl: this.receiptImageUrl || '/comprobante.png',
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    };
+    });
   }
 
   validate(): void {
@@ -170,39 +170,3 @@ export class PaymentEntity {
   }
 }
 
-// DTO types
-export interface PaymentDTO {
-  id: number;
-  tenantId: number | null;
-  propertyId: number | null;
-  contractId: number | null;
-  monthNumber: number | null;
-  tenantFullName: string | null;
-  tenantPhone: string | null;
-  amount: number;
-  paymentDate: string;
-  dueDate: string;
-  paymentMethod: string;
-  pentamontSettled: boolean;
-  notes: string | null;
-  receiptImageUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreatePaymentDTO {
-  rentalId: number;
-  amount: number;
-  paymentDate?: string;
-  dueDate: string;
-  pentamontSettled?: boolean;
-  notes?: string;
-}
-
-export interface UpdatePaymentDTO {
-  amount?: number;
-  paymentDate?: string;
-  dueDate?: string;
-  pentamontSettled?: boolean;
-  notes?: string;
-}

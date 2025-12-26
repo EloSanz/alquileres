@@ -1,5 +1,7 @@
 // GuaranteeType enum - matches Prisma enum
 export type GuaranteeType = 'DEPOSITO' | 'FIANZA' | 'SEGURO' | 'OTROS';
+import { GuaranteeDTO } from '../dtos/guarantee.dto';
+import { Guarantee } from '../../../shared/types/Guarantee';
 
 export class GuaranteeEntity {
   constructor(
@@ -104,12 +106,12 @@ export class GuaranteeEntity {
   }
 
   toDTO(): GuaranteeDTO {
-    return {
+    return Guarantee.fromJSON({
       id: this.id!,
       propertyId: this.propertyId,
       contractId: this.contractId,
       tenantId: this.tenantId,
-      guaranteeType: this.guaranteeType,
+      guaranteeType: this.guaranteeType.toString(),
       amount: this.amount,
       depositDate: this.depositDate.toISOString().split('T')[0],
       returnDate: this.returnDate ? this.returnDate.toISOString().split('T')[0] : null,
@@ -117,7 +119,7 @@ export class GuaranteeEntity {
       notes: this.notes,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    };
+    });
   }
 
   validate(): void {
@@ -131,42 +133,3 @@ export class GuaranteeEntity {
   }
 }
 
-// DTO types
-export interface GuaranteeDTO {
-  id: number;
-  propertyId: number | null;
-  contractId: number | null;
-  tenantId: number | null;
-  guaranteeType: string;
-  amount: number;
-  depositDate: string;
-  returnDate: string | null;
-  isReturned: boolean;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateGuaranteeDTO {
-  propertyId: number | null;
-  contractId: number | null;
-  tenantId: number | null;
-  guaranteeType: string;
-  amount: number;
-  depositDate?: string;
-  returnDate?: string | null;
-  isReturned?: boolean;
-  notes?: string;
-}
-
-export interface UpdateGuaranteeDTO {
-  propertyId?: number | null;
-  contractId?: number | null;
-  tenantId?: number | null;
-  guaranteeType?: string;
-  amount?: number;
-  depositDate?: string;
-  returnDate?: string | null;
-  isReturned?: boolean;
-  notes?: string;
-}

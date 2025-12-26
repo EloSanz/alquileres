@@ -10,7 +10,7 @@ import {
   Divider,
   Paper,
 } from '@mui/material';
-import type { Payment } from '../services/paymentService';
+import type { Payment } from '../../../shared/types/Payment';
 
 export interface PaymentDetailsModalProps {
   open: boolean;

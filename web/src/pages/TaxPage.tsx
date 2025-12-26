@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -15,7 +15,12 @@ const TaxPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const hasFetchedRef = useRef(false);
+  
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+    
     const fetchTaxes = async () => {
       try {
         setLoading(true);

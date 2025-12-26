@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -31,7 +31,8 @@ import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
 import TenantDeletionModal from '../components/TenantDeletionModal';
-import { useTenantService, type Tenant, type CreateTenantData, type UpdateTenantData } from '../services/tenantService';
+import { useTenantService } from '../services/tenantService';
+import { Tenant, CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
 
 const TenantPage = () => {
   const tenantService = useTenantService()
@@ -198,15 +199,17 @@ const TenantPage = () => {
 
   const handleCreateTenant = async () => {
     try {
-      const tenantData: CreateTenantData = {
-        firstName: createForm.firstName,
-        lastName: createForm.lastName,
-        phone: createForm.phone || undefined,
-        documentId: createForm.documentId,
-        numeroLocal: createForm.numeroLocal || undefined,
-        rubro: createForm.rubro || undefined,
-        fechaInicioContrato: createForm.fechaInicioContrato || undefined,
-      };
+      const tenantData = new CreateTenant(
+        createForm.firstName,
+        createForm.lastName,
+        createForm.documentId,
+        createForm.phone || undefined,
+        undefined,
+        undefined,
+        createForm.numeroLocal || undefined,
+        createForm.rubro || undefined,
+        createForm.fechaInicioContrato || undefined
+      );
 
       await tenantService.createTenant(tenantData);
 
@@ -226,7 +229,11 @@ const TenantPage = () => {
     }
   };
 
+  const hasFetchedRef = useRef(false);
+  
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchTenants();
   }, []);
 
@@ -273,14 +280,16 @@ const TenantPage = () => {
     if (!editingTenant) return;
 
     try {
-      const tenantData: UpdateTenantData = {
-        firstName: editForm.firstName,
-        lastName: editForm.lastName,
-        phone: editForm.phone || undefined,
-        numeroLocal: editForm.numeroLocal || undefined,
-        rubro: editForm.rubro || undefined,
-        fechaInicioContrato: editForm.fechaInicioContrato || undefined,
-      };
+      const tenantData = new UpdateTenant(
+        editForm.firstName,
+        editForm.lastName,
+        editForm.phone || undefined,
+        undefined,
+        undefined,
+        editForm.numeroLocal || undefined,
+        editForm.rubro || undefined,
+        editForm.fechaInicioContrato || undefined
+      );
 
       await tenantService.updateTenant(editingTenant.id, tenantData);
 

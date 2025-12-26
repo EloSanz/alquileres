@@ -27,7 +27,7 @@ const createPropertyBodySchema = t.Object({
   propertyType: t.String(),
   monthlyRent: t.Number({ minimum: 0 }),
   isAvailable: t.Optional(t.Boolean()),
-  tenantId: t.Number({ minimum: 1 })
+  tenantId: t.Union([t.Number({ minimum: 1 }), t.Null()])
 });
 
 const updatePropertyBodySchema = t.Object({

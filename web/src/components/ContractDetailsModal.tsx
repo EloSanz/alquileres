@@ -11,9 +11,10 @@ import {
   Stack,
   Divider
 } from '@mui/material';
-import { usePaymentService, type Payment } from '../services/paymentService';
+import { usePaymentService } from '../services/paymentService';
+import type { Payment } from '../../../shared/types/Payment';
 import { buildContractTimeline, type ContractMonthInfo } from '../services/contractTimeline';
-import type { Contract } from '../services/contractService';
+import type { Contract } from '../../../shared/types/Contract';
 
 export interface ContractDetailsModalProps {
   open: boolean;

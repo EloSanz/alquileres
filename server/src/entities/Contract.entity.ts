@@ -1,39 +1,7 @@
-export enum ContractStatus {
-  ACTIVE = 'ACTIVE',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-  TERMINATED = 'TERMINATED',
-}
+import { ContractDTO, ContractStatus } from '../dtos/contract.dto';
+import { Contract } from '../../../shared/types/Contract';
 
-export interface ContractDTO {
-  id: number;
-  tenantId: number | null;
-  propertyId: number | null;
-  tenantFullName?: string | null;
-  propertyName?: string;
-  propertyLocalNumber?: number;
-  startDate: string;
-  endDate: string;
-  monthlyRent: number;
-  status: ContractStatus;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateContractDTO {
-  tenantId: number;
-  propertyId: number;
-  startDate: string;
-  monthlyRent: number;
-}
-
-export interface UpdateContractDTO {
-  tenantId?: number | null;
-  propertyId?: number | null;
-  startDate?: string;
-  monthlyRent?: number;
-  status?: ContractStatus;
-}
+export { ContractStatus };
 
 export class ContractEntity {
   constructor(
@@ -50,7 +18,7 @@ export class ContractEntity {
     public updatedAt: Date
   ) {}
 
-  static create(data: CreateContractDTO): ContractEntity {
+  static create(data: { tenantId: number; propertyId: number; startDate: string; monthlyRent: number }): ContractEntity {
     const startDate = new Date(data.startDate);
     const endDate = new Date(startDate);
     endDate.setFullYear(endDate.getFullYear() + 1); // Contrato de 1 año
@@ -70,7 +38,7 @@ export class ContractEntity {
     return entity;
   }
 
-  update(data: UpdateContractDTO): ContractEntity {
+  update(data: { tenantId?: number | null; propertyId?: number | null; startDate?: string; monthlyRent?: number; status?: ContractStatus }): ContractEntity {
     if (data.tenantId !== undefined) this.tenantId = data.tenantId;
     if (data.propertyId !== undefined) this.propertyId = data.propertyId;
     if (data.startDate !== undefined) {
@@ -126,7 +94,7 @@ export class ContractEntity {
   }
 
   toDTO(): ContractDTO {
-    return {
+    return Contract.fromJSON({
       id: this.id!,
       tenantId: this.tenantId,
       propertyId: this.propertyId,
@@ -136,10 +104,10 @@ export class ContractEntity {
       startDate: this.startDate.toISOString().split('T')[0],
       endDate: this.endDate.toISOString().split('T')[0],
       monthlyRent: this.monthlyRent,
-      status: this.status,
+      status: this.status.toString(),
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
-    };
+    });
   }
 
   validate(): void {

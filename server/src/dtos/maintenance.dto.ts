@@ -1,2 +1,1 @@
-// Re-export types from entity for consistency
-export type { MaintenanceDTO, CreateMaintenanceDTO, UpdateMaintenanceDTO } from '../entities/Maintenance.entity';
+export { Maintenance as MaintenanceDTO, CreateMaintenance as CreateMaintenanceDTO, UpdateMaintenance as UpdateMaintenanceDTO } from '../../../shared/types/Maintenance';

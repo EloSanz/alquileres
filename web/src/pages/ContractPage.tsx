@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -20,7 +20,8 @@ import { Add as AddIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
-import { useContractService, type Contract } from '../services/contractService';
+import { useContractService } from '../services/contractService';
+import { Contract } from '../../../shared/types/Contract';
 import ContractDetailsModal from '../components/ContractDetailsModal';
 import ContractEditorModal from '../components/contract-editor/ContractEditorModal';
 
@@ -134,7 +135,11 @@ const ContractPage = () => {
     setFilteredContracts(filtered);
   };
 
+  const hasFetchedRef = useRef(false);
+  
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchContracts();
   }, []);
 

@@ -1,5 +1,5 @@
 import { IContractService } from '../interfaces/services/IContractService';
-import { CreateContractDTO, UpdateContractDTO } from '../dtos/contract.dto';
+import { CreateContract, UpdateContract } from '../../../shared/types/Contract';
 
 export class ContractController {
   constructor(private contractService: IContractService) {}
@@ -77,10 +77,15 @@ export class ContractController {
     body,
     userId,
   }: {
-    body: CreateContractDTO;
+    body: any;
     userId: number;
   }) => {
-    const contract = await this.contractService.createContract(body, userId);
+    const createContract = CreateContract.fromJSON(body);
+    const errors = createContract.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const contract = await this.contractService.createContract(createContract.toDTO(), userId);
     return {
       success: true,
       message: 'Contract created successfully',
@@ -94,10 +99,15 @@ export class ContractController {
     userId,
   }: {
     params: { id: number };
-    body: UpdateContractDTO;
+    body: any;
     userId: number;
   }) => {
-    const contract = await this.contractService.updateContract(id, body, userId);
+    const updateContract = UpdateContract.fromJSON(body);
+    const errors = updateContract.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const contract = await this.contractService.updateContract(id, updateContract.toDTO(), userId);
     return {
       success: true,
       message: 'Contract updated successfully',

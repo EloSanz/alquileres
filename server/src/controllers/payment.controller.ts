@@ -1,5 +1,5 @@
 import { IPaymentService } from '../interfaces/services/IPaymentService';
-import { CreatePaymentDTO, UpdatePaymentDTO } from '../dtos/payment.dto';
+import { CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
 
 export class PaymentController {
   constructor(private paymentService: IPaymentService) {}
@@ -32,10 +32,15 @@ export class PaymentController {
     body,
     userId,
   }: {
-    body: CreatePaymentDTO;
+    body: any;
     userId: number;
   }) => {
-    const payment = await this.paymentService.createPayment(body, userId);
+    const createPayment = CreatePayment.fromJSON(body);
+    const errors = createPayment.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const payment = await this.paymentService.createPayment(createPayment.toDTO(), userId);
     return {
       success: true,
       message: 'Payment created successfully',
@@ -49,10 +54,15 @@ export class PaymentController {
     userId,
   }: {
     params: { id: number };
-    body: UpdatePaymentDTO;
+    body: any;
     userId: number;
   }) => {
-    const payment = await this.paymentService.updatePayment(id, body, userId);
+    const updatePayment = UpdatePayment.fromJSON(body);
+    const errors = updatePayment.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const payment = await this.paymentService.updatePayment(id, updatePayment.toDTO(), userId);
     return {
       success: true,
       message: 'Payment updated successfully',

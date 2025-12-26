@@ -1,5 +1,5 @@
 import { IMaintenanceService } from '../interfaces/services/IMaintenanceService';
-import { CreateMaintenanceDTO, UpdateMaintenanceDTO } from '../dtos/maintenance.dto';
+import { CreateMaintenance, UpdateMaintenance } from '../../../shared/types/Maintenance';
 
 export class MaintenanceController {
   constructor(private maintenanceService: IMaintenanceService) {}
@@ -32,10 +32,15 @@ export class MaintenanceController {
     body,
     userId,
   }: {
-    body: CreateMaintenanceDTO;
+    body: any;
     userId: number;
   }) => {
-    const maintenance = await this.maintenanceService.createMaintenance(body, userId);
+    const createMaintenance = CreateMaintenance.fromJSON(body);
+    const errors = createMaintenance.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const maintenance = await this.maintenanceService.createMaintenance(createMaintenance.toDTO(), userId);
     return {
       success: true,
       message: 'Maintenance created successfully',
@@ -49,10 +54,15 @@ export class MaintenanceController {
     userId,
   }: {
     params: { id: number };
-    body: UpdateMaintenanceDTO;
+    body: any;
     userId: number;
   }) => {
-    const maintenance = await this.maintenanceService.updateMaintenance(id, body, userId);
+    const updateMaintenance = UpdateMaintenance.fromJSON(body);
+    const errors = updateMaintenance.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const maintenance = await this.maintenanceService.updateMaintenance(id, updateMaintenance.toDTO(), userId);
     return {
       success: true,
       message: 'Maintenance updated successfully',

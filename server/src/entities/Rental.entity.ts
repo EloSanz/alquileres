@@ -1,3 +1,6 @@
+import { RentalDTO } from '../dtos/rental.dto';
+import { Rental } from '../../../shared/types/Rental';
+
 export class RentalEntity {
   constructor(
     public id: number | null,
@@ -94,7 +97,7 @@ export class RentalEntity {
   }
 
   toDTO(): RentalDTO {
-    return {
+    return Rental.fromJSON({
       id: this.id!,
       tenantId: this.tenantId,
       propertyId: this.propertyId,
@@ -102,11 +105,11 @@ export class RentalEntity {
       endDate: this.endDate?.toISOString() || null,
       monthlyRent: this.monthlyRent,
       depositAmount: this.depositAmount,
-      status: this.status,
+      status: this.status.toString(),
       notes: this.notes,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    };
+    });
   }
 
   validate(): void {
@@ -139,37 +142,3 @@ export enum RentalStatus {
   TERMINATED = 'TERMINATED'
 }
 
-// DTO types
-export interface RentalDTO {
-  id: number;
-  tenantId: number;
-  propertyId: number;
-  startDate: string;
-  endDate: string | null;
-  monthlyRent: number;
-  depositAmount: number | null;
-  status: RentalStatus;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateRentalDTO {
-  tenantId: number;
-  propertyId: number;
-  startDate: string;
-  endDate?: string;
-  monthlyRent: number;
-  depositAmount?: number;
-  status?: RentalStatus;
-  notes?: string;
-}
-
-export interface UpdateRentalDTO {
-  startDate?: string;
-  endDate?: string;
-  monthlyRent?: number;
-  depositAmount?: number;
-  status?: RentalStatus;
-  notes?: string;
-}

@@ -1,5 +1,7 @@
 // ServiceType enum - matches Prisma enum
 export type ServiceType = 'AGUA' | 'LUZ' | 'ARBITRIOS';
+import { ServiceDTO } from '../dtos/service.dto';
+import { Service } from '../../../shared/types/Service';
 
 export class ServiceEntity {
   constructor(
@@ -97,11 +99,11 @@ export class ServiceEntity {
   }
 
   toDTO(): ServiceDTO {
-    return {
+    return Service.fromJSON({
       id: this.id!,
       propertyId: this.propertyId,
       contractId: this.contractId,
-      serviceType: this.serviceType,
+      serviceType: this.serviceType.toString(),
       amount: this.amount,
       dueDate: this.dueDate.toISOString().split('T')[0],
       paidDate: this.paidDate ? this.paidDate.toISOString().split('T')[0] : null,
@@ -109,7 +111,7 @@ export class ServiceEntity {
       notes: this.notes,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    };
+    });
   }
 
   validate(): void {
@@ -123,40 +125,4 @@ export class ServiceEntity {
   }
 }
 
-// DTO types
-export interface ServiceDTO {
-  id: number;
-  propertyId: number | null;
-  contractId: number | null;
-  serviceType: string;
-  amount: number;
-  dueDate: string;
-  paidDate: string | null;
-  isPaid: boolean;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateServiceDTO {
-  propertyId: number | null;
-  contractId: number | null;
-  serviceType: string;
-  amount: number;
-  dueDate: string;
-  paidDate?: string | null;
-  isPaid?: boolean;
-  notes?: string;
-}
-
-export interface UpdateServiceDTO {
-  propertyId?: number | null;
-  contractId?: number | null;
-  serviceType?: string;
-  amount?: number;
-  dueDate?: string;
-  paidDate?: string | null;
-  isPaid?: boolean;
-  notes?: string;
-}
 

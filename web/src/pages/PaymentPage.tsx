@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -27,8 +27,10 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
-import { usePropertyService, type Property } from '../services/propertyService';
-import { usePaymentService, type Payment, type CreatePaymentData } from '../services/paymentService';
+import { usePropertyService } from '../services/propertyService';
+import { Property } from '../../../shared/types/Property';
+import { usePaymentService } from '../services/paymentService';
+import { Payment, CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { FilterConfig } from '../components/FilterBar';
 import PaymentDetailsModal from '../components/PaymentDetailsModal';
@@ -92,7 +94,8 @@ const PaymentPage = () => {
   const handleTogglePentamont = async (payment: Payment) => {
     try {
       const next = !payment.pentamontSettled;
-      await paymentService.updatePayment(payment.id, { pentamontSettled: next });
+      const updateData = new UpdatePayment(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, next, undefined);
+      await paymentService.updatePayment(payment.id, updateData);
       setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
       setFilteredPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
     } catch (e: any) {
@@ -200,20 +203,25 @@ const PaymentPage = () => {
     }
 
     try {
-      const paymentData: CreatePaymentData = {
-        tenantId: selectedProperty.tenantId || undefined,
-        propertyId: selectedProperty.id,
-        amount: parseFloat(createForm.amount),
-        paymentDate: createForm.paymentDate,
-        dueDate: createForm.dueDate,
-        paymentMethod: createForm.paymentMethod,
-        notes: createForm.notes || undefined,
-        // TODO: En el futuro, aquí se haría el upload real de la imagen
-        // Por ahora, siempre usamos comprobante.png como mock (se ignora en el servicio)
-        receiptImage: receiptImageFile || null,
-      };
+      const tenantId = selectedProperty.tenantId;
+      if (!tenantId) {
+        setError('La propiedad seleccionada no tiene un inquilino asignado');
+        return;
+      }
       
-      await paymentService.createPayment(paymentData);
+      const paymentData = new CreatePayment(
+        tenantId,
+        selectedProperty.id,
+        parseFloat(createForm.amount),
+        createForm.dueDate,
+        createForm.paymentDate,
+        createForm.paymentMethod,
+        undefined,
+        createForm.notes || undefined
+      );
+      (paymentData as any).receiptImage = receiptImageFile || null; // Para mantener compatibilidad con CreatePaymentData
+      
+      await paymentService.createPayment(paymentData as any);
 
       setCreateDialogOpen(false);
       setSelectedProperty(null);
@@ -235,7 +243,11 @@ const PaymentPage = () => {
     }
   };
 
+  const hasFetchedRef = useRef(false);
+  
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchPayments();
     fetchProperties();
   }, []);
@@ -321,15 +333,20 @@ const PaymentPage = () => {
     if (!editingPayment) return;
 
     try {
-      const paymentData: Partial<CreatePaymentData> = {
-        tenantId: parseInt(editForm.tenantId),
-        propertyId: parseInt(editForm.propertyId),
-        amount: parseFloat(editForm.amount),
-        paymentDate: editForm.paymentDate,
-        dueDate: editForm.dueDate,
-        paymentMethod: editForm.paymentMethod,
-        notes: editForm.notes || undefined,
-      };
+      const paymentData = new UpdatePayment(
+        parseInt(editForm.tenantId),
+        parseInt(editForm.propertyId),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        parseFloat(editForm.amount),
+        editForm.paymentDate,
+        editForm.dueDate,
+        editForm.paymentMethod,
+        undefined,
+        editForm.notes || undefined
+      );
 
       await paymentService.updatePayment(editingPayment.id, paymentData);
 

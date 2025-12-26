@@ -1,2 +1,1 @@
-// Re-export types from entity for consistency
-export type { GuaranteeDTO, CreateGuaranteeDTO, UpdateGuaranteeDTO } from '../entities/Guarantee.entity';
+export { Guarantee as GuaranteeDTO, CreateGuarantee as CreateGuaranteeDTO, UpdateGuarantee as UpdateGuaranteeDTO } from '../../../shared/types/Guarantee';

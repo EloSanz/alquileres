@@ -1,2 +1,1 @@
-// Re-export types from entity for consistency
-export type { TaxDTO, CreateTaxDTO, UpdateTaxDTO } from '../entities/Tax.entity';
+export { Tax as TaxDTO, CreateTax as CreateTaxDTO, UpdateTax as UpdateTaxDTO } from '../../../shared/types/Tax';

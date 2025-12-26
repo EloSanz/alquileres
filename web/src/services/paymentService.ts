@@ -1,46 +1,9 @@
 import { useApi } from '../contexts/ApiContext'
+import { Payment, CreatePayment, UpdatePayment } from '../../../shared/types/Payment'
 
-export interface Payment {
-  id: number
-  tenantId?: number | null
-  propertyId: number | null
-  contractId?: number | null
-  monthNumber?: number | null
-  tenantFullName?: string | null
-  tenantPhone?: string | null
-  amount: number
-  paymentDate: string
-  dueDate: string
-  paymentMethod: string
-  pentamontSettled?: boolean
-  notes?: string | null
-  receiptImageUrl?: string | null
-  createdAt: string
-}
-
-export interface CreatePaymentData {
-  tenantId?: number
-  propertyId: number | null
-  amount: number
-  paymentDate?: string
-  dueDate: string
-  paymentMethod?: string
-  pentamontSettled?: boolean
-  notes?: string
-  // TODO: En el futuro, este campo se usará para el upload real de la imagen
-  // Por ahora, se ignora y siempre se usa comprobante.png como mock
+// Extended interface for frontend form that includes receiptImage
+export interface CreatePaymentData extends CreatePayment {
   receiptImage?: File | null
-}
-
-export interface UpdatePaymentData {
-  tenantId?: number | null
-  propertyId?: number | null
-  amount?: number
-  paymentDate?: string
-  dueDate?: string
-  paymentMethod?: string
-  pentamontSettled?: boolean
-  notes?: string
 }
 
 export const usePaymentService = () => {
@@ -58,7 +21,7 @@ export const usePaymentService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch payments')
       }
-      return response.data.data || []
+      return (response.data.data || []).map((item: any) => Payment.fromJSON(item))
     },
     
     getPaymentById: async (id: number): Promise<Payment> => {
@@ -72,7 +35,7 @@ export const usePaymentService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch payment')
       }
-      return response.data.data
+      return Payment.fromJSON(response.data.data)
     },
     
     createPayment: async (paymentData: CreatePaymentData): Promise<Payment> => {
@@ -91,8 +54,13 @@ export const usePaymentService = () => {
       
       // Remover receiptImage del payload ya que no se envía al backend por ahora
       const { receiptImage, ...payload } = paymentData;
+      const createPayment = CreatePayment.fromJSON(payload);
+      const errors = createPayment.validate();
+      if (errors.length > 0) {
+        throw new Error(errors.join(', '));
+      }
       
-      const response = await api.api.payments.post(payload as any)
+      const response = await api.api.payments.post(createPayment.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -102,11 +70,15 @@ export const usePaymentService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to create payment')
       }
-      return response.data.data
+      return Payment.fromJSON(response.data.data)
     },
     
-    updatePayment: async (id: number, paymentData: UpdatePaymentData): Promise<Payment> => {
-      const response = await api.api.payments({ id }).put(paymentData)
+    updatePayment: async (id: number, paymentData: UpdatePayment): Promise<Payment> => {
+      const errors = paymentData.validate();
+      if (errors.length > 0) {
+        throw new Error(errors.join(', '));
+      }
+      const response = await api.api.payments({ id }).put(paymentData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -116,7 +88,7 @@ export const usePaymentService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to update payment')
       }
-      return response.data.data
+      return Payment.fromJSON(response.data.data)
     },
     
     deletePayment: async (id: number): Promise<void> => {

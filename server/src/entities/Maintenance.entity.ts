@@ -1,6 +1,8 @@
 // MaintenanceType and MaintenanceStatus enums - matches Prisma enum
 export type MaintenanceType = 'REPARACION' | 'LIMPIEZA' | 'PINTURA' | 'ELECTRICIDAD' | 'PLOMERIA' | 'JARDINERIA' | 'OTROS';
 export type MaintenanceStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+import { MaintenanceDTO } from '../dtos/maintenance.dto';
+import { Maintenance } from '../../../shared/types/Maintenance';
 
 export class MaintenanceEntity {
   constructor(
@@ -112,7 +114,7 @@ export class MaintenanceEntity {
   }
 
   toDTO(): MaintenanceDTO {
-    return {
+    return Maintenance.fromJSON({
       id: this.id!,
       propertyId: this.propertyId,
       contractId: this.contractId,
@@ -122,11 +124,11 @@ export class MaintenanceEntity {
       actualCost: this.actualCost,
       scheduledDate: this.scheduledDate ? this.scheduledDate.toISOString().split('T')[0] : null,
       completedDate: this.completedDate ? this.completedDate.toISOString().split('T')[0] : null,
-      status: this.status,
+      status: this.status.toString(),
       notes: this.notes,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    };
+    });
   }
 
   validate(): void {
@@ -144,45 +146,3 @@ export class MaintenanceEntity {
   }
 }
 
-// DTO types
-export interface MaintenanceDTO {
-  id: number;
-  propertyId: number | null;
-  contractId: number | null;
-  maintenanceType: string;
-  description: string;
-  estimatedCost: number | null;
-  actualCost: number | null;
-  scheduledDate: string | null;
-  completedDate: string | null;
-  status: string;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateMaintenanceDTO {
-  propertyId: number | null;
-  contractId: number | null;
-  maintenanceType: string;
-  description: string;
-  estimatedCost?: number | null;
-  actualCost?: number | null;
-  scheduledDate?: string | null;
-  completedDate?: string | null;
-  status?: string;
-  notes?: string;
-}
-
-export interface UpdateMaintenanceDTO {
-  propertyId?: number | null;
-  contractId?: number | null;
-  maintenanceType?: string;
-  description?: string;
-  estimatedCost?: number | null;
-  actualCost?: number | null;
-  scheduledDate?: string | null;
-  completedDate?: string | null;
-  status?: string;
-  notes?: string;
-}

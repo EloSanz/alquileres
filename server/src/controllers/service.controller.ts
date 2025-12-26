@@ -1,5 +1,5 @@
 import { IServiceService } from '../interfaces/services/IServiceService';
-import { CreateServiceDTO, UpdateServiceDTO } from '../dtos/service.dto';
+import { CreateService, UpdateService } from '../../../shared/types/Service';
 
 export class ServiceController {
   constructor(private serviceService: IServiceService) {}
@@ -32,10 +32,15 @@ export class ServiceController {
     body,
     userId,
   }: {
-    body: CreateServiceDTO;
+    body: any;
     userId: number;
   }) => {
-    const service = await this.serviceService.createService(body, userId);
+    const createService = CreateService.fromJSON(body);
+    const errors = createService.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const service = await this.serviceService.createService(createService.toDTO(), userId);
     return {
       success: true,
       message: 'Service created successfully',
@@ -49,10 +54,15 @@ export class ServiceController {
     userId,
   }: {
     params: { id: number };
-    body: UpdateServiceDTO;
+    body: any;
     userId: number;
   }) => {
-    const service = await this.serviceService.updateService(id, body, userId);
+    const updateService = UpdateService.fromJSON(body);
+    const errors = updateService.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    const service = await this.serviceService.updateService(id, updateService.toDTO(), userId);
     return {
       success: true,
       message: 'Service updated successfully',

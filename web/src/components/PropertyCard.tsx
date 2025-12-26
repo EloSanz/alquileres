@@ -8,17 +8,7 @@ import {
   Typography,
   Box,
 } from '@mui/material';
-
-interface Property {
-  id: number;
-  localNumber: number;
-  ubicacion: string;
-  propertyType: string;
-  monthlyRent: number;
-  isAvailable?: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Property } from '../../../shared/types/Property';
 
 interface PropertyCardProps {
   property: Property;
