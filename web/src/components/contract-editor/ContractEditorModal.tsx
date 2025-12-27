@@ -120,10 +120,11 @@ export default function ContractEditorModal({
   };
 
   const handleDataChange = useCallback((field: keyof ContractData, value: string) => {
-    const trimmedValue = value.trim();
+    // No aplicar trim mientras el usuario escribe, solo guardar el valor tal cual
+    // El trim se aplicará solo en validaciones cuando sea necesario
 
     setContractData(prev => {
-      const newData = { ...prev, [field]: trimmedValue };
+      const newData = { ...prev, [field]: value };
 
       // Calcular campos faltantes con el nuevo estado
       const missing = [];
