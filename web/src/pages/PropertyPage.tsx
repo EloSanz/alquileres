@@ -217,9 +217,12 @@ const PropertyPage = () => {
       event.stopPropagation();
     }
     setEditingProperty(property);
+    // Normalizar ubicacion por compatibilidad antigua ('BOULEVARD' -> 'BOULEVAR')
+    const normalizedUbicacion =
+      ((property.ubicacion as unknown as string) === 'BOULEVARD' ? 'BOULEVAR' : property.ubicacion) || 'BOULEVAR';
     setEditForm({
       localNumber: property.localNumber?.toString() || '',
-      ubicacion: property.ubicacion || 'BOULEVAR',
+      ubicacion: normalizedUbicacion as 'BOULEVAR' | 'SAN_MARTIN' | 'PATIO',
       monthlyRent: property.monthlyRent?.toString() || '',
     });
     setEditDialogOpen(true);
@@ -320,7 +323,9 @@ const PropertyPage = () => {
               <TableRow>
                 <TableCell><strong>N° Local</strong></TableCell>
                 <TableCell><strong>Ubicación</strong></TableCell>
+                  <TableCell><strong>Inquilino</strong></TableCell>
                 <TableCell align="right"><strong>Renta Mensual</strong></TableCell>
+                  <TableCell align="center"><strong>Estado</strong></TableCell>
                 <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
             </TableHead>
@@ -349,7 +354,29 @@ const PropertyPage = () => {
                       color="primary"
                     />
                   </TableCell>
+                  <TableCell>
+                    {property.tenant
+                      ? `${property.tenant.firstName} ${property.tenant.lastName}`
+                      : <Typography variant="body2" color="text.secondary">Disponible</Typography>}
+                  </TableCell>
                   <TableCell align="right">S/ {property.monthlyRent?.toLocaleString()}</TableCell>
+                  <TableCell align="center">
+                    <Chip
+                      label={
+                        property.status === 'ACTIVE' ? 'Activo' :
+                        property.status === 'INACTIVE' ? 'Inactivo' :
+                        property.status === 'ARCHIVED' ? 'Archivado' :
+                        property.status
+                      }
+                      size="small"
+                      color={
+                        property.status === 'ACTIVE' ? 'success' :
+                        property.status === 'INACTIVE' ? 'warning' :
+                        property.status === 'ARCHIVED' ? 'default' : 'default'
+                      }
+                      variant="outlined"
+                    />
+                  </TableCell>
                   <TableCell align="center" onClick={(e) => e.stopPropagation()}>
                     <IconButton
                       size="small"
@@ -372,7 +399,7 @@ const PropertyPage = () => {
               ))}
               {properties.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
                       No hay locales registrados
                     </Typography>
@@ -463,6 +490,20 @@ const PropertyPage = () => {
                 value={createForm.ubicacion}
                 onChange={(e) => setCreateForm({ ...createForm, ubicacion: e.target.value })}
                 required
+                SelectProps={{
+                  displayEmpty: true,
+                  renderValue: (value) => {
+                    const v = (value as string) || '';
+                    if (!v) return 'Seleccionar ubicación';
+                    return v === 'BOULEVAR'
+                      ? 'Boulevar'
+                      : v === 'SAN_MARTIN'
+                      ? 'San Martín'
+                      : v === 'PATIO'
+                      ? 'Patio'
+                      : v;
+                  },
+                }}
               >
                 <MenuItem value="BOULEVAR">Boulevar</MenuItem>
                 <MenuItem value="SAN_MARTIN">San Martín</MenuItem>
@@ -523,6 +564,20 @@ const PropertyPage = () => {
                 value={editForm.ubicacion}
                 onChange={(e) => setEditForm({ ...editForm, ubicacion: e.target.value })}
                 required
+                SelectProps={{
+                  displayEmpty: true,
+                  renderValue: (value) => {
+                    const v = (value as string) || '';
+                    if (!v) return 'Seleccionar ubicación';
+                    return v === 'BOULEVAR'
+                      ? 'Boulevar'
+                      : v === 'SAN_MARTIN'
+                      ? 'San Martín'
+                      : v === 'PATIO'
+                      ? 'Patio'
+                      : v;
+                  },
+                }}
               >
                 <MenuItem value="BOULEVAR">Boulevar</MenuItem>
                 <MenuItem value="SAN_MARTIN">San Martín</MenuItem>
