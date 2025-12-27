@@ -66,8 +66,17 @@ const LoginPage = () => {
 
       const data = await response.json();
 
-      if (data.success) {
-        login(data.data.token, data.data.user);
+      if (data.success && data.data) {
+        // Asegurar que el token esté limpio (sin espacios ni comillas)
+        const token = String(data.data.token || '').trim().replace(/^["']|["']$/g, '');
+        const user = data.data.user;
+        
+        if (!token) {
+          setError('Token no recibido del servidor');
+          return;
+        }
+        
+        login(token, user);
         navigate('/');
       } else {
         setError(data.message || 'Error al iniciar sesión');

@@ -26,7 +26,11 @@ export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
     headers: () => {
       const token = localStorage.getItem('token')
       if (token) {
-        return { Authorization: `Bearer ${token}` } as HeadersInit
+        // Limpiar el token antes de enviarlo (quitar espacios y comillas)
+        const cleanToken = String(token).trim().replace(/^["']|["']$/g, '')
+        if (cleanToken) {
+          return { Authorization: `Bearer ${cleanToken}` } as HeadersInit
+        }
       }
       return undefined
     }
