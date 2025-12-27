@@ -31,7 +31,7 @@ const LoginPage = () => {
 
   const navigate = useNavigate();
   const { login } = useAuth();
-  const api = useApi();
+  // const api = useApi(); // No usado actualmente, usando fetch directo
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -73,6 +73,18 @@ const LoginPage = () => {
         
         if (!token) {
           setError('Token no recibido del servidor');
+          return;
+        }
+        
+        // Validar formato JWT (debe tener 3 partes separadas por puntos)
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) {
+          console.error('Token malformado recibido:', {
+            length: token.length,
+            parts: tokenParts.length,
+            preview: token.substring(0, 20) + '...'
+          });
+          setError('Token inválido recibido del servidor');
           return;
         }
         

@@ -54,13 +54,33 @@ export const tenantRoutes = new Elysia({ prefix: '/tenants' })
       throw new Error('No token provided')
     }
 
-    const token: string = authHeader.substring(7)
+    const token: string = authHeader.substring(7).trim()
+    
+    // Debug: Log token format (solo primeros y últimos caracteres por seguridad)
+    if (token.length < 10 || token.split('.').length !== 3) {
+      logError('Token malformed - invalid format', undefined, { 
+        route: 'tenants', 
+        method: request.method, 
+        url: request.url,
+        tokenLength: token.length,
+        tokenParts: token.split('.').length,
+        tokenPreview: token.substring(0, 10) + '...' + token.substring(token.length - 10)
+      })
+      throw new Error('Invalid token')
+    }
 
     try {
       const payload = jwtVerify(token, JWT_SECRET) as JWTPayload
       return { userId: payload.userId }
     } catch (error: any) {
-      logError('Token verification failed', error, { route: 'tenants', method: request.method, url: request.url })
+      logError('Token verification failed', error, { 
+        route: 'tenants', 
+        method: request.method, 
+        url: request.url,
+        errorMessage: error.message,
+        tokenLength: token.length,
+        tokenParts: token.split('.').length
+      })
       throw new Error('Invalid token')
     }
   })
