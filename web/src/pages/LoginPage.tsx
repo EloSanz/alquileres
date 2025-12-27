@@ -47,7 +47,7 @@ const LoginPage = () => {
 
     try {
       // Usar fetch directamente con la ruta correcta /pentamont/api/auth/login
-      const response = await fetch('/pentamont/api/auth/login', {
+      const response = await fetch(`${window.location.origin}/pentamont/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
