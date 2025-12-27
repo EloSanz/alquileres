@@ -7,26 +7,26 @@ Este directorio contiene las configuraciones de Nginx para diferentes escenarios
 ### HTTP (Sin SSL)
 
 1. **`alquileres-app.conf.http`** - Desarrollo
-   - Proxy al puerto 5173 (Vite Dev Server)
-   - Proxy al puerto 3000 (Backend API)
+   - Proxy al puerto 4001 (Vite Dev Server)
+   - Proxy al puerto 4000 (Backend API)
    - Usar cuando el frontend está en modo desarrollo
 
 2. **`alquileres-app.conf.http.production`** - Producción
    - Sirve archivos estáticos desde `/web/dist`
-   - Proxy al puerto 3000 (Backend API)
+   - Proxy al puerto 4000 (Backend API)
    - Usar cuando el frontend está construido
 
 ### HTTPS (Con SSL)
 
 1. **`alquileres-app.conf.https`** - Producción con SSL
    - Sirve archivos estáticos desde `/web/dist`
-   - Proxy al puerto 3000 (Backend API)
+   - Proxy al puerto 4000 (Backend API)
    - Redirige HTTP a HTTPS
    - Usar cuando el frontend está construido y hay certificado SSL
 
 2. **`alquileres-app.conf.https.development`** - Desarrollo con SSL
-   - Proxy al puerto 5173 (Vite Dev Server)
-   - Proxy al puerto 3000 (Backend API)
+   - Proxy al puerto 4001 (Vite Dev Server)
+   - Proxy al puerto 4000 (Backend API)
    - Redirige HTTP a HTTPS
    - Usar cuando el frontend está en modo desarrollo y hay certificado SSL
 
@@ -109,8 +109,8 @@ Antes de usar estas configuraciones, asegúrate de:
 
 ## Puertos
 
-- **Frontend (Desarrollo)**: 5173 (Vite Dev Server)
-- **Backend API**: 3000
+- **Frontend (Desarrollo)**: 4001 (Vite Dev Server)
+- **Backend API**: 4000
 - **Nginx**: 80 (HTTP) y 443 (HTTPS)
 
 ## Troubleshooting

@@ -169,7 +169,7 @@ pm2 start dist/index.js --name alquileres-backend --env production
 
 # Iniciar frontend (servir archivos estáticos)
 cd ../web
-pm2 serve dist 5173 --name alquileres-frontend --spa
+pm2 serve dist 4001 --name alquileres-frontend --spa
 
 # Guardar configuración
 pm2 save
@@ -197,7 +197,7 @@ server {
     server_name api.tu-dominio.com;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:4000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -228,7 +228,7 @@ server {
     }
 
     location /api {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:4000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -304,12 +304,12 @@ pm2 restart all
 
 ## 🐛 Troubleshooting
 
-### Error: Puerto 3000 o 5173 ya en uso
+### Error: Puerto 4000 o 4001 ya en uso
 
 ```bash
 # Ver qué proceso usa el puerto
-lsof -i :3000
-lsof -i :5173
+lsof -i :4000
+lsof -i :4001
 
 # Matar proceso
 kill -9 <PID>
@@ -351,8 +351,8 @@ Después del seed, puedes iniciar sesión con:
 ## 📝 Notas Importantes
 
 1. **Puertos**: 
-   - Backend: `3000`
-   - Frontend: `5173`
+   - Backend: `4000`
+   - Frontend: `4001`
    - Asegúrate de abrir estos puertos en el firewall si es necesario
 
 2. **Variables de Entorno**: 

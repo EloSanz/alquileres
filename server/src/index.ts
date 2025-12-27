@@ -102,7 +102,7 @@ const server = createServer(async (req, res) => {
     }
 
     // Convert Node.js request to Web API Request
-    const requestUrl = `http://localhost:3000${req.url}`
+    const requestUrl = `http://localhost:4000${req.url}`
     const request = new Request(requestUrl, {
       method: req.method,
       headers: req.headers as any,
@@ -184,8 +184,8 @@ process.on('SIGINT', () => {
   })
 })
 
-server.listen(3000, () => {
-  console.log('🚀 Server running at http://localhost:3000')
+server.listen(4000, () => {
+  console.log('🚀 Server running at http://localhost:4000')
   console.log('Press Ctrl+C to stop the server')
 })
 

@@ -1,6 +1,6 @@
 # Configuración de Nginx para alquileres-app (HTTPS - Con SSL - Producción)
 # Esta configuración se usa después de generar el certificado SSL con certbot
-# Sirve archivos estáticos desde /web/dist y hace proxy al puerto 3000 (backend API)
+# Sirve archivos estáticos desde /web/dist y hace proxy al puerto 4000 (backend API)
 # Usar esta versión cuando el frontend está construido
 
 # Redirección HTTP a HTTPS
@@ -49,9 +49,9 @@ server {
     access_log /var/log/nginx/alquileres-app-access.log;
     error_log /var/log/nginx/alquileres-app-error.log;
 
-    # Proxy para API Backend (puerto 3000)
+    # Proxy para API Backend (puerto 4000)
     location /api {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:4000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';

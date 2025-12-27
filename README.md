@@ -96,8 +96,8 @@ Aplicación Full Stack para administradores de propiedades que necesitan gestion
 
 ### 🎯 Estado Actual
 
-- ✅ **Backend**: Elysia.js corriendo en `http://localhost:3000`
-- ✅ **Frontend**: React + Vite corriendo en `http://localhost:5173`
+- ✅ **Backend**: Elysia.js corriendo en `http://localhost:4000`
+- ✅ **Frontend**: React + Vite corriendo en `http://localhost:4001`
 - ✅ **API Endpoints**: Funcionando (`/api/tenants`, `/api/users`)
 - ✅ **Type Safety**: Eden Treaty configurado correctamente
 - ✅ **Base de Datos**: Prisma schema definido (requiere PostgreSQL)
@@ -175,8 +175,8 @@ cd web && npm run dev:full
 ```
 
 La aplicación estará disponible en:
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3000
+- **Frontend**: http://localhost:4001
+- **Backend API**: http://localhost:4000
 
 ## Desarrollo
 
