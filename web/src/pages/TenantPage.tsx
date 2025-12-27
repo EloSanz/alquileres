@@ -283,9 +283,15 @@ const TenantPage = () => {
 
 
   const handleUpdateTenant = async () => {
-    if (!editingTenant) return;
+    if (!editingTenant) {
+      console.error('No tenant selected for editing');
+      return;
+    }
 
     try {
+      setError(''); // Clear previous errors
+      console.log('Updating tenant:', editingTenant.id, editForm);
+      
       // Convert empty strings to undefined for fechaInicioContrato
       const fechaInicioContrato = editForm.fechaInicioContrato?.trim() || undefined;
       
@@ -293,12 +299,17 @@ const TenantPage = () => {
         editForm.firstName,
         editForm.lastName,
         editForm.phone || undefined,
+        editForm.documentId || undefined,
         editForm.numeroLocal || undefined,
         editForm.rubro || undefined,
         fechaInicioContrato
       );
 
+      console.log('Tenant data to update:', tenantData.toJSON());
+      
       const updatedTenant = await tenantService.updateTenant(editingTenant.id, tenantData);
+      
+      console.log('Tenant updated successfully:', updatedTenant);
 
       // Actualizar estado local manteniendo el orden
       setTenants(prev => prev.map(t => t.id === updatedTenant.id ? updatedTenant : t));
@@ -316,6 +327,7 @@ const TenantPage = () => {
         fechaInicioContrato: '',
       });
     } catch (err: any) {
+      console.error('Error updating tenant:', err);
       setError(err.message || 'Failed to update tenant');
     }
   };
@@ -553,7 +565,14 @@ const TenantPage = () => {
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Editar Inquilino</DialogTitle>
         <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
-          <Box component="form" sx={{ mt: 2 }}>
+          <Box 
+            component="form" 
+            sx={{ mt: 2 }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleUpdateTenant();
+            }}
+          >
             <TextField
               fullWidth
               label="Nombre"
@@ -615,8 +634,8 @@ const TenantPage = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
-          <Button onClick={handleUpdateTenant} variant="contained">
+          <Button onClick={() => setEditDialogOpen(false)} type="button">Cancelar</Button>
+          <Button onClick={handleUpdateTenant} variant="contained" type="submit">
             Actualizar
           </Button>
         </DialogActions>
