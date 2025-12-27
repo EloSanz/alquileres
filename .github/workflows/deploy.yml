@@ -32,17 +32,66 @@ jobs:
           set -e
 
           echo "➡️ Actualizando proyecto en VPS..."
+          echo "📂 Cambiando al directorio del proyecto..."
           cd /root/alquileres-app || exit 1
+          pwd && ls -la
+
+          echo "📥 Obteniendo cambios desde Git..."
           git fetch origin develop
+          echo "🔄 Reset a origin/develop..."
           git reset --hard origin/develop
           git clean -fd
-          cd /root/alquileres-app
+
+          echo "📋 Estado actual del repositorio:"
+          git log --oneline -5
+          git status
 
           echo "➡️ Reiniciando servicios..."
-          if [ -f ecosystem.config.js ]; then
-            pm2 startOrReload ecosystem.config.js --update-env || pm2 restart all || true
+
+          # Función para verificar si un servicio está corriendo
+          check_service() {
+            local port=$1
+            local name=$2
+            if curl -f -s --max-time 5 http://localhost:$port > /dev/null 2>&1; then
+              echo "✅ $name corriendo en puerto $port"
+              return 0
+            else
+              echo "❌ $name NO responde en puerto $port"
+              return 1
+            fi
+          }
+
+          if command -v pm2 &> /dev/null; then
+            echo "🔧 PM2 detectado, usando configuración de PM2..."
+            if [ -f ecosystem.config.js ]; then
+              echo "📄 Encontrado ecosystem.config.js"
+              pm2 describe alquileres-backend > /dev/null 2>&1 && pm2 restart alquileres-backend || pm2 start ecosystem.config.js
+              pm2 describe alquileres-frontend > /dev/null 2>&1 && pm2 restart alquileres-frontend || pm2 start ecosystem.config.js
+
+              echo "📊 Estado de procesos PM2:"
+              pm2 list
+
+              sleep 5
+              check_service 4000 "Backend API"
+              check_service 4001 "Frontend"
+            else
+              echo "⚠️  No se encontró ecosystem.config.js, usando script alternativo..."
+              chmod +x start_services_screen.sh
+              ./start_services_screen.sh
+            fi
           else
+            echo "⚠️  PM2 no está instalado, usando script alternativo..."
             chmod +x start_services_screen.sh
-            ./start_services_screen.sh || true
+            ./start_services_screen.sh
           fi
+
+          echo "🔍 Verificación final de servicios:"
+          check_service 4000 "Backend API"
+          check_service 4001 "Frontend"
+
+          echo "📝 Logs recientes:"
+          if command -v pm2 &> /dev/null; then
+            pm2 logs --lines 10 --nostream || true
+          fi
+
           echo "✅ Deploy finalizado"
