@@ -33,23 +33,14 @@ export default function PropertyDetailsModal({
 
   const getUbicacionLabel = (ubicacion: string) => {
     switch (ubicacion) {
-      case 'BOULEVARD':
-        return 'Boulevard';
+      case 'BOULEVAR':
+        return 'Boulevar';
       case 'SAN_MARTIN':
-        return 'San Martin';
+        return 'San Martín';
+      case 'PATIO':
+        return 'Patio';
       default:
         return ubicacion;
-    }
-  };
-
-  const getPropertyTypeLabel = (propertyType: string) => {
-    switch (propertyType) {
-      case 'INSIDE':
-        return 'Adentro';
-      case 'OUTSIDE':
-        return 'Afuera';
-      default:
-        return propertyType;
     }
   };
 
@@ -111,16 +102,6 @@ export default function PropertyDetailsModal({
                     size="small"
                     variant="outlined"
                     color="primary"
-                  />
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    Tipo:
-                  </Typography>
-                  <Chip
-                    label={getPropertyTypeLabel(property.propertyType)}
-                    size="small"
-                    variant="outlined"
                   />
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -1,3 +1,9 @@
+export enum PaymentStatus {
+  PAGADO = 'PAGADO',
+  VENCIDO = 'VENCIDO',
+  FUTURO = 'FUTURO'
+}
+
 export class Payment {
   constructor(
     public id: number,
@@ -11,6 +17,7 @@ export class Payment {
     public paymentDate: string,
     public dueDate: string,
     public paymentMethod: string,
+    public status: PaymentStatus,
     public pentamontSettled: boolean,
     public notes: string | null,
     public receiptImageUrl: string | null,
@@ -44,6 +51,7 @@ export class Payment {
       data.paymentDate,
       data.dueDate,
       data.paymentMethod,
+      data.status || PaymentStatus.FUTURO,
       data.pentamontSettled,
       data.notes,
       data.receiptImageUrl,
@@ -65,6 +73,7 @@ export class CreatePayment {
     public dueDate: string,
     public paymentDate?: string,
     public paymentMethod?: string,
+    public status?: PaymentStatus,
     public pentamontSettled?: boolean,
     public notes?: string
   ) {}
@@ -111,6 +120,7 @@ export class UpdatePayment {
     public paymentDate?: string,
     public dueDate?: string,
     public paymentMethod?: string,
+    public status?: PaymentStatus,
     public pentamontSettled?: boolean,
     public notes?: string
   ) {}
@@ -135,6 +145,7 @@ export class UpdatePayment {
     if (this.paymentDate !== undefined) result.paymentDate = this.paymentDate;
     if (this.dueDate !== undefined) result.dueDate = this.dueDate;
     if (this.paymentMethod !== undefined) result.paymentMethod = this.paymentMethod;
+    if (this.status !== undefined) result.status = this.status;
     if (this.pentamontSettled !== undefined) result.pentamontSettled = this.pentamontSettled;
     if (this.notes !== undefined) result.notes = this.notes;
     return result;
@@ -152,6 +163,7 @@ export class UpdatePayment {
       data.paymentDate,
       data.dueDate,
       data.paymentMethod,
+      data.status,
       data.pentamontSettled,
       data.notes
     );
