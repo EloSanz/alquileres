@@ -348,7 +348,11 @@ const PaymentPage = () => {
         editForm.notes || undefined
       );
 
-      await paymentService.updatePayment(editingPayment.id, paymentData);
+      const updatedPayment = await paymentService.updatePayment(editingPayment.id, paymentData);
+
+      // Actualizar estado local manteniendo el orden
+      setPayments(prev => prev.map(p => p.id === updatedPayment.id ? updatedPayment : p));
+      // El useEffect se encargará de re-filtrar filteredPayments
 
       setEditDialogOpen(false);
       setEditingPayment(null);
@@ -361,7 +365,6 @@ const PaymentPage = () => {
         paymentMethod: 'YAPE',
         notes: '',
       });
-      fetchPayments(); // Refresh the list
     } catch (err: any) {
       setError(err.message || 'Failed to update payment');
     }

@@ -6,7 +6,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 export class PrismaUserRepository implements IUserRepository {
   async findAll(): Promise<UserEntity[]> {
     const users = await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return users.map(user => UserEntity.fromPrisma(user));
   }

@@ -8,7 +8,7 @@ export class PrismaPaymentRepository implements IPaymentRepository {
       include: {
         tenant: true
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return payments.map(payment => PaymentEntity.fromPrisma(payment));
   }

@@ -295,7 +295,11 @@ const PropertyPage = () => {
         parseFloat(editForm.monthlyRent)
       );
 
-      await propertyService.updateProperty(editingProperty.id, propertyData);
+      const updatedProperty = await propertyService.updateProperty(editingProperty.id, propertyData);
+
+      // Actualizar estado local manteniendo el orden
+      setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
+      // El useEffect se encargará de re-filtrar filteredProperties
 
       setEditDialogOpen(false);
       setEditingProperty(null);
@@ -305,7 +309,6 @@ const PropertyPage = () => {
         propertyType: 'INSIDE',
         monthlyRent: '',
       });
-      fetchProperties(); // Refresh the list
     } catch (err: any) {
       setError(err.message || 'Failed to update property');
     }

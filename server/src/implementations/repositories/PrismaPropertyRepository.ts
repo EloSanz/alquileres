@@ -5,7 +5,7 @@ import { prisma } from '../../lib/prisma';
 export class PrismaPropertyRepository implements IPropertyRepository {
   async findAll(): Promise<PropertyEntity[]> {
     const properties = await prisma.property.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return properties.map(property => PropertyEntity.fromPrisma(property));
   }
@@ -20,7 +20,7 @@ export class PrismaPropertyRepository implements IPropertyRepository {
   async findByTenantId(tenantId: number): Promise<PropertyEntity[]> {
     const properties = await prisma.property.findMany({
       where: { tenantId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return properties.map(property => PropertyEntity.fromPrisma(property));
   }

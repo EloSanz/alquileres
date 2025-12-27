@@ -212,8 +212,6 @@ const TenantPage = () => {
         createForm.lastName,
         createForm.documentId,
         createForm.phone || undefined,
-        undefined,
-        undefined,
         createForm.numeroLocal || undefined,
         createForm.rubro || undefined,
         fechaInicioContrato
@@ -295,14 +293,16 @@ const TenantPage = () => {
         editForm.firstName,
         editForm.lastName,
         editForm.phone || undefined,
-        undefined,
-        undefined,
         editForm.numeroLocal || undefined,
         editForm.rubro || undefined,
         fechaInicioContrato
       );
 
-      await tenantService.updateTenant(editingTenant.id, tenantData);
+      const updatedTenant = await tenantService.updateTenant(editingTenant.id, tenantData);
+
+      // Actualizar estado local manteniendo el orden
+      setTenants(prev => prev.map(t => t.id === updatedTenant.id ? updatedTenant : t));
+      // El useEffect se encargará de re-filtrar y re-ordenar filteredTenants
 
       setEditDialogOpen(false);
       setEditingTenant(null);
@@ -315,7 +315,6 @@ const TenantPage = () => {
         rubro: '',
         fechaInicioContrato: '',
       });
-      fetchTenants(); // Refresh the list
     } catch (err: any) {
       setError(err.message || 'Failed to update tenant');
     }

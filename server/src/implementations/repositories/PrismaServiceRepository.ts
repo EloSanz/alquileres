@@ -5,7 +5,7 @@ import { prisma } from '../../lib/prisma';
 export class PrismaServiceRepository implements IServiceRepository {
   async findAll(): Promise<ServiceEntity[]> {
     const services = await prisma.service.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return services.map(service => ServiceEntity.fromPrisma(service));
   }

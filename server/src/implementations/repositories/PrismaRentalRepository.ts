@@ -22,7 +22,7 @@ export class PrismaRentalRepository implements IRentalRepository {
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return rentals.map(rental => RentalEntity.fromPrisma(rental));
   }

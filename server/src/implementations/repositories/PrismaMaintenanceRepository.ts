@@ -5,7 +5,7 @@ import { prisma } from '../../lib/prisma';
 export class PrismaMaintenanceRepository implements IMaintenanceRepository {
   async findAll(): Promise<MaintenanceEntity[]> {
     const maintenances = await prisma.maintenance.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return maintenances.map(maintenance => MaintenanceEntity.fromPrisma(maintenance));
   }

@@ -5,7 +5,7 @@ import { prisma } from '../../lib/prisma';
 export class PrismaGuaranteeRepository implements IGuaranteeRepository {
   async findAll(): Promise<GuaranteeEntity[]> {
     const guarantees = await prisma.guarantee.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return guarantees.map(guarantee => GuaranteeEntity.fromPrisma(guarantee));
   }

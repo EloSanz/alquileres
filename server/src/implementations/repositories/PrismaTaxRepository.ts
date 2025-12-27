@@ -5,7 +5,7 @@ import { prisma } from '../../lib/prisma';
 export class PrismaTaxRepository implements ITaxRepository {
   async findAll(): Promise<TaxEntity[]> {
     const taxes = await prisma.tax.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return taxes.map(tax => TaxEntity.fromPrisma(tax));
   }

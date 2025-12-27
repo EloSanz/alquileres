@@ -5,7 +5,7 @@ import { prisma } from '../../lib/prisma';
 export class PrismaTenantRepository implements ITenantRepository {
   async findAll(): Promise<TenantEntity[]> {
     const tenants = await prisma.tenant.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return tenants.map(tenant => TenantEntity.fromPrisma(tenant));
   }

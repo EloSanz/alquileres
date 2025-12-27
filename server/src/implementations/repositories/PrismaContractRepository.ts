@@ -9,7 +9,7 @@ export class PrismaContractRepository implements IContractRepository {
         tenant: true,
         property: true
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return contracts.map(contract => ContractEntity.fromPrisma(contract));
   }
@@ -28,7 +28,7 @@ export class PrismaContractRepository implements IContractRepository {
   async findByTenantId(tenantId: number): Promise<ContractEntity[]> {
     const contracts = await prisma.contract.findMany({
       where: { tenantId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return contracts.map(contract => ContractEntity.fromPrisma(contract));
   }
@@ -36,7 +36,7 @@ export class PrismaContractRepository implements IContractRepository {
   async findByPropertyId(propertyId: number): Promise<ContractEntity[]> {
     const contracts = await prisma.contract.findMany({
       where: { propertyId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return contracts.map(contract => ContractEntity.fromPrisma(contract));
   }
@@ -47,7 +47,7 @@ export class PrismaContractRepository implements IContractRepository {
         tenantId,
         status: 'ACTIVE'
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return contract ? ContractEntity.fromPrisma(contract) : null;
   }
@@ -58,7 +58,7 @@ export class PrismaContractRepository implements IContractRepository {
         propertyId,
         status: 'ACTIVE'
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'asc' }
     });
     return contract ? ContractEntity.fromPrisma(contract) : null;
   }
