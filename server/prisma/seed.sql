@@ -1,9 +1,12 @@
 -- Seed data for alquileres-app
 -- Updated to match the exact planilla data with correct payment months and amounts
 
--- Insert admin user
+-- Insert admin user (actualizar contraseña si ya existe)
 INSERT INTO "users" (username, email, password, "createdAt", "updatedAt") VALUES
-('admin', 'admin@alquileres.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NOW(), NOW());
+('admin', 'admin@alquileres.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NOW(), NOW())
+ON CONFLICT (username) DO UPDATE SET 
+  password = EXCLUDED.password,
+  "updatedAt" = NOW();
 
 -- Insert tenants (15 unique tenants)
 INSERT INTO "tenants" ("firstName", "lastName", "phone", "documentId", "numeroLocal", "rubro", "fechaInicioContrato", "estadoPago", "createdAt", "updatedAt") VALUES
