@@ -43,7 +43,6 @@ const PropertyPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({});
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     localNumber: '',
@@ -70,7 +69,7 @@ const PropertyPage = () => {
       setError(''); // Limpiar error anterior
       const data = await propertyService.getAllProperties();
       setProperties(data);
-      const filtered = filterProperties(searchQuery, filterValues, data);
+      const filtered = filterProperties(searchQuery, data);
       setFilteredProperties(filtered);
     } catch (err: any) {
       // Solo mostrar error si es un error real de red/API, no si es array vacío
@@ -85,7 +84,7 @@ const PropertyPage = () => {
     }
   };
 
-  const filterProperties = (query: string, filters: Record<string, string | string[]>, propertiesList: Property[]) => {
+  const filterProperties = (query: string, propertiesList: Property[]) => {
     return propertiesList.filter(property => {
       // Filtro de búsqueda por texto
       if (query.trim()) {
@@ -106,13 +105,13 @@ const PropertyPage = () => {
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
     setSearchQuery(query);
-    const filtered = filterProperties(query, filterValues, properties);
+    const filtered = filterProperties(query, properties);
     setFilteredProperties(filtered);
   };
 
   const handleClearSearch = () => {
     setSearchQuery('');
-    const filtered = filterProperties('', filterValues, properties);
+    const filtered = filterProperties('', properties);
     setFilteredProperties(filtered);
   };
 
@@ -176,9 +175,9 @@ const PropertyPage = () => {
 
   // Aplicar filtros cuando cambien los criterios
   useEffect(() => {
-    const filtered = filterProperties(searchQuery, filterValues, properties);
+    const filtered = filterProperties(searchQuery, properties);
     setFilteredProperties(filtered);
-  }, [searchQuery, filterValues, properties]);
+  }, [searchQuery, properties]);
 
   // Validar número de local en tiempo real
   useEffect(() => {
