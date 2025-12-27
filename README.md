@@ -175,8 +175,8 @@ cd web && npm run dev:full
 ```
 
 La aplicación estará disponible en:
-- **Frontend**: http://localhost:4001
-- **Backend API**: http://localhost:4000
+- **Frontend**: http://localhost:4001/pentamont/lodemas/
+- **Backend API**: http://localhost:4000/pentamont/lodemas/api
 
 ## Desarrollo
 

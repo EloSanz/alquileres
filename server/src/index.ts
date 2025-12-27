@@ -46,12 +46,14 @@ const app = new Elysia()
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
   }))
-  .use(authRoutes)  // Auth routes don't need auth plugin (register/login are public)
-  .use(userRoutes)
-  .group('/api', app => app
-    .use(protectedRoutes)  // All protected routes under /api with auth
+  .group('/pentamont/lodemas', app => app
+    .use(authRoutes)  // Auth routes don't need auth plugin (register/login are public)
+    .use(userRoutes)
+    .group('/api', app => app
+      .use(protectedRoutes)  // All protected routes under /api with auth
+    )
+    .get('/', () => ({ message: 'Rental Management API is running', timestamp: new Date().toISOString() }))
   )
-  .get('/', () => ({ message: 'Rental Management API is running', timestamp: new Date().toISOString() }))
 
 // Helper function to extract IP address from request
 function getClientIP(req: any): string {

@@ -106,6 +106,56 @@ Para que los merges sean permitidos, configurar:
 2. **Linting**: `npm run lint` (si aplica)
 3. **Tests**: `npm run test` (cuando existan)
 
+## Configuración de GitHub Secrets
+
+El proyecto utiliza GitHub Actions para despliegue automático. Las secrets se configuran mediante **Environments** de GitHub para mayor seguridad y organización.
+
+### Crear Environment "penta mont"
+
+1. Ir a **Settings > Environments** en el repositorio de GitHub
+2. Click en **New environment**
+3. Nombre del environment: `penta mont`
+4. Click en **Configure environment**
+
+### Configurar Secrets del Environment
+
+En la página de configuración del environment "penta mont", agregar las siguientes secrets:
+
+#### Secrets Requeridas
+
+- **`SSH_HOST`**: Dirección IP o hostname del servidor VPS donde se despliega la aplicación
+  - Ejemplo: `192.168.1.100` o `servidor.ejemplo.com`
+  
+- **`SSH_PASSWORD`**: Contraseña del usuario SSH para acceder al servidor
+  - Ejemplo: `tu-contraseña-segura`
+
+#### Cómo Agregar Secrets
+
+1. En la página del environment "penta mont", buscar la sección **Secrets**
+2. Click en **Add secret**
+3. Ingresar el nombre de la secret (ej: `SSH_HOST`)
+4. Ingresar el valor de la secret
+5. Click en **Add secret**
+6. Repetir para cada secret requerida
+
+### Uso en Workflows
+
+El workflow de despliegue (`.github/workflows/deploy.yml`) utiliza este environment:
+
+```yaml
+environment: penta mont
+```
+
+Las secrets configuradas en el environment "penta mont" estarán disponibles automáticamente cuando el workflow se ejecute en el contexto de ese environment.
+
+### Verificación
+
+Para verificar que las secrets están configuradas correctamente:
+
+1. Hacer push a la rama `develop`
+2. El workflow se ejecutará automáticamente
+3. Revisar los logs del workflow en **Actions** para confirmar que las secrets se están usando correctamente
+
 ## Convenciones de Commit
 
 Usar **Conventional Commits**:

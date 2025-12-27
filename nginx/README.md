@@ -7,26 +7,26 @@ Este directorio contiene las configuraciones de Nginx para diferentes escenarios
 ### HTTP (Sin SSL)
 
 1. **`alquileres-app.conf.http`** - Desarrollo
-   - Proxy al puerto 4001 (Vite Dev Server)
-   - Proxy al puerto 4000 (Backend API)
+   - Proxy al puerto 4001 (Vite Dev Server) bajo `/pentamont/lodemas`
+   - Proxy al puerto 4000 (Backend API) bajo `/pentamont/lodemas/api`
    - Usar cuando el frontend está en modo desarrollo
 
 2. **`alquileres-app.conf.http.production`** - Producción
-   - Sirve archivos estáticos desde `/web/dist`
-   - Proxy al puerto 4000 (Backend API)
+   - Sirve archivos estáticos desde `/web/dist` bajo `/pentamont/lodemas`
+   - Proxy al puerto 4000 (Backend API) bajo `/pentamont/lodemas/api`
    - Usar cuando el frontend está construido
 
 ### HTTPS (Con SSL)
 
 1. **`alquileres-app.conf.https`** - Producción con SSL
-   - Sirve archivos estáticos desde `/web/dist`
-   - Proxy al puerto 4000 (Backend API)
+   - Sirve archivos estáticos desde `/web/dist` bajo `/pentamont/lodemas`
+   - Proxy al puerto 4000 (Backend API) bajo `/pentamont/lodemas/api`
    - Redirige HTTP a HTTPS
    - Usar cuando el frontend está construido y hay certificado SSL
 
 2. **`alquileres-app.conf.https.development`** - Desarrollo con SSL
-   - Proxy al puerto 4001 (Vite Dev Server)
-   - Proxy al puerto 4000 (Backend API)
+   - Proxy al puerto 4001 (Vite Dev Server) bajo `/pentamont/lodemas`
+   - Proxy al puerto 4000 (Backend API) bajo `/pentamont/lodemas/api`
    - Redirige HTTP a HTTPS
    - Usar cuando el frontend está en modo desarrollo y hay certificado SSL
 
@@ -107,11 +107,12 @@ Antes de usar estas configuraciones, asegúrate de:
    certbot --nginx -d tu-dominio.com -d www.tu-dominio.com
    ```
 
-## Puertos
+## Puertos y Rutas
 
-- **Frontend (Desarrollo)**: 4001 (Vite Dev Server)
-- **Backend API**: 4000
+- **Frontend (Desarrollo)**: 4001 (Vite Dev Server) - Disponible en `/pentamont/lodemas/`
+- **Backend API**: 4000 - Disponible en `/pentamont/lodemas/api`
 - **Nginx**: 80 (HTTP) y 443 (HTTPS)
+- **Path Base**: Todas las rutas están bajo el prefijo `/pentamont/lodemas`
 
 ## Troubleshooting
 

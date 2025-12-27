@@ -196,7 +196,7 @@ server {
     listen 80;
     server_name api.tu-dominio.com;
 
-    location / {
+    location /pentamont/lodemas/api {
         proxy_pass http://localhost:4000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -227,7 +227,7 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    location /api {
+    location /pentamont/lodemas/api {
         proxy_pass http://localhost:4000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
