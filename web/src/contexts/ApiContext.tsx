@@ -13,12 +13,10 @@ export const useApi = () => {
 }
 
 export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
-  // En desarrollo, usar ruta relativa que será manejada por Vite proxy
-  // En producción, usar la URL completa con el prefijo
-  const baseUrl = import.meta.env.VITE_API_URL || '/pentamont'
-  const apiUrl = baseUrl.startsWith('http')
-    ? `${baseUrl}/pentamont`  // Producción: URL completa con prefijo
-    : baseUrl  // Desarrollo: ruta relativa, Vite proxy maneja /pentamont/api
+  // Siempre usar ruta relativa /pentamont
+  // En desarrollo: Vite proxy maneja /pentamont/api -> localhost:4000
+  // En producción: Nginx maneja /pentamont/api -> localhost:4000
+  const apiUrl = import.meta.env.VITE_API_URL || '/pentamont'
   
   const api = treaty<App>(apiUrl, {
     headers: () => {

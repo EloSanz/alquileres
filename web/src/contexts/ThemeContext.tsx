@@ -144,8 +144,8 @@ const themes = {
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [themeName, setThemeName] = useState(() => {
-    const saved = localStorage.getItem('themeName');
-    return saved || 'light';
+    // Siempre usar 'light' por defecto, ignorar localStorage
+    return 'light';
   });
 
   useEffect(() => {
