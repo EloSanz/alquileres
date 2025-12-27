@@ -9,6 +9,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Check secrets
+      run: |
+        echo "🔍 Verificando secrets..."
+        if [ -z "$SSH_HOST" ]; then
+          echo "❌ SSH_HOST no está configurado"
+          exit 1
+        fi
+        if [ -z "$SSH_PASSWORD" ]; then
+          echo "❌ SSH_PASSWORD no está configurado"
+          exit 1
+        fi
+        echo "✅ Host starts with: ${SSH_HOST:0:5}..."
+        echo "✅ Password length: ${#SSH_PASSWORD} chars"
+      env:
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+
     - name: Deploy
       uses: appleboy/ssh-action@v1.0.3
       with:
