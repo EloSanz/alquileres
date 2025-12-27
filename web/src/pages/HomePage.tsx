@@ -45,7 +45,7 @@ const HomePage = () => {
       >
         <Box>
           <Typography variant="h4" component="h1" gutterBottom>
-            Gestión de Alquileres
+            Penta Mont
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Bienvenido, {user?.username}
