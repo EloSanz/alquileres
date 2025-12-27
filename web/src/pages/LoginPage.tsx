@@ -18,7 +18,6 @@ import {
   Login as LoginIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { useApi } from '../contexts/ApiContext';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -73,18 +72,6 @@ const LoginPage = () => {
         
         if (!token) {
           setError('Token no recibido del servidor');
-          return;
-        }
-        
-        // Validar formato JWT (debe tener 3 partes separadas por puntos)
-        const tokenParts = token.split('.');
-        if (tokenParts.length !== 3) {
-          console.error('Token malformado recibido:', {
-            length: token.length,
-            parts: tokenParts.length,
-            preview: token.substring(0, 20) + '...'
-          });
-          setError('Token inválido recibido del servidor');
           return;
         }
         
