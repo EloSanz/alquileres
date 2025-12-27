@@ -31,29 +31,14 @@ jobs:
         script: |
           set -e
 
-          # Verificar que Node.js esté disponible para npx
-          if ! command -v node &> /dev/null; then
-            echo "⚠️  Node.js no encontrado. npx podría no funcionar correctamente"
-            echo "ℹ️  Si hay problemas con Prisma, instala Node.js manualmente:"
-            echo "    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -"
-            echo "    apt-get install -y nodejs"
-          else
-            echo "✅ Node.js disponible: $(node --version)"
-          fi
-
           echo "➡️ Actualizando proyecto en VPS..."
           cd /root/alquileres-app || exit 1
           git fetch origin develop
           git reset --hard origin/develop
           git clean -fd
-
-          echo "➡️ Ejecutando migraciones de Prisma..."
-          cd /root/alquileres-app/server
-          npx prisma migrate deploy
-          npx prisma generate
+          cd /root/alquileres-app
 
           echo "➡️ Reiniciando servicios..."
-          cd /root/alquileres-app
           if [ -f ecosystem.config.js ]; then
             pm2 startOrReload ecosystem.config.js --update-env || pm2 restart all || true
           else
