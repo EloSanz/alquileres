@@ -258,11 +258,9 @@ const PropertyPage = () => {
         parseFloat(editForm.monthlyRent)
       );
 
-      const updatedProperty = await propertyService.updateProperty(editingProperty.id, propertyData);
-
-      // Actualizar estado local manteniendo el orden
-      setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
-      // El useEffect se encargará de re-filtrar filteredProperties
+      await propertyService.updateProperty(editingProperty.id, propertyData);
+      // Volver a cargar desde API para obtener el tenant embebido y evitar parpadeos de "Disponible"
+      await fetchProperties();
 
       setEditDialogOpen(false);
       setEditingProperty(null);
