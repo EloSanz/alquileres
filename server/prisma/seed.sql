@@ -60,8 +60,7 @@ INSERT INTO "properties" ("localNumber", "ubicacion", "propertyType", "monthlyRe
 (23, 'BOULEVARD', 'INSIDE', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000022'), NOW(), NOW()),
 -- SEGUNDO ALARCON: locales 24 y 25
 (24, 'SAN_MARTIN', 'INSIDE', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001'), NOW(), NOW()),
-(25, 'BOULEVARD', 'INSIDE', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001'), NOW(), NOW())
-ON CONFLICT DO NOTHING;
+(25, 'BOULEVARD', 'INSIDE', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001'), NOW(), NOW());
 
 -- Insert contracts based on payment months from planilla
 INSERT INTO "contracts" ("tenantId", "propertyId", "tenantFullName", "startDate", "endDate", "monthlyRent", "status", "createdAt", "updatedAt") VALUES
@@ -141,4 +140,4 @@ INSERT INTO "payments" ("tenantId", "propertyId", "contractId", "monthNumber", "
 -- NELTON NINAHUAMAN: local 7 - AGOSTO (mes 8) y SETIEMBRE (mes 9) - 1,600.00 total
 ((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), (SELECT id FROM "contracts" WHERE "tenantId" = (SELECT id FROM "tenants" WHERE "documentId" = '10000007') AND "propertyId" = (SELECT id FROM "properties" WHERE "localNumber" = 7)), 8, 'NELTON NINAHUAMAN', '983210987', 800.00, '2023-07-28', '2023-08-05', 'YAPE', true, NOW(), NOW()),
 ((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), (SELECT id FROM "contracts" WHERE "tenantId" = (SELECT id FROM "tenants" WHERE "documentId" = '10000007') AND "propertyId" = (SELECT id FROM "properties" WHERE "localNumber" = 7)), 9, 'NELTON NINAHUAMAN', '983210987', 800.00, '2023-08-28', '2023-09-05', 'YAPE', true, NOW(), NOW())
-ON CONFLICT DO NOTHING;
+ON CONFLICT ("contractId", "monthNumber") DO NOTHING;
