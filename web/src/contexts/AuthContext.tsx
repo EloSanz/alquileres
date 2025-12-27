@@ -34,6 +34,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const savedUser = localStorage.getItem('user');
 
     if (token && savedUser) {
+      // Validar formato JWT (debe tener 3 partes separadas por puntos)
+      const cleanToken = String(token).trim().replace(/^["']|["']$/g, '');
+      const tokenParts = cleanToken.split('.');
+      
+      if (tokenParts.length !== 3) {
+        // Token malformado, limpiar todo
+        console.warn('Token malformado detectado al iniciar, limpiando localStorage');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        return;
+      }
+
       try {
         setUser(JSON.parse(savedUser));
       } catch (error) {

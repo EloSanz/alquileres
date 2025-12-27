@@ -28,8 +28,19 @@ export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
       if (token) {
         // Limpiar el token antes de enviarlo (quitar espacios y comillas)
         const cleanToken = String(token).trim().replace(/^["']|["']$/g, '')
-        if (cleanToken) {
+        
+        // Validar formato JWT (debe tener 3 partes separadas por puntos)
+        if (cleanToken && cleanToken.split('.').length === 3) {
           return { Authorization: `Bearer ${cleanToken}` } as HeadersInit
+        } else {
+          // Token malformado, limpiarlo
+          console.error('Token malformado detectado, limpiando localStorage', {
+            length: cleanToken.length,
+            parts: cleanToken.split('.').length,
+            preview: cleanToken.substring(0, 20)
+          })
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
         }
       }
       return undefined

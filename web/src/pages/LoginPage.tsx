@@ -75,6 +75,18 @@ const LoginPage = () => {
           return;
         }
         
+        // Validar formato JWT (debe tener 3 partes separadas por puntos)
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) {
+          console.error('Token malformado recibido:', {
+            length: token.length,
+            parts: tokenParts.length,
+            preview: token.substring(0, 20) + '...'
+          });
+          setError('Token inválido recibido del servidor');
+          return;
+        }
+        
         login(token, user);
         navigate('/');
       } else {
