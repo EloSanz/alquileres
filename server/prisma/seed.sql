@@ -24,7 +24,8 @@ INSERT INTO "tenants" ("firstName", "lastName", "phone", "documentId", "numeroLo
 ('ULISES', 'FLORES', '978765432', '10000013', '13', 'PEDICURE', '2023-09-01', 'AL_DIA', NOW(), NOW()),
 ('MICHELL', 'REVILLA', '977654321', '10000017', '17', 'TIPEO', '2023-09-01', 'AL_DIA', NOW(), NOW()),
 ('K', 'MODA', '976543210', '10000021', '21', 'PEDICURE', '2023-09-01', 'AL_DIA', NOW(), NOW()),
-('JUAN', 'PARIONA', '975432109', '10000022', '22', 'TIPEO', '2023-09-01', 'AL_DIA', NOW(), NOW());
+('JUAN', 'PARIONA', '975432109', '10000022', '22', 'TIPEO', '2023-09-01', 'AL_DIA', NOW(), NOW())
+ON CONFLICT ("documentId") DO NOTHING;
 
 -- Insert properties (25 properties from planilla)
 INSERT INTO "properties" ("localNumber", "ubicacion", "propertyType", "monthlyRent", "tenantId", "createdAt", "updatedAt") VALUES
@@ -59,7 +60,8 @@ INSERT INTO "properties" ("localNumber", "ubicacion", "propertyType", "monthlyRe
 (23, 'BOULEVARD', 'INSIDE', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000022'), NOW(), NOW()),
 -- SEGUNDO ALARCON: locales 24 y 25
 (24, 'SAN_MARTIN', 'INSIDE', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001'), NOW(), NOW()),
-(25, 'BOULEVARD', 'INSIDE', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001'), NOW(), NOW());
+(25, 'BOULEVARD', 'INSIDE', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001'), NOW(), NOW())
+ON CONFLICT DO NOTHING;
 
 -- Insert contracts based on payment months from planilla
 INSERT INTO "contracts" ("tenantId", "propertyId", "tenantFullName", "startDate", "endDate", "monthlyRent", "status", "createdAt", "updatedAt") VALUES
@@ -100,7 +102,8 @@ INSERT INTO "contracts" ("tenantId", "propertyId", "tenantFullName", "startDate"
 -- MENDEZ MAYTA: local 8 - ABRIL
 ((SELECT id FROM "tenants" WHERE "documentId" = '10000008'), (SELECT id FROM "properties" WHERE "localNumber" = 8), 'MENDEZ MAYTA', '2023-04-01', '2024-03-31', 800.00, 'ACTIVE', NOW(), NOW()),
 -- NELTON NINAHUAMAN: local 7 - AGOSTO y SETIEMBRE
-((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), 'NELTON NINAHUAMAN', '2023-08-01', '2024-07-31', 800.00, 'ACTIVE', NOW(), NOW());
+((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), 'NELTON NINAHUAMAN', '2023-08-01', '2024-07-31', 800.00, 'ACTIVE', NOW(), NOW())
+ON CONFLICT ("tenantId", "propertyId", "startDate") DO NOTHING;
 
 -- Payments based on months paid according to planilla
 INSERT INTO "payments" ("tenantId", "propertyId", "contractId", "monthNumber", "tenantFullName", "tenantPhone", "amount", "paymentDate", "dueDate", "paymentMethod", "pentamontSettled", "createdAt", "updatedAt") VALUES
@@ -137,4 +140,5 @@ INSERT INTO "payments" ("tenantId", "propertyId", "contractId", "monthNumber", "
 
 -- NELTON NINAHUAMAN: local 7 - AGOSTO (mes 8) y SETIEMBRE (mes 9) - 1,600.00 total
 ((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), (SELECT id FROM "contracts" WHERE "tenantId" = (SELECT id FROM "tenants" WHERE "documentId" = '10000007') AND "propertyId" = (SELECT id FROM "properties" WHERE "localNumber" = 7)), 8, 'NELTON NINAHUAMAN', '983210987', 800.00, '2023-07-28', '2023-08-05', 'YAPE', true, NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), (SELECT id FROM "contracts" WHERE "tenantId" = (SELECT id FROM "tenants" WHERE "documentId" = '10000007') AND "propertyId" = (SELECT id FROM "properties" WHERE "localNumber" = 7)), 9, 'NELTON NINAHUAMAN', '983210987', 800.00, '2023-08-28', '2023-09-05', 'YAPE', true, NOW(), NOW());
+((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), (SELECT id FROM "contracts" WHERE "tenantId" = (SELECT id FROM "tenants" WHERE "documentId" = '10000007') AND "propertyId" = (SELECT id FROM "properties" WHERE "localNumber" = 7)), 9, 'NELTON NINAHUAMAN', '983210987', 800.00, '2023-08-28', '2023-09-05', 'YAPE', true, NOW(), NOW())
+ON CONFLICT DO NOTHING;
