@@ -18,6 +18,7 @@ import {
   Login as LoginIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import { useApi } from '../contexts/ApiContext';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -30,6 +31,7 @@ const LoginPage = () => {
 
   const navigate = useNavigate();
   const { login } = useAuth();
+  const api = useApi();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -44,7 +46,8 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      // Usar fetch directamente con la ruta correcta /pentamont/api/auth/login
+      const response = await fetch('/pentamont/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,6 +57,12 @@ const LoginPage = () => {
           password: formData.password,
         }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error al iniciar sesión' }));
+        setError(errorData.message || `Error ${response.status}`);
+        return;
+      }
 
       const data = await response.json();
 
