@@ -101,8 +101,7 @@ INSERT INTO "contracts" ("tenantId", "propertyId", "tenantFullName", "startDate"
 -- MENDEZ MAYTA: local 8 - ABRIL
 ((SELECT id FROM "tenants" WHERE "documentId" = '10000008'), (SELECT id FROM "properties" WHERE "localNumber" = 8), 'MENDEZ MAYTA', '2023-04-01', '2024-03-31', 800.00, 'ACTIVE', NOW(), NOW()),
 -- NELTON NINAHUAMAN: local 7 - AGOSTO y SETIEMBRE
-((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), 'NELTON NINAHUAMAN', '2023-08-01', '2024-07-31', 800.00, 'ACTIVE', NOW(), NOW())
-ON CONFLICT ("tenantId", "propertyId", "startDate") DO NOTHING;
+((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), 'NELTON NINAHUAMAN', '2023-08-01', '2024-07-31', 800.00, 'ACTIVE', NOW(), NOW());
 
 -- Payments based on months paid according to planilla
 INSERT INTO "payments" ("tenantId", "propertyId", "contractId", "monthNumber", "tenantFullName", "tenantPhone", "amount", "paymentDate", "dueDate", "paymentMethod", "pentamontSettled", "createdAt", "updatedAt") VALUES
@@ -139,5 +138,4 @@ INSERT INTO "payments" ("tenantId", "propertyId", "contractId", "monthNumber", "
 
 -- NELTON NINAHUAMAN: local 7 - AGOSTO (mes 8) y SETIEMBRE (mes 9) - 1,600.00 total
 ((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), (SELECT id FROM "contracts" WHERE "tenantId" = (SELECT id FROM "tenants" WHERE "documentId" = '10000007') AND "propertyId" = (SELECT id FROM "properties" WHERE "localNumber" = 7)), 8, 'NELTON NINAHUAMAN', '983210987', 800.00, '2023-07-28', '2023-08-05', 'YAPE', true, NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), (SELECT id FROM "contracts" WHERE "tenantId" = (SELECT id FROM "tenants" WHERE "documentId" = '10000007') AND "propertyId" = (SELECT id FROM "properties" WHERE "localNumber" = 7)), 9, 'NELTON NINAHUAMAN', '983210987', 800.00, '2023-08-28', '2023-09-05', 'YAPE', true, NOW(), NOW())
-ON CONFLICT ("contractId", "monthNumber") DO NOTHING;
+((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), (SELECT id FROM "contracts" WHERE "tenantId" = (SELECT id FROM "tenants" WHERE "documentId" = '10000007') AND "propertyId" = (SELECT id FROM "properties" WHERE "localNumber" = 7)), 9, 'NELTON NINAHUAMAN', '983210987', 800.00, '2023-08-28', '2023-09-05', 'YAPE', true, NOW(), NOW());
