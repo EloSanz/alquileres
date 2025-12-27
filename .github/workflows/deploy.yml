@@ -30,6 +30,18 @@ jobs:
         timeout: 30s
         script: |
           set -e
+
+          # Instalar Node.js si no está disponible
+          if ! command -v node &> /dev/null; then
+            echo "➡️ Node.js no encontrado. Instalando Node.js 20.x..."
+            curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+            apt-get update -qq
+            apt-get install -y nodejs
+            echo "✅ Node.js instalado: $(node --version)"
+          else
+            echo "✅ Node.js ya instalado: $(node --version)"
+          fi
+
           echo "➡️ Actualizando proyecto en VPS..."
           cd /root/alquileres-app || exit 1
           git fetch origin develop
