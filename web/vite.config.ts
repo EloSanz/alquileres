@@ -6,6 +6,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 4001,
+    host: true, // Permitir acceso desde cualquier host
+    allowedHosts: [
+      'icards.fun',
+      'www.icards.fun',
+      'localhost'
+    ],
     proxy: {
       '/pentamont/api': {
         target: 'http://localhost:4000',
