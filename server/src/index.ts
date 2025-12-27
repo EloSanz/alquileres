@@ -118,7 +118,7 @@ const server = createServer(async (req, res) => {
     // Skip logging for OPTIONS (CORS preflight) responses
     if (method === 'OPTIONS') {
       res.statusCode = response.status
-      response.headers.forEach((value, key) => {
+      response.headers.forEach((value: string, key: string) => {
         res.setHeader(key, value)
       })
       const responseBody = await response.text()
@@ -142,7 +142,7 @@ const server = createServer(async (req, res) => {
     }
 
     res.statusCode = response.status
-    response.headers.forEach((value, key) => {
+    response.headers.forEach((value: string, key: string) => {
       res.setHeader(key, value)
     })
 
