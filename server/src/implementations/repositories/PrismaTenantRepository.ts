@@ -32,6 +32,14 @@ export class PrismaTenantRepository implements ITenantRepository {
     const data = tenant.toPrisma();
     delete (data as any).id; // Don't update id
     delete (data as any).createdAt; // Don't update createdAt
+    
+    // Remove undefined values to avoid Prisma errors
+    Object.keys(data).forEach(key => {
+      if (data[key as keyof typeof data] === undefined) {
+        delete data[key as keyof typeof data];
+      }
+    });
+    
     const updated = await prisma.tenant.update({ where: { id }, data });
     return TenantEntity.fromPrisma(updated);
   }

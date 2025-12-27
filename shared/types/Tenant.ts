@@ -93,9 +93,11 @@ export class UpdateTenant {
     public firstName?: string,
     public lastName?: string,
     public phone?: string,
+    public documentId?: string,
     public numeroLocal?: string,
     public rubro?: string,
-    public fechaInicioContrato?: string
+    public fechaInicioContrato?: string,
+    public estadoPago?: string
   ) {}
 
   validate(): string[] {
@@ -106,6 +108,9 @@ export class UpdateTenant {
     if (this.lastName !== undefined && this.lastName.length < 2) {
       errors.push('Last name must be at least 2 characters');
     }
+    if (this.documentId !== undefined && this.documentId.length < 5) {
+      errors.push('Document ID must be at least 5 characters');
+    }
     return errors;
   }
 
@@ -114,9 +119,11 @@ export class UpdateTenant {
     if (this.firstName !== undefined) result.firstName = this.firstName;
     if (this.lastName !== undefined) result.lastName = this.lastName;
     if (this.phone !== undefined) result.phone = this.phone;
+    if (this.documentId !== undefined) result.documentId = this.documentId;
     if (this.numeroLocal !== undefined) result.numeroLocal = this.numeroLocal;
     if (this.rubro !== undefined) result.rubro = this.rubro;
     if (this.fechaInicioContrato !== undefined) result.fechaInicioContrato = this.fechaInicioContrato;
+    if (this.estadoPago !== undefined) result.estadoPago = this.estadoPago;
     return result;
   }
 
@@ -125,9 +132,11 @@ export class UpdateTenant {
       data.firstName,
       data.lastName,
       data.phone,
+      data.documentId,
       data.numeroLocal,
       data.rubro,
-      data.fechaInicioContrato
+      data.fechaInicioContrato,
+      data.estadoPago
     );
   }
 

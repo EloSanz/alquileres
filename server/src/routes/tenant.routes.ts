@@ -39,9 +39,11 @@ const updateTenantBodySchema = t.Object({
   firstName: t.Optional(t.String({ minLength: 2 })),
   lastName: t.Optional(t.String({ minLength: 2 })),
   phone: t.Optional(t.String()),
+  documentId: t.Optional(t.String({ minLength: 5 })),
   numeroLocal: t.Optional(t.String()),
   rubro: t.Optional(t.String()),
-  fechaInicioContrato: t.Optional(t.String())
+  fechaInicioContrato: t.Optional(t.String()),
+  estadoPago: t.Optional(t.String())
 });
 
 export const tenantRoutes = new Elysia({ prefix: '/tenants' })

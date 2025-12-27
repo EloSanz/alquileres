@@ -17,6 +17,16 @@ function stringToRubro(value: string | null): Rubro | null {
   }
 }
 
+// Helper function to convert string to EstadoPago enum
+function stringToEstadoPago(value: string | null): EstadoPago | null {
+  if (!value) return null;
+  switch (value.toUpperCase()) {
+    case 'AL_DIA': return EstadoPago.AL_DIA;
+    case 'CON_DEUDA': return EstadoPago.CON_DEUDA;
+    default: return null;
+  }
+}
+
 export class TenantService implements ITenantService {
   constructor(
     private tenantRepository: ITenantRepository,
@@ -168,8 +178,15 @@ export class TenantService implements ITenantService {
     if (data.firstName !== undefined) entity.firstName = data.firstName;
     if (data.lastName !== undefined) entity.lastName = data.lastName;
     if (data.phone !== undefined) entity.phone = data.phone;
+    if (data.documentId !== undefined) entity.documentId = data.documentId;
     if (data.numeroLocal !== undefined) entity.numeroLocal = data.numeroLocal;
     if (data.rubro !== undefined) entity.rubro = stringToRubro(data.rubro);
+    if (data.estadoPago !== undefined) {
+      const estadoPago = stringToEstadoPago(data.estadoPago);
+      if (estadoPago !== null) {
+        entity.estadoPago = estadoPago;
+      }
+    }
     if (data.fechaInicioContrato !== undefined) {
       // Handle empty strings and validate date
       const dateStr = typeof data.fechaInicioContrato === 'string' 
