@@ -20,10 +20,17 @@ jobs:
         if [ -z "${{ secrets.SSH_PASSWORD }}" ]; then echo "❌ SSH_PASSWORD no está configurado"; exit 1; fi
         echo "✔ Credenciales SSH verificadas"
     
+    - name: Clean SSH_HOST (remove spaces)
+      id: clean_host
+      run: |
+        CLEAN_HOST=$(echo "${{ secrets.SSH_HOST }}" | xargs)
+        echo "host=$CLEAN_HOST" >> $GITHUB_OUTPUT
+        echo "✔ SSH_HOST limpiado (espacios removidos)"
+    
     - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.SSH_HOST }}
+        host: ${{ steps.clean_host.outputs.host }}
         username: root
         password: ${{ secrets.SSH_PASSWORD }}
         port: 22
