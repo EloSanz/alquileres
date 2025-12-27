@@ -60,30 +60,55 @@ jobs:
       run: |
         # Intentar resolver el hostname para diagnosticar problemas de DNS
         HOST="${{ secrets.SSH_HOST }}"
-        echo "🔍 Intentando resolver el host..."
-        echo "Host (primeros 3 caracteres): ${HOST:0:3}..."
+        echo "🔍 Diagnosticando SSH_HOST..."
+        echo "Longitud del host: ${#HOST} caracteres"
+        
+        # Mostrar caracteres especiales sin exponer el valor completo
+        echo "Primer carácter: '${HOST:0:1}'"
+        echo "Último carácter: '${HOST: -1}'"
+        
+        # Verificar caracteres no válidos
+        if [[ "$HOST" =~ [^a-zA-Z0-9\.\-] ]]; then
+          echo "⚠️  ADVERTENCIA: El host contiene caracteres especiales que podrían causar problemas"
+          echo "Caracteres permitidos: letras, números, puntos (.) y guiones (-)"
+        fi
         
         # Verificar si es una IP
         if [[ "$HOST" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-          echo "✔ Parece ser una IP válida"
+          echo "✔ Formato: IP válida"
+          echo "Probando conectividad..."
+          if timeout 5 ping -c 1 "$HOST" &> /dev/null; then
+            echo "✔ La IP responde a ping"
+          else
+            echo "⚠️  La IP no responde a ping (puede estar bloqueado por firewall)"
+          fi
         else
-          echo "ℹ️  Parece ser un hostname, intentando resolver DNS..."
+          echo "ℹ️  Formato: Hostname"
+          echo "Intentando resolver DNS..."
           if command -v nslookup &> /dev/null; then
             if nslookup "$HOST" 2>&1 | head -5; then
-              echo "✔ DNS resolution exitosa"
+              echo "✔ DNS resolution exitosa con nslookup"
             else
-              echo "⚠️  nslookup falló - el hostname podría no existir"
+              echo "❌ nslookup falló - el hostname no se puede resolver"
+              echo "Esto causará el error 'no such host'"
             fi
           fi
           if command -v dig &> /dev/null; then
             RESULT=$(dig "$HOST" +short 2>&1)
-            if [ -n "$RESULT" ]; then
-              echo "✔ dig resolution exitosa"
+            if [ -n "$RESULT" ] && [[ ! "$RESULT" =~ "connection timed out" ]]; then
+              echo "✔ DNS resolution exitosa con dig: $RESULT"
             else
-              echo "⚠️  dig falló - el hostname podría no existir"
+              echo "❌ dig falló - el hostname no se puede resolver"
             fi
           fi
         fi
+        
+        echo ""
+        echo "💡 Si ves errores arriba, verifica:"
+        echo "   1. El valor de SSH_HOST en GitHub (Settings > Environments > penta mont > Secrets)"
+        echo "   2. Que no tenga espacios al inicio o final"
+        echo "   3. Que sea una IP válida (ej: 123.45.67.89) o hostname válido"
+        echo "   4. Si es hostname, que el DNS esté configurado correctamente"
     
     - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
