@@ -31,15 +31,14 @@ jobs:
         script: |
           set -e
 
-          # Instalar Node.js si no está disponible
+          # Verificar que Node.js esté disponible para npx
           if ! command -v node &> /dev/null; then
-            echo "➡️ Node.js no encontrado. Instalando Node.js 20.x..."
-            curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-            apt-get update -qq
-            apt-get install -y nodejs
-            echo "✅ Node.js instalado: $(node --version)"
+            echo "⚠️  Node.js no encontrado. npx podría no funcionar correctamente"
+            echo "ℹ️  Si hay problemas con Prisma, instala Node.js manualmente:"
+            echo "    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -"
+            echo "    apt-get install -y nodejs"
           else
-            echo "✅ Node.js ya instalado: $(node --version)"
+            echo "✅ Node.js disponible: $(node --version)"
           fi
 
           echo "➡️ Actualizando proyecto en VPS..."
@@ -48,19 +47,10 @@ jobs:
           git reset --hard origin/develop
           git clean -fd
 
-          echo "➡️ Backend: instalar deps, migrar y generar Prisma..."
+          echo "➡️ Ejecutando migraciones de Prisma..."
           cd /root/alquileres-app/server
-          npm ci --quiet
           npx prisma migrate deploy
           npx prisma generate
-          npm run type-check
-          npm run build
-
-          echo "➡️ Frontend: instalar deps y build..."
-          cd /root/alquileres-app/web
-          npm ci --quiet
-          npm run type-check
-          npm run build
 
           echo "➡️ Reiniciando servicios..."
           cd /root/alquileres-app
