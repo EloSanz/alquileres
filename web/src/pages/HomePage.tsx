@@ -44,10 +44,7 @@ const HomePage = () => {
         }}
       >
         <Box>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Penta Mont
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant="h4" color="text.secondary">
             Bienvenido, {user?.username}
           </Typography>
         </Box>
