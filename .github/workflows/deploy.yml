@@ -1,38 +1,61 @@
-name: Deploy
+name: Backend CI
 
 on:
   push:
     branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
 
 jobs:
   deploy:
+    name: Deploy to VPS
     runs-on: ubuntu-latest
+    environment: hostinger
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
 
     steps:
-    - name: Check secrets
+    - name: Verify SSH credentials exist
       run: |
-        echo "🔍 Verificando secrets..."
-        if [ -z "$SSH_HOST" ]; then
-          echo "❌ SSH_HOST no está configurado"
-          exit 1
-        fi
-        if [ -z "$SSH_PASSWORD" ]; then
-          echo "❌ SSH_PASSWORD no está configurado"
-          exit 1
-        fi
-        echo "✅ Host starts with: ${SSH_HOST:0:5}..."
-        echo "✅ Password length: ${#SSH_PASSWORD} chars"
-      env:
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        if [ -z "${{ secrets.SSH_HOST }}" ]; then echo "❌ SSH_HOST no está configurado"; exit 1; fi
+        if [ -z "${{ secrets.SSH_PASSWORD }}" ]; then echo "❌ SSH_PASSWORD no está configurado"; exit 1; fi
+        echo "✔ Credenciales SSH verificadas"
 
-    - name: Deploy
+    - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}
         username: root
         password: ${{ secrets.SSH_PASSWORD }}
+        port: 22
+        timeout: 30s
         script: |
-          cd alquileres-app
-          git pull origin develop
-          pm2 restart all
+          set -e
+          echo "➡️ Actualizando proyecto en VPS..."
+          cd /root/alquileres-app || exit 1
+          git fetch origin develop
+          git reset --hard origin/develop
+          git clean -fd
+
+          echo "➡️ Backend: instalar deps, migrar y generar Prisma..."
+          cd /root/alquileres-app/server
+          npm ci --quiet
+          npx prisma migrate deploy
+          npx prisma generate
+          npm run type-check
+          npm run build
+
+          echo "➡️ Frontend: instalar deps y build..."
+          cd /root/alquileres-app/web
+          npm ci --quiet
+          npm run type-check
+          npm run build
+
+          echo "➡️ Reiniciando servicios..."
+          cd /root/alquileres-app
+          if [ -f ecosystem.config.js ]; then
+            pm2 startOrReload ecosystem.config.js --update-env || pm2 restart all || true
+          else
+            chmod +x start_services_screen.sh
+            ./start_services_screen.sh || true
+          fi
+          echo "✅ Deploy finalizado"
