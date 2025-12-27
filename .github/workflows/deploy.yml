@@ -16,9 +16,31 @@ jobs:
     steps:
     - name: Verify SSH credentials exist
       run: |
-        if [ -z "${{ secrets.SSH_HOST }}" ]; then echo "❌ SSH_HOST no está configurado"; exit 1; fi
-        if [ -z "${{ secrets.SSH_PASSWORD }}" ]; then echo "❌ SSH_PASSWORD no está configurado"; exit 1; fi
+        if [ -z "${{ secrets.SSH_HOST }}" ]; then 
+          echo "❌ SSH_HOST no está configurado en el environment 'penta mont'"
+          echo "Por favor, configura SSH_HOST en: Settings > Environments > penta mont > Secrets"
+          exit 1
+        fi
+        if [ -z "${{ secrets.SSH_PASSWORD }}" ]; then 
+          echo "❌ SSH_PASSWORD no está configurado en el environment 'penta mont'"
+          echo "Por favor, configura SSH_PASSWORD en: Settings > Environments > penta mont > Secrets"
+          exit 1
+        fi
+        echo "✔ SSH_HOST está configurado (valor oculto por seguridad)"
+        echo "✔ SSH_PASSWORD está configurado (valor oculto por seguridad)"
         echo "✔ Credenciales SSH verificadas"
+    
+    - name: Test DNS resolution
+      run: |
+        # Intentar resolver el hostname para diagnosticar problemas de DNS
+        HOST="${{ secrets.SSH_HOST }}"
+        echo "🔍 Intentando resolver: $HOST"
+        if command -v nslookup &> /dev/null; then
+          nslookup "$HOST" || echo "⚠️  nslookup falló, pero continuando..."
+        fi
+        if command -v dig &> /dev/null; then
+          dig "$HOST" +short || echo "⚠️  dig falló, pero continuando..."
+        fi
     
     - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
@@ -27,7 +49,8 @@ jobs:
         username: root
         password: ${{ secrets.SSH_PASSWORD }}
         port: 22
-        timeout: 30s
+        timeout: 60s
+        command_timeout: 10m
         script: |
           echo "➡️ Actualizando proyecto en VPS..."
           cd /var/www/alquileres-app || exit 1
