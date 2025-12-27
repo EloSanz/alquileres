@@ -6,7 +6,7 @@ export const ThemeContext = createContext<{
   setTheme: (name: string) => void;
   themes: Record<string, any>;
 }>({
-  themeName: 'dark',
+  themeName: 'light',
   setTheme: () => {},
   themes: {},
 });
@@ -145,7 +145,7 @@ const themes = {
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [themeName, setThemeName] = useState(() => {
     const saved = localStorage.getItem('themeName');
-    return saved || 'dark';
+    return saved || 'light';
   });
 
   useEffect(() => {
@@ -156,7 +156,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     setThemeName(name);
   };
 
-  const theme = (themes as any)[themeName] || themes.dark || createTheme();
+  const theme = (themes as any)[themeName] || themes.light || createTheme();
 
   // Pass themeName so components can use it for background image logic
   return (

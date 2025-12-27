@@ -61,7 +61,7 @@ export default function ContractEditorModal({
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [previewReady, setPreviewReady] = useState(false);
-  const [splitView, setSplitView] = useState(false);
+  const [splitView, setSplitView] = useState(true); // Vista dividida por defecto
   const [exportWarningOpen, setExportWarningOpen] = useState(false);
   const [exportWarningFields, setExportWarningFields] = useState<string[]>([]);
 
@@ -94,23 +94,27 @@ export default function ContractEditorModal({
       setError('');
       setFieldErrors({});
       setTabValue(0);
+      setSplitView(true); // Activar vista dividida por defecto al abrir
     }
   }, [open, draft]);
 
-  // Mark preview as ready when tab changes to preview tab
+  // Mark preview as ready when split view is active or tab changes to preview tab
   useEffect(() => {
-    if (tabValue === 1) {
+    if (splitView || tabValue === 1) {
       // Small delay to ensure the component is fully rendered
       const timer = setTimeout(() => setPreviewReady(true), 50);
       return () => clearTimeout(timer);
     } else {
       setPreviewReady(false);
     }
-  }, [tabValue]);
+  }, [tabValue, splitView]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
-    if (newValue !== 0) {
+    // Mantener split view solo en la pestaña de formulario
+    if (newValue === 0) {
+      setSplitView(true);
+    } else {
       setSplitView(false);
     }
   };
@@ -521,88 +525,101 @@ export default function ContractEditorModal({
           </Alert>
         )}
 
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3, display: splitView ? 'none' : 'block' }}>
           <Tabs value={tabValue} onChange={handleTabChange}>
             <Tab label="Formulario" id="contract-tab-0" aria-controls="contract-tabpanel-0" />
             <Tab label="Vista del Documento" id="contract-tab-1" aria-controls="contract-tabpanel-1" />
           </Tabs>
         </Box>
 
-            <DialogContent sx={{ flex: 1, overflow: 'hidden', p: 0 }}>
-              <TabPanel value={tabValue} index={0}>
-                {splitView ? (
-                  <Box sx={{ height: '100%', display: 'flex', gap: 2, overflow: 'hidden', p: 0 }}>
-                    <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
-                      {missingFields.length > 0 && (
-                        <Box
-                          sx={{
-                            position: 'sticky',
-                            top: 0,
-                            zIndex: 10,
-                            mb: 2,
-                            p: 2,
-                            borderRadius: 2,
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            backdropFilter: 'blur(8px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                          }}
-                        >
-                          <Typography
-                            variant="body1"
-                            color="primary.main"
-                            fontWeight="bold"
-                            sx={{ fontSize: '1.1rem' }}
-                          >
-                            ⚠️ Campos requeridos pendientes: {missingFields.join(', ')}
-                          </Typography>
-                        </Box>
-                      )}
-                      <ContractFormSection
-                        stacked
-                        data={contractData}
-                        fieldErrors={fieldErrors}
-                        onChange={handleDataChange}
-                      />
-                    </Box>
-                    <Box sx={{
-                      flex: 1,
-                      overflow: 'auto',
-                      bgcolor: '#f5f5f5',
-                      p: 0,
-                      '@media print': {
-                        bgcolor: 'white !important',
-                        p: '0 !important'
-                      }
-                    }}>
-                      <Box
-                        ref={previewRef}
-                        sx={{
-                          bgcolor: 'white',
-                          width: '210mm',
-                          minHeight: '297mm',
-                          mx: 'auto',
-                          my: 0,
-                          p: '20mm',
-                          boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-                          fontFamily: '"Times New Roman", Times, serif',
-                          lineHeight: 1.5,
-                          fontSize: '11pt',
-                          color: '#000',
-                          '@media print': {
-                            width: 'auto !important',
-                            minHeight: 'auto !important',
-                            boxShadow: 'none !important',
-                            margin: '0 !important',
-                            padding: '15mm 20mm !important'
-                          }
-                        }}
-                      >
-                        <ContractPreview data={contractData} fullPage />
-                      </Box>
-                    </Box>
+        <DialogContent sx={{ flex: 1, overflow: 'hidden', p: 0 }}>
+          {splitView ? (
+            // Vista dividida: formulario izquierda, preview derecha
+            <Box sx={{ height: '100%', display: 'flex', gap: 2, overflow: 'hidden', p: 0 }}>
+              {/* Panel izquierdo: Formulario */}
+              <Box sx={{ 
+                flex: 1, 
+                overflow: 'auto', 
+                p: 3,
+                borderRight: 1,
+                borderColor: 'divider'
+              }}>
+                {missingFields.length > 0 && (
+                  <Box
+                    sx={{
+                      position: 'sticky',
+                      top: 0,
+                      zIndex: 10,
+                      mb: 2,
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor: 'rgba(255, 193, 7, 0.1)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid',
+                      borderColor: 'rgba(255, 193, 7, 0.3)',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      color="text.primary"
+                      fontWeight="medium"
+                    >
+                      ⚠️ Campos requeridos pendientes: {missingFields.join(', ')}
+                    </Typography>
                   </Box>
-                ) : (
+                )}
+                <ContractFormSection
+                  stacked
+                  data={contractData}
+                  fieldErrors={fieldErrors}
+                  onChange={handleDataChange}
+                />
+              </Box>
+              
+              {/* Panel derecho: Preview */}
+              <Box sx={{
+                flex: 1,
+                overflow: 'auto',
+                bgcolor: '#f5f5f5',
+                p: 2,
+                '@media print': {
+                  bgcolor: 'white !important',
+                  p: '0 !important'
+                }
+              }}>
+                <Box
+                  ref={previewRef}
+                  sx={{
+                    bgcolor: 'white',
+                    width: '100%',
+                    maxWidth: '210mm',
+                    minHeight: '297mm',
+                    mx: 'auto',
+                    my: 0,
+                    p: '20mm',
+                    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                    fontFamily: '"Times New Roman", Times, serif',
+                    lineHeight: 1.5,
+                    fontSize: '11pt',
+                    color: '#000',
+                    '@media print': {
+                      width: 'auto !important',
+                      minHeight: 'auto !important',
+                      boxShadow: 'none !important',
+                      margin: '0 !important',
+                      padding: '15mm 20mm !important'
+                    }
+                  }}
+                >
+                  <ContractPreview data={contractData} fullPage />
+                </Box>
+              </Box>
+            </Box>
+          ) : (
+            // Vista de pestañas tradicional
+            <>
+              <TabPanel value={tabValue} index={0}>
                 <Box sx={{ height: '100%', overflow: 'auto', p: 3 }}>
                   {missingFields.length > 0 && (
                     <Box
@@ -613,17 +630,17 @@ export default function ContractEditorModal({
                         mb: 2,
                         p: 2,
                         borderRadius: 2,
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                        bgcolor: 'rgba(255, 193, 7, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid',
+                        borderColor: 'rgba(255, 193, 7, 0.3)',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
                       }}
                     >
                       <Typography
-                        variant="body1"
-                        color="primary.main"
-                        fontWeight="bold"
-                          sx={{ fontSize: '1.1rem' }}
+                        variant="body2"
+                        color="text.primary"
+                        fontWeight="medium"
                       >
                         ⚠️ Campos requeridos pendientes: {missingFields.join(', ')}
                       </Typography>
@@ -635,47 +652,48 @@ export default function ContractEditorModal({
                     onChange={handleDataChange}
                   />
                 </Box>
-                )}
               </TabPanel>
 
-          <TabPanel value={tabValue} index={1}>
-            <Box sx={{
-              height: '100%',
-              overflow: 'auto',
-              bgcolor: '#f5f5f5',
-              p: 0,
-              '@media print': {
-                bgcolor: 'white !important',
-                p: '0 !important'
-              }
-            }}>
-              <Box
-                ref={previewRef}
-                sx={{
-                  bgcolor: 'white',
-                  width: '210mm', // A4 width
-                  minHeight: '297mm', // A4 height
-                  mx: 'auto',
-                  my: 0,
-                  p: '20mm', // Márgenes consistentes
-                  boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-                  fontFamily: '"Times New Roman", Times, serif',
-                  lineHeight: 1.5,
-                  fontSize: '11pt',
-                  color: '#000',
+              <TabPanel value={tabValue} index={1}>
+                <Box sx={{
+                  height: '100%',
+                  overflow: 'auto',
+                  bgcolor: '#f5f5f5',
+                  p: 0,
                   '@media print': {
-                    width: 'auto !important',
-                    minHeight: 'auto !important',
-                    boxShadow: 'none !important',
-                    margin: '0 !important',
-                    padding: '15mm 20mm !important'
+                    bgcolor: 'white !important',
+                    p: '0 !important'
                   }
-                }}
-              >
-                <ContractPreview data={contractData} fullPage />
-              </Box>
-            </Box>
-          </TabPanel>
+                }}>
+                  <Box
+                    ref={previewRef}
+                    sx={{
+                      bgcolor: 'white',
+                      width: '210mm',
+                      minHeight: '297mm',
+                      mx: 'auto',
+                      my: 0,
+                      p: '20mm',
+                      boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                      fontFamily: '"Times New Roman", Times, serif',
+                      lineHeight: 1.5,
+                      fontSize: '11pt',
+                      color: '#000',
+                      '@media print': {
+                        width: 'auto !important',
+                        minHeight: 'auto !important',
+                        boxShadow: 'none !important',
+                        margin: '0 !important',
+                        padding: '15mm 20mm !important'
+                      }
+                    }}
+                  >
+                    <ContractPreview data={contractData} fullPage />
+                  </Box>
+                </Box>
+              </TabPanel>
+            </>
+          )}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
@@ -683,21 +701,31 @@ export default function ContractEditorModal({
             Cerrar
           </Button>
           <Box sx={{ flex: 1 }} />
-          {tabValue === 0 && (
           <Button
-              onClick={() => setSplitView(v => !v)}
+            onClick={() => setSplitView(v => !v)}
             variant="outlined"
+            color="secondary"
           >
-              {splitView ? 'Cerrar vista paralela' : 'Vista previa en paralelo'}
+            {splitView ? 'Vista de Pestañas' : 'Vista Dividida'}
           </Button>
+          {!splitView && (
+            <Button
+              onClick={tabValue === 0 ? () => setTabValue(1) : handleExportPDF}
+              variant="contained"
+              startIcon={tabValue === 0 ? undefined : <PrintIcon />}
+            >
+              {tabValue === 0 ? 'Vista Previa' : 'Exportar PDF'}
+            </Button>
           )}
-          <Button
-            onClick={tabValue === 0 ? () => setTabValue(1) : handleExportPDF}
-            variant="contained"
-            startIcon={tabValue === 0 ? undefined : <PrintIcon />}
-          >
-            {tabValue === 0 ? 'Vista Previa' : 'Exportar PDF'}
-          </Button>
+          {splitView && (
+            <Button
+              onClick={handleExportPDF}
+              variant="contained"
+              startIcon={<PrintIcon />}
+            >
+              Exportar PDF
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 

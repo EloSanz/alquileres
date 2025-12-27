@@ -15,7 +15,9 @@ import {
   Home as HomeIcon,
   CalendarMonth as CalendarIcon,
   AttachMoney as MoneyIcon,
-  AccountBalance as BankIcon,
+  Description as DescriptionIcon,
+  Assignment as AssignmentIcon,
+  Gavel as GavelIcon,
 } from '@mui/icons-material';
 import type { ContractData } from '../../services/contractDraftService';
 
@@ -90,7 +92,13 @@ const SectionCard = ({ title, icon, color, children }: SectionCardProps) => (
 function ContractFormSection({ data, stacked, fieldErrors = {}, onChange }: ContractFormSectionProps) {
   return (
     <Box>
-      {/* Arrendador Section */}
+      {/* 1. ENCABEZADO */}
+      <SectionCard title="ENCABEZADO" icon={<DescriptionIcon />} color="primary.main">
+        <FormField stacked={stacked} label="Número de Stand" field="stand_numero" data={data} error={fieldErrors.stand_numero} onChange={onChange} />
+        <FormField stacked={stacked} label="Lugar de Firma" field="lugar_firma" data={data} error={fieldErrors.lugar_firma} onChange={onChange} />
+      </SectionCard>
+
+      {/* 2. ARRENDADOR */}
       <SectionCard title="ARRENDADOR" icon={<BusinessIcon />} color="primary.main">
         <FormField stacked={stacked} label="Nombre de la empresa" field="arrendador_nombre" data={data} error={fieldErrors.arrendador_nombre} onChange={onChange} md={12} />
         <FormField stacked={stacked} label="RUC" field="arrendador_ruc" data={data} error={fieldErrors.arrendador_ruc} onChange={onChange} />
@@ -103,7 +111,7 @@ function ContractFormSection({ data, stacked, fieldErrors = {}, onChange }: Cont
         <FormField stacked={stacked} label="Departamento" field="arrendador_departamento" data={data} error={fieldErrors.arrendador_departamento} onChange={onChange} md={4} />
       </SectionCard>
 
-      {/* Arrendatario Section */}
+      {/* 3. ARRENDATARIO */}
       <SectionCard title="ARRENDATARIO" icon={<PersonIcon />} color="success.main">
         <FormField stacked={stacked} label="Nombre completo" field="arrendatario_nombre" data={data} error={fieldErrors.arrendatario_nombre} onChange={onChange} md={12} />
         <FormField stacked={stacked} label="DNI" field="arrendatario_dni" data={data} error={fieldErrors.arrendatario_dni} onChange={onChange} placeholder="Ej: 12345678 o 12345678A" />
@@ -113,12 +121,10 @@ function ContractFormSection({ data, stacked, fieldErrors = {}, onChange }: Cont
         <FormField stacked={stacked} label="Departamento" field="arrendatario_departamento" data={data} error={fieldErrors.arrendatario_departamento} onChange={onChange} md={4} />
       </SectionCard>
 
-      {/* Inmueble Section */}
-      <SectionCard title="INMUEBLE" icon={<HomeIcon />} color="warning.main">
-        <FormField stacked={stacked} label="Número de Stand" field="stand_numero" data={data} error={fieldErrors.stand_numero} onChange={onChange} />
-        <FormField stacked={stacked} label="Total de Stands" field="total_stands" data={data} error={fieldErrors.total_stands} onChange={onChange} />
+      {/* 4. ANTECEDENTES */}
+      <SectionCard title="ANTECEDENTES" icon={<HomeIcon />} color="warning.main">
         <FormField stacked={stacked} label="Dirección del Inmueble" field="inmueble_direccion" data={data} error={fieldErrors.inmueble_direccion} onChange={onChange} md={12} />
-        <FormField stacked={stacked} label="Partida Registral" field="inmueble_partida_registral" data={data} error={fieldErrors.inmueble_partida_registral} onChange={onChange} placeholder="Ej: 11162972" />
+        <FormField stacked={stacked} label="Partida Registral del Inmueble" field="inmueble_partida_registral" data={data} error={fieldErrors.inmueble_partida_registral} onChange={onChange} placeholder="Ej: 11162972" />
         <FormField stacked={stacked} label="Zona Registral" field="inmueble_zona_registral" data={data} error={fieldErrors.inmueble_zona_registral} onChange={onChange} />
         
         <Grid item xs={12}>
@@ -132,37 +138,55 @@ function ContractFormSection({ data, stacked, fieldErrors = {}, onChange }: Cont
         <FormField stacked={stacked} label="Domicilio del Propietario" field="propietario_domicilio" data={data} error={fieldErrors.propietario_domicilio} onChange={onChange} md={12} />
         <FormField stacked={stacked} label="Representante Legal" field="propietario_representante" data={data} error={fieldErrors.propietario_representante} onChange={onChange} />
         <FormField stacked={stacked} label="DNI del Representante" field="propietario_representante_dni" data={data} error={fieldErrors.propietario_representante_dni} onChange={onChange} />
-        <FormField stacked={stacked} label="Partida Registral" field="propietario_partida_registral" data={data} error={fieldErrors.propietario_partida_registral} onChange={onChange} placeholder="Ej: 02011638" />
+        <FormField stacked={stacked} label="Partida Registral del Propietario" field="propietario_partida_registral" data={data} error={fieldErrors.propietario_partida_registral} onChange={onChange} placeholder="Ej: 02011638" />
+        
+        <FormField stacked={stacked} label="Total de Stands" field="total_stands" data={data} error={fieldErrors.total_stands} onChange={onChange} />
       </SectionCard>
 
-      {/* Fechas Section */}
-      <SectionCard title="FECHAS DEL CONTRATO" icon={<CalendarIcon />} color="info.main">
+      {/* 5. OBJETO DEL CONTRATO */}
+      <SectionCard title="OBJETO DEL CONTRATO" icon={<AssignmentIcon />} color="info.main">
+        <FormField stacked={stacked} label="Número de Stand" field="stand_numero" data={data} error={fieldErrors.stand_numero} onChange={onChange} />
+      </SectionCard>
+
+      {/* 6. PLAZO DEL CONTRATO */}
+      <SectionCard title="PLAZO DEL CONTRATO" icon={<CalendarIcon />} color="info.main">
         <FormField stacked={stacked} label="Fecha de Inicio" field="fecha_inicio" data={data} error={fieldErrors.fecha_inicio} onChange={onChange} type="date" />
         <FormField stacked={stacked} label="Fecha de Fin" field="fecha_fin" data={data} error={fieldErrors.fecha_fin} onChange={onChange} type="date" />
         <FormField stacked={stacked} label="Plazo (meses)" field="plazo_meses" data={data} error={fieldErrors.plazo_meses} onChange={onChange} />
-        <FormField stacked={stacked} label="Fecha de Firma" field="fecha_firma" data={data} error={fieldErrors.fecha_firma} onChange={onChange} type="date" />
-        <FormField stacked={stacked} label="Lugar de Firma" field="lugar_firma" data={data} error={fieldErrors.lugar_firma} onChange={onChange} />
       </SectionCard>
 
-      {/* Financiero Section */}
-      <SectionCard title="DATOS FINANCIEROS" icon={<MoneyIcon />} color="error.main">
+      {/* 7. LA MERCED CONDUCTIVA */}
+      <SectionCard title="LA MERCED CONDUCTIVA: FORMA Y OPORTUNIDAD DE PAGO" icon={<MoneyIcon />} color="error.main">
         <FormField stacked={stacked} label="Renta Mensual (S/)" field="renta_mensual" data={data} error={fieldErrors.renta_mensual} onChange={onChange} />
         <FormField stacked={stacked} label="Renta en texto" field="renta_texto" data={data} error={fieldErrors.renta_texto} onChange={onChange} />
-        <FormField stacked={stacked} label="Garantía (S/)" field="garantia_monto" data={data} error={fieldErrors.garantia_monto} onChange={onChange} />
-        <FormField stacked={stacked} label="Garantía en texto" field="garantia_texto" data={data} error={fieldErrors.garantia_texto} onChange={onChange} />
-        <FormField stacked={stacked} label="Adelanto (S/)" field="adelanto_monto" data={data} error={fieldErrors.adelanto_monto} onChange={onChange} />
-        <FormField stacked={stacked} label="Adelanto en texto" field="adelanto_texto" data={data} error={fieldErrors.adelanto_texto} onChange={onChange} />
-        <FormField stacked={stacked} label="Penalidad diaria ($)" field="penalidad_diaria" data={data} error={fieldErrors.penalidad_diaria} onChange={onChange} />
-        <FormField stacked={stacked} label="Penalidad en texto" field="penalidad_texto" data={data} error={fieldErrors.penalidad_texto} onChange={onChange} />
         <FormField stacked={stacked} label="Día de vencimiento" field="dia_vencimiento" data={data} error={fieldErrors.dia_vencimiento} onChange={onChange} />
         <FormField stacked={stacked} label="Días de tolerancia" field="tolerancia_dias" data={data} error={fieldErrors.tolerancia_dias} onChange={onChange} />
-      </SectionCard>
-
-      {/* Banco Section */}
-      <SectionCard title="DATOS BANCARIOS" icon={<BankIcon />} color="secondary.main">
+        
+        <Grid item xs={12}>
+          <Divider sx={{ my: 2 }}>
+            <Typography variant="caption" color="text.secondary">Datos Bancarios</Typography>
+          </Divider>
+        </Grid>
+        
         <FormField stacked={stacked} label="Nombre del Banco" field="banco_nombre" data={data} error={fieldErrors.banco_nombre} onChange={onChange} md={12} />
         <FormField stacked={stacked} label="Número de Cuenta" field="banco_cuenta" data={data} error={fieldErrors.banco_cuenta} onChange={onChange} />
         <FormField stacked={stacked} label="Código Interbancario (CCI)" field="banco_cci" data={data} error={fieldErrors.banco_cci} onChange={onChange} />
+      </SectionCard>
+
+      {/* 8. SOBRE LOS IMPORTES PECUNIARIOS */}
+      <SectionCard title="SOBRE LOS IMPORTES PECUNIARIOS" icon={<MoneyIcon />} color="error.main">
+        <FormField stacked={stacked} label="Adelanto (S/)" field="adelanto_monto" data={data} error={fieldErrors.adelanto_monto} onChange={onChange} />
+        <FormField stacked={stacked} label="Adelanto en texto" field="adelanto_texto" data={data} error={fieldErrors.adelanto_texto} onChange={onChange} />
+        <FormField stacked={stacked} label="Garantía (S/)" field="garantia_monto" data={data} error={fieldErrors.garantia_monto} onChange={onChange} />
+        <FormField stacked={stacked} label="Garantía en texto" field="garantia_texto" data={data} error={fieldErrors.garantia_texto} onChange={onChange} />
+        <FormField stacked={stacked} label="Penalidad diaria ($)" field="penalidad_diaria" data={data} error={fieldErrors.penalidad_diaria} onChange={onChange} />
+        <FormField stacked={stacked} label="Penalidad en texto" field="penalidad_texto" data={data} error={fieldErrors.penalidad_texto} onChange={onChange} />
+      </SectionCard>
+
+      {/* 9. FIRMA Y LEGALIZACIÓN */}
+      <SectionCard title="FIRMA Y LEGALIZACIÓN" icon={<GavelIcon />} color="secondary.main">
+        <FormField stacked={stacked} label="Lugar de Firma" field="lugar_firma" data={data} error={fieldErrors.lugar_firma} onChange={onChange} />
+        <FormField stacked={stacked} label="Fecha de Firma" field="fecha_firma" data={data} error={fieldErrors.fecha_firma} onChange={onChange} type="date" />
       </SectionCard>
     </Box>
   );

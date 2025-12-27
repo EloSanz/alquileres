@@ -16,15 +16,13 @@ import {
   ListItemText,
   Divider
 } from '@mui/material';
-import { Home as HomeIcon, Brightness4 as ThemeIcon, Menu as MenuIcon } from '@mui/icons-material';
+import { Home as HomeIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useAppTheme } from '../contexts/ThemeContext';
 
 const Navigation = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
-  const { themeName, setTheme } = useAppTheme();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -33,13 +31,6 @@ const Navigation = () => {
     logout();
     navigate('/login');
     setDrawerOpen(false);
-  };
-
-  const toggleTheme = () => {
-    const themes = ['light', 'dark', 'github', 'kyoto', 'tokyo'];
-    const currentIndex = themes.indexOf(themeName);
-    const nextIndex = (currentIndex + 1) % themes.length;
-    setTheme(themes[nextIndex]);
   };
 
   const handleNavigate = (path: string) => {
@@ -57,14 +48,6 @@ const Navigation = () => {
             <HomeIcon />
           </ListItemIcon>
           <ListItemText primary="Inicio" />
-        </ListItemButton>
-      </ListItem>
-      <ListItem disablePadding>
-        <ListItemButton onClick={toggleTheme}>
-          <ListItemIcon>
-            <ThemeIcon />
-          </ListItemIcon>
-          <ListItemText primary={`Tema: ${themeName}`} />
         </ListItemButton>
       </ListItem>
       <Divider />
@@ -100,14 +83,6 @@ const Navigation = () => {
             onClick={() => navigate('/')}
           >
             Inicio
-          </Button>
-
-          <Button
-            color="inherit"
-            startIcon={<ThemeIcon />}
-            onClick={toggleTheme}
-          >
-            {themeName}
           </Button>
 
           <Button

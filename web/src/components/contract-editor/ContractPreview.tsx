@@ -267,7 +267,7 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
       </h2>
       <p style={{...paragraphStyle, marginBottom: '16px'}}>
         Hecho y firmado en {data.lugar_firma || '____'}, bajo legalización notarial de las partes intervinientes,
-        a los {formatDateLong(data.fecha_firma)} en dos (2) ejemplares de idéntico tenor que obrarán en poder de{' '}
+        a los {data.fecha_firma ? formatDateLong(data.fecha_firma) : '____'} en dos (2) ejemplares de idéntico tenor que obrarán en poder de{' '}
         <strong>EL ARRENDADOR</strong> y de <strong>EL ARRENDATARIO</strong>, respectivamente.
       </p>
 
