@@ -10,121 +10,15 @@ jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    environment: penta mont
+    environment: hostinger
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
 
     steps:
     - name: Verify SSH credentials exist
       run: |
-        if [ -z "${{ secrets.SSH_HOST }}" ]; then 
-          echo "❌ SSH_HOST no está configurado en el environment 'penta mont'"
-          echo "Por favor, configura SSH_HOST en: Settings > Environments > penta mont > Secrets"
-          echo ""
-          echo "El valor debe ser:"
-          echo "  - Una IP válida (ej: 123.45.67.89)"
-          echo "  - Un hostname válido (ej: vps.tu-dominio.com)"
-          echo "  - Sin espacios ni caracteres especiales"
-          echo "  - Sin http:// o https://"
-          exit 1
-        fi
-        if [ -z "${{ secrets.SSH_PASSWORD }}" ]; then 
-          echo "❌ SSH_PASSWORD no está configurado en el environment 'penta mont'"
-          echo "Por favor, configura SSH_PASSWORD en: Settings > Environments > penta mont > Secrets"
-          exit 1
-        fi
-        
-        # Verificar formato básico del host (sin mostrar el valor completo)
-        HOST="${{ secrets.SSH_HOST }}"
-        HOST_LENGTH=${#HOST}
-        echo "✔ SSH_HOST está configurado (longitud: $HOST_LENGTH caracteres)"
-        echo "✔ SSH_PASSWORD está configurado"
-        
-        # Limpiar espacios al inicio y final
-        HOST_TRIMMED=$(echo "$HOST" | xargs)
-        HOST_TRIMMED_LENGTH=${#HOST_TRIMMED}
-        
-        # Verificar que no tenga espacios
-        if [[ "$HOST" =~ [[:space:]] ]]; then
-          echo "⚠️  ADVERTENCIA: SSH_HOST contiene espacios"
-          echo "   Longitud original: $HOST_LENGTH caracteres"
-          echo "   Longitud sin espacios: $HOST_TRIMMED_LENGTH caracteres"
-          echo ""
-          echo "🔧 Solución:"
-          echo "   1. Ve a: Settings > Environments > 'penta mont' > Secrets"
-          echo "   2. Edita SSH_HOST"
-          echo "   3. Elimina TODOS los espacios (inicio, final, y en medio)"
-          echo "   4. El valor debe ser solo: IP o hostname"
-          echo "      Ejemplo correcto: 123.45.67.89"
-          echo "      Ejemplo correcto: vps.tu-dominio.com"
-          echo ""
-          echo "   Si el valor tiene espacios en medio, probablemente copiaste mal."
-          echo "   Copia solo la IP o hostname, sin espacios."
-          exit 1
-        fi
-        
-        # Verificar que no empiece con http
-        if [[ "$HOST" =~ ^https?:// ]]; then
-          echo "❌ ERROR: SSH_HOST no debe incluir http:// o https://"
-          echo "Usa solo la IP o hostname (ej: 123.45.67.89 o vps.tu-dominio.com)"
-          exit 1
-        fi
-        
-        echo "✔ Formato de SSH_HOST parece correcto"
+        if [ -z "${{ secrets.SSH_HOST }}" ]; then echo "❌ SSH_HOST no está configurado"; exit 1; fi
+        if [ -z "${{ secrets.SSH_PASSWORD }}" ]; then echo "❌ SSH_PASSWORD no está configurado"; exit 1; fi
         echo "✔ Credenciales SSH verificadas"
-    
-    - name: Test DNS resolution
-      run: |
-        # Intentar resolver el hostname para diagnosticar problemas de DNS
-        HOST="${{ secrets.SSH_HOST }}"
-        echo "🔍 Diagnosticando SSH_HOST..."
-        echo "Longitud del host: ${#HOST} caracteres"
-        
-        # Mostrar caracteres especiales sin exponer el valor completo
-        echo "Primer carácter: '${HOST:0:1}'"
-        echo "Último carácter: '${HOST: -1}'"
-        
-        # Verificar caracteres no válidos
-        if [[ "$HOST" =~ [^a-zA-Z0-9\.\-] ]]; then
-          echo "⚠️  ADVERTENCIA: El host contiene caracteres especiales que podrían causar problemas"
-          echo "Caracteres permitidos: letras, números, puntos (.) y guiones (-)"
-        fi
-        
-        # Verificar si es una IP
-        if [[ "$HOST" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-          echo "✔ Formato: IP válida"
-          echo "Probando conectividad..."
-          if timeout 5 ping -c 1 "$HOST" &> /dev/null; then
-            echo "✔ La IP responde a ping"
-          else
-            echo "⚠️  La IP no responde a ping (puede estar bloqueado por firewall)"
-          fi
-        else
-          echo "ℹ️  Formato: Hostname"
-          echo "Intentando resolver DNS..."
-          if command -v nslookup &> /dev/null; then
-            if nslookup "$HOST" 2>&1 | head -5; then
-              echo "✔ DNS resolution exitosa con nslookup"
-            else
-              echo "❌ nslookup falló - el hostname no se puede resolver"
-              echo "Esto causará el error 'no such host'"
-            fi
-          fi
-          if command -v dig &> /dev/null; then
-            RESULT=$(dig "$HOST" +short 2>&1)
-            if [ -n "$RESULT" ] && [[ ! "$RESULT" =~ "connection timed out" ]]; then
-              echo "✔ DNS resolution exitosa con dig: $RESULT"
-            else
-              echo "❌ dig falló - el hostname no se puede resolver"
-            fi
-          fi
-        fi
-        
-        echo ""
-        echo "💡 Si ves errores arriba, verifica:"
-        echo "   1. El valor de SSH_HOST en GitHub (Settings > Environments > penta mont > Secrets)"
-        echo "   2. Que no tenga espacios al inicio o final"
-        echo "   3. Que sea una IP válida (ej: 123.45.67.89) o hostname válido"
-        echo "   4. Si es hostname, que el DNS esté configurado correctamente"
     
     - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
@@ -133,8 +27,7 @@ jobs:
         username: root
         password: ${{ secrets.SSH_PASSWORD }}
         port: 22
-        timeout: 60s
-        command_timeout: 10m
+        timeout: 30s
         script: |
           echo "➡️ Actualizando proyecto en VPS..."
           cd /var/www/alquileres-app || exit 1
@@ -239,4 +132,3 @@ jobs:
           chmod +x start_services_screen.sh
           ./start_services_screen.sh
           echo "✅ Servicios levantados con Screen"
-
