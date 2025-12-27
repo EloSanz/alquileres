@@ -22,32 +22,18 @@ const idParamsSchema = t.Object({
 });
 
 const createPropertyBodySchema = t.Object({
-  name: t.String({ minLength: 2 }),
   localNumber: t.Number({ minimum: 1 }),
-  state: t.String({ minLength: 2 }),
-  zipCode: t.Optional(t.String()),
+  ubicacion: t.Union([t.Literal('BOULEVARD'), t.Literal('SAN_MARTIN')]),
   propertyType: t.String(),
-  bedrooms: t.Optional(t.Number()),
-  bathrooms: t.Optional(t.Number()),
-  areaSqm: t.Optional(t.Number()),
   monthlyRent: t.Number({ minimum: 0 }),
-  description: t.Optional(t.String()),
-  isAvailable: t.Optional(t.Boolean()),
-  tenantId: t.Number({ minimum: 1 })
+  tenantId: t.Union([t.Number({ minimum: 1 }), t.Null()])
 });
 
 const updatePropertyBodySchema = t.Object({
-  name: t.Optional(t.String({ minLength: 2 })),
   localNumber: t.Optional(t.Number({ minimum: 1 })),
-  state: t.Optional(t.String({ minLength: 2 })),
-  zipCode: t.Optional(t.String()),
+  ubicacion: t.Optional(t.Union([t.Literal('BOULEVARD'), t.Literal('SAN_MARTIN')])),
   propertyType: t.Optional(t.String()),
-  bedrooms: t.Optional(t.Number()),
-  bathrooms: t.Optional(t.Number()),
-  areaSqm: t.Optional(t.Number()),
-  monthlyRent: t.Optional(t.Number({ minimum: 0 })),
-  description: t.Optional(t.String()),
-  isAvailable: t.Optional(t.Boolean())
+  monthlyRent: t.Optional(t.Number({ minimum: 0 }))
 });
 
 export const propertyRoutes = new Elysia({ prefix: '/properties' })

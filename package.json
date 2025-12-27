@@ -13,7 +13,17 @@
   "devDependencies": {
     "concurrently": "^8.0.0"
   },
-  "keywords": ["fullstack", "elysia", "react", "typescript", "prisma"],
+  "keywords": [
+    "fullstack",
+    "elysia",
+    "react",
+    "typescript",
+    "prisma"
+  ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@types/html2pdf.js": "^0.10.0",
+    "html2pdf.js": "^0.12.1"
+  }
 }

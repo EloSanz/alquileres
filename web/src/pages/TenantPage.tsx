@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -26,12 +26,13 @@ import {
   FormControl,
   InputLabel,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
 import TenantDeletionModal from '../components/TenantDeletionModal';
-import { useTenantService, type Tenant, type CreateTenantData, type UpdateTenantData } from '../services/tenantService';
+import { useTenantService } from '../services/tenantService';
+import { Tenant, CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
 
 const TenantPage = () => {
   const tenantService = useTenantService()
@@ -52,7 +53,9 @@ const TenantPage = () => {
         { value: 'firstName', label: 'Nombre (A-Z)' },
         { value: 'lastName', label: 'Apellido (A-Z)' },
         { value: 'firstName_desc', label: 'Nombre (Z-A)' },
-        { value: 'lastName_desc', label: 'Apellido (Z-A)' }
+        { value: 'lastName_desc', label: 'Apellido (Z-A)' },
+        { value: 'localNumber', label: 'N° Local (menor a mayor)' },
+        { value: 'localNumber_desc', label: 'N° Local (mayor a menor)' }
       ]
     }
   ];
@@ -139,31 +142,34 @@ const TenantPage = () => {
     // Aplicar ordenamiento
     const sortBy = filters.sortBy as string;
     filtered.sort((a, b) => {
-      let aValue: string, bValue: string;
-
       switch (sortBy) {
-        case 'firstName':
-          aValue = a.firstName;
-          bValue = b.firstName;
-          break;
-        case 'lastName':
-          aValue = a.lastName;
-          bValue = b.lastName;
-          break;
-        case 'firstName_desc':
-          aValue = b.firstName;
-          bValue = a.firstName;
-          break;
-        case 'lastName_desc':
-          aValue = b.lastName;
-          bValue = a.lastName;
-          break;
-        default:
-          aValue = a.firstName;
-          bValue = b.firstName;
-      }
+        case 'localNumber':
+          // Ordenar por el número de local más bajo
+          const aMinLocal = a.localNumbers && a.localNumbers.length > 0 ? Math.min(...a.localNumbers) : 999999;
+          const bMinLocal = b.localNumbers && b.localNumbers.length > 0 ? Math.min(...b.localNumbers) : 999999;
+          return aMinLocal - bMinLocal;
 
-      return aValue.localeCompare(bValue);
+        case 'localNumber_desc':
+          // Ordenar por el número de local más alto (descendente)
+          const aMaxLocal = a.localNumbers && a.localNumbers.length > 0 ? Math.max(...a.localNumbers) : 0;
+          const bMaxLocal = b.localNumbers && b.localNumbers.length > 0 ? Math.max(...b.localNumbers) : 0;
+          return bMaxLocal - aMaxLocal;
+
+        case 'firstName':
+          return a.firstName.localeCompare(b.firstName);
+
+        case 'lastName':
+          return a.lastName.localeCompare(b.lastName);
+
+        case 'firstName_desc':
+          return b.firstName.localeCompare(a.firstName);
+
+        case 'lastName_desc':
+          return b.lastName.localeCompare(a.lastName);
+
+        default:
+          return a.firstName.localeCompare(b.firstName);
+      }
     });
 
     return filtered;
@@ -198,15 +204,17 @@ const TenantPage = () => {
 
   const handleCreateTenant = async () => {
     try {
-      const tenantData: CreateTenantData = {
-        firstName: createForm.firstName,
-        lastName: createForm.lastName,
-        phone: createForm.phone || undefined,
-        documentId: createForm.documentId,
-        numeroLocal: createForm.numeroLocal || undefined,
-        rubro: createForm.rubro || undefined,
-        fechaInicioContrato: createForm.fechaInicioContrato || undefined,
-      };
+      const tenantData = new CreateTenant(
+        createForm.firstName,
+        createForm.lastName,
+        createForm.documentId,
+        createForm.phone || undefined,
+        undefined,
+        undefined,
+        createForm.numeroLocal || undefined,
+        createForm.rubro || undefined,
+        createForm.fechaInicioContrato || undefined
+      );
 
       await tenantService.createTenant(tenantData);
 
@@ -226,7 +234,11 @@ const TenantPage = () => {
     }
   };
 
+  const hasFetchedRef = useRef(false);
+  
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchTenants();
   }, []);
 
@@ -235,11 +247,6 @@ const TenantPage = () => {
     const filtered = filterAndSortTenants(searchQuery, filterValues, tenants);
     setFilteredTenants(filtered);
   }, [searchQuery, filterValues, tenants]);
-
-  const handleViewDetails = (tenant: Tenant) => {
-    // TODO: Navigate to tenant details page
-    console.log('View details for tenant:', tenant.id);
-  };
 
   const handleEdit = (tenant: Tenant) => {
     setEditingTenant(tenant);
@@ -278,14 +285,16 @@ const TenantPage = () => {
     if (!editingTenant) return;
 
     try {
-      const tenantData: UpdateTenantData = {
-        firstName: editForm.firstName,
-        lastName: editForm.lastName,
-        phone: editForm.phone || undefined,
-        numeroLocal: editForm.numeroLocal || undefined,
-        rubro: editForm.rubro || undefined,
-        fechaInicioContrato: editForm.fechaInicioContrato || undefined,
-      };
+      const tenantData = new UpdateTenant(
+        editForm.firstName,
+        editForm.lastName,
+        editForm.phone || undefined,
+        undefined,
+        undefined,
+        editForm.numeroLocal || undefined,
+        editForm.rubro || undefined,
+        editForm.fechaInicioContrato || undefined
+      );
 
       await tenantService.updateTenant(editingTenant.id, tenantData);
 
@@ -317,15 +326,20 @@ const TenantPage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ 
+          display: { xs: 'block', sm: 'flex' }, 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          mb: 2 
+        }}>
           <Typography variant="h4" component="h1" gutterBottom>
             Inquilinos
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
-          <Box sx={{ flex: 1, maxWidth: 400 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
+          <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 250 }, maxWidth: { xs: '100%', sm: 400 } }}>
             <SearchBar
               searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
@@ -357,32 +371,45 @@ const TenantPage = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell><strong>ID</strong></TableCell>
                 <TableCell><strong>Nombre</strong></TableCell>
-                <TableCell><strong>Teléfono</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Teléfono</strong></TableCell>
                 <TableCell><strong>DNI</strong></TableCell>
-                <TableCell><strong>N° Local</strong></TableCell>
-                <TableCell><strong>Rubro</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Locales</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Rubro</strong></TableCell>
                 <TableCell><strong>Estado Pago</strong></TableCell>
-                <TableCell><strong>Fecha Inicio</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Inicio</strong></TableCell>
                 <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredTenants.map((tenant) => (
-                <TableRow key={tenant.id} hover>
-                  <TableCell>{tenant.id}</TableCell>
+                <TableRow
+                  key={tenant.id}
+                  hover
+                  onClick={() => handleEdit(tenant)}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                    },
+                  }}
+                >
                   <TableCell>
                     {tenant.firstName} {tenant.lastName}
                   </TableCell>
-                  <TableCell>{tenant.phone || '-'}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tenant.phone || '-'}</TableCell>
                   <TableCell>{tenant.documentId}</TableCell>
-                  <TableCell>{tenant.numeroLocal ?? '-'}</TableCell>
-                  <TableCell>{tenant.rubro || '-'}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    {tenant.localNumbers && tenant.localNumbers.length > 0
+                      ? tenant.localNumbers.join(', ')
+                      : tenant.numeroLocal ?? '-'
+                    }
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tenant.rubro || '-'}</TableCell>
                   <TableCell>
                     <Chip
                       label={tenant.estadoPago === 'AL_DIA' ? 'Al día' : 'Con deuda'}
@@ -390,15 +417,8 @@ const TenantPage = () => {
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>{tenant.fechaInicioContrato ? formatDate(tenant.fechaInicioContrato) : '-'}</TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleViewDetails(tenant)}
-                      title="Ver detalles"
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tenant.fechaInicioContrato ? formatDate(tenant.fechaInicioContrato) : '-'}</TableCell>
+                  <TableCell align="center" onClick={(e) => e.stopPropagation()}>
                     <IconButton
                       size="small"
                       onClick={() => handleEdit(tenant)}
@@ -435,17 +455,26 @@ const TenantPage = () => {
       {/* Floating Action Button for creating new tenant */}
       <Fab
         color="primary"
+        variant="extended"
+        size="large"
         aria-label="add"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          px: 3,
+          py: 1.5
+        }}
         onClick={() => setCreateDialogOpen(true)}
       >
-        <AddIcon />
+        <AddIcon sx={{ mr: 1 }} />
+        Agregar Inquilino
       </Fab>
 
       {/* Create Tenant Dialog */}
       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Crear Nuevo Inquilino</DialogTitle>
-        <DialogContent>
+        <DialogTitle>Agregar Inquilino</DialogTitle>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Box component="form" sx={{ mt: 2 }}>
             <TextField
               fullWidth
@@ -480,16 +509,16 @@ const TenantPage = () => {
             />
             <TextField
               fullWidth
-              label="Número de Local"
+              label="Número de Local (opcional)"
               value={createForm.numeroLocal}
               onChange={(e) => setCreateForm({ ...createForm, numeroLocal: e.target.value })}
               sx={{ mb: 2 }}
             />
             <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Rubro</InputLabel>
+              <InputLabel>Rubro - Pedicure o Tipeo</InputLabel>
               <Select
                 value={createForm.rubro}
-                label="Rubro"
+                label="Rubro - Pedicure o Tipeo"
                 onChange={(e) => setCreateForm({ ...createForm, rubro: e.target.value })}
               >
                 <MenuItem value="TIPEO">Tipeo</MenuItem>
@@ -518,7 +547,7 @@ const TenantPage = () => {
       {/* Edit Tenant Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Editar Inquilino</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Box component="form" sx={{ mt: 2 }}>
             <TextField
               fullWidth
@@ -591,7 +620,7 @@ const TenantPage = () => {
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Confirmar Eliminación</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Typography>
             ¿Estás seguro de que quieres eliminar al inquilino{' '}
             <strong>

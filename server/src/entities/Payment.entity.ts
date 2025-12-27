@@ -1,5 +1,7 @@
 // Import the enum
 import { PaymentMethod } from '@prisma/client';
+import { PaymentDTO } from '../dtos/payment.dto';
+import { Payment } from '../../../shared/types/Payment';
 
 export class PaymentEntity {
   constructor(
@@ -16,6 +18,7 @@ export class PaymentEntity {
     public paymentMethod: PaymentMethod,
     public pentamontSettled: boolean,
     public notes: string | null,
+    public receiptImageUrl: string | null,
     public createdAt: Date,
     public updatedAt: Date
   ) {  }
@@ -33,6 +36,7 @@ export class PaymentEntity {
     paymentMethod?: string;
     pentamontSettled?: boolean;
     notes?: string;
+    receiptImageUrl?: string | null;
   }): PaymentEntity {
     return new PaymentEntity(
       null, // id
@@ -48,6 +52,7 @@ export class PaymentEntity {
       (data.paymentMethod as PaymentMethod) || PaymentMethod.YAPE,
       data.pentamontSettled ?? false,
       data.notes || null,
+      data.receiptImageUrl || null,
       new Date(), // createdAt
       new Date()  // updatedAt
     );
@@ -66,6 +71,7 @@ export class PaymentEntity {
     paymentMethod?: string;
     pentamontSettled?: boolean;
     notes?: string;
+    receiptImageUrl?: string | null;
   }): PaymentEntity {
     if (data.tenantId !== undefined) this.tenantId = data.tenantId;
     if (data.propertyId !== undefined) this.propertyId = data.propertyId;
@@ -79,6 +85,7 @@ export class PaymentEntity {
     if (data.paymentMethod !== undefined) this.paymentMethod = data.paymentMethod as PaymentMethod;
     if (data.pentamontSettled !== undefined) this.pentamontSettled = data.pentamontSettled;
     if (data.notes !== undefined) this.notes = data.notes;
+    if (data.receiptImageUrl !== undefined) this.receiptImageUrl = data.receiptImageUrl;
     this.updatedAt = new Date();
     this.validate();
     return this;
@@ -99,6 +106,7 @@ export class PaymentEntity {
       prismaData.paymentMethod,
       prismaData.pentamontSettled ?? false,
       prismaData.notes,
+      prismaData.receiptImageUrl || null,
       prismaData.createdAt,
       prismaData.updatedAt
     );
@@ -125,13 +133,14 @@ export class PaymentEntity {
       paymentMethod: this.paymentMethod,
       pentamontSettled: this.pentamontSettled,
       notes: this.notes,
+      receiptImageUrl: this.receiptImageUrl,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };
   }
 
   toDTO(): PaymentDTO {
-    return {
+    return Payment.fromJSON({
       id: this.id!,
       tenantId: this.tenantId,
       propertyId: this.propertyId,
@@ -142,12 +151,13 @@ export class PaymentEntity {
       amount: this.amount,
       paymentDate: this.paymentDate.toISOString().split('T')[0],
       dueDate: this.dueDate.toISOString().split('T')[0],
-      paymentMethod: this.paymentMethod,
+      paymentMethod: this.paymentMethod.toString(),
       pentamontSettled: this.pentamontSettled,
       notes: this.notes,
+      receiptImageUrl: this.receiptImageUrl || '/comprobante.png',
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    };
+    });
   }
 
   validate(): void {
@@ -160,38 +170,3 @@ export class PaymentEntity {
   }
 }
 
-// DTO types
-export interface PaymentDTO {
-  id: number;
-  tenantId: number | null;
-  propertyId: number | null;
-  contractId: number | null;
-  monthNumber: number | null;
-  tenantFullName: string | null;
-  tenantPhone: string | null;
-  amount: number;
-  paymentDate: string;
-  dueDate: string;
-  paymentMethod: string;
-  pentamontSettled: boolean;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreatePaymentDTO {
-  rentalId: number;
-  amount: number;
-  paymentDate?: string;
-  dueDate: string;
-  pentamontSettled?: boolean;
-  notes?: string;
-}
-
-export interface UpdatePaymentDTO {
-  amount?: number;
-  paymentDate?: string;
-  dueDate?: string;
-  pentamontSettled?: boolean;
-  notes?: string;
-}

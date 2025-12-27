@@ -1,4 +1,5 @@
-import { AuthUserDTO, CreateUserDTO, LoginDTO, UserDTO } from '../../entities/User.entity';
+import { AuthUserDTO, LoginDTO } from '../../entities/User.entity';
+import { CreateUserDTO, UserDTO } from '../../dtos/user.dto';
 
 export interface IAuthService {
   register(data: CreateUserDTO): Promise<AuthUserDTO>;

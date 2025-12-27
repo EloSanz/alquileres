@@ -1,4 +1,4 @@
-import { type Payment } from './paymentService';
+import { type Payment } from '../../../shared/types/Payment';
 
 export type ContractMonthStatus = 'PAID' | 'DUE' | 'FUTURE';
 

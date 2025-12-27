@@ -1,0 +1,378 @@
+import { PrismaClient, PropertyType, UbicacionType, RentalStatus, EstadoPago, Rubro, ContractStatus, PaymentMethod } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
+
+const prisma = new PrismaClient();
+
+// Datos peruanos realistas
+const peruvianNames = [
+  // Nombres masculinos comunes en Perú
+  'Carlos', 'José', 'Luis', 'Jorge', 'Miguel', 'Juan', 'Pedro', 'Ricardo', 'Fernando', 'Roberto',
+  'Alberto', 'Antonio', 'Manuel', 'Francisco', 'Diego', 'Andrés', 'Raúl', 'Sergio', 'Víctor', 'Gustavo',
+  'Mario', 'Pablo', 'Rafael', 'Eduardo', 'Emilio', 'Héctor', 'Jaime', 'Julio', 'Leonardo', 'Marco',
+
+  // Nombres femeninos comunes en Perú
+  'María', 'Ana', 'Rosa', 'Carmen', 'Isabel', 'Patricia', 'Teresa', 'Luisa', 'Elena', 'Gloria',
+  'Mercedes', 'Victoria', 'Francisca', 'Antonia', 'Dolores', 'Pilar', 'Concepción', 'Cristina', 'Beatriz', 'Juana',
+  'Adriana', 'Silvia', 'Claudia', 'Gabriela', 'Verónica', 'Sandra', 'Mónica', 'Laura', 'Celia', 'Sonia'
+];
+
+const peruvianLastNames = [
+  // Apellidos comunes en Perú
+  'García', 'Rodríguez', 'González', 'Fernández', 'López', 'Martínez', 'Sánchez', 'Pérez', 'Gómez', 'Ruiz',
+  'Hernández', 'Jiménez', 'Díaz', 'Moreno', 'Muñoz', 'Álvarez', 'Romero', 'Navarro', 'Torres', 'Ramírez',
+  'Domínguez', 'Gil', 'Vargas', 'Herrera', 'Castro', 'Ortega', 'Rubio', 'Santiago', 'Delgado', 'Ramos',
+  'Guerrero', 'Medina', 'Cortes', 'Castillo', 'Santos', 'Aguilar', 'Ortiz', 'Morales', 'Núñez', 'Prieto'
+];
+
+const limaDistricts = [
+  'Miraflores', 'San Isidro', 'Barranco', 'Surco', 'La Molina', 'San Borja', 'Pueblo Libre', 'Jesús María',
+  'Lince', 'Magdalena', 'San Miguel', 'Pueblo Nuevo', 'Independencia', 'Comas', 'Los Olivos', 'San Martín de Porres',
+  'Rímac', 'Breña', 'Callao', 'Bellavista', 'La Victoria', 'El Agustino', 'Ate', 'Chorrillos', 'Villa El Salvador'
+];
+
+const streets = [
+  'Av. Arequipa', 'Av. Larco', 'Av. Pardo', 'Av. Benavides', 'Av. Brasil', 'Av. Universitaria',
+  'Jr. de la Unión', 'Jr. Carabaya', 'Jr. Huallaga', 'Calle Los Pinos', 'Calle Las Palmeras',
+  'Av. Javier Prado', 'Av. Salaverry', 'Av. Tacna', 'Av. Abancay', 'Jr. Azángaro',
+  'Av. Nicolás de Piérola', 'Calle Los Cedros', 'Av. Petit Thouars', 'Jr. Junín'
+];
+
+const propertyNames = [
+  'Edificio Residencial', 'Condominio', 'Casa Familiar', 'Apartamento Moderno', 'Estudio Ejecutivo',
+  'Casa de Playa', 'Penthouse', 'Loft Industrial', 'Casa Colonial', 'Apartamento Vista Mar',
+  'Casa Jardín', 'Departamento Ejecutivo', 'Casa Campestre', 'Apartamento Premium', 'Estudio Minimalista'
+];
+
+const businessRubros = [
+  Rubro.TIPEO, Rubro.PEDICURE
+];
+
+const propertyDescriptions = [
+  'Hermosa propiedad con excelente ubicación y todas las comodidades modernas.',
+  'Propiedad espaciosa con jardín privado y estacionamiento.',
+  'Apartamento completamente equipado con vista panorámica.',
+  'Casa familiar ideal para una familia numerosa.',
+  'Estudio moderno perfecto para profesionales.',
+  'Propiedad con acabados de primera calidad y áreas comunes.',
+  'Casa colonial restaurada manteniendo su encanto original.',
+  'Apartamento con terraza privada y zona BBQ.',
+  'Propiedad con seguridad 24/7 y áreas verdes.',
+  'Casa con diseño contemporáneo y materiales premium.'
+];
+
+function getRandomElement<T>(array: T[]): T {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function getRandomNumber(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateDNI(): string {
+  // Genera un DNI peruano válido (8 dígitos)
+  return String(Math.floor(10000000 + Math.random() * 90000000));
+}
+
+function generatePhone(): string {
+  // Genera un número de teléfono peruano
+  const prefixes = ['9', '8', '7']; // Móviles comunes en Perú
+  const prefix = getRandomElement(prefixes);
+  const number = Math.floor(10000000 + Math.random() * 90000000);
+  return `${prefix}${number}`;
+}
+
+function getRandomPaymentMethod(): PaymentMethod {
+  // Distribución realista de medios de pago en Perú (basado en estadísticas reales)
+  // Yape: 45% (muy popular en pagos diarios y alquileres)
+  // Depósito bancario: 35% (tradicional pero aún común)
+  // Transferencia Virtual: 20% (creciente pero menos usado para alquileres)
+  const random = Math.random();
+  if (random < 0.45) return PaymentMethod.YAPE;
+  if (random < 0.8) return PaymentMethod.DEPOSITO;
+  return PaymentMethod.TRANSFERENCIA_VIRTUAL;
+}
+
+function getRandomDate(start: Date, end: Date): Date {
+  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+}
+
+async function main() {
+  console.log('🌱 Iniciando seed de datos peruanos...');
+
+  // Limpiar datos existentes (orden importa por las foreign keys)
+  console.log('🧹 Limpiando datos existentes...');
+  try {
+    await prisma.payment.deleteMany();
+  } catch (e) {
+    console.log('Tabla payments no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.contract.deleteMany();
+  } catch (e) {
+    console.log('Tabla contracts no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.rental.deleteMany();
+  } catch (e) {
+    console.log('Tabla rentals no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.property.deleteMany();
+  } catch (e) {
+    console.log('Tabla properties no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.tenant.deleteMany();
+  } catch (e) {
+    console.log('Tabla tenants no existe o está vacía, continuando...');
+  }
+  try {
+    await prisma.user.deleteMany();
+  } catch (e) {
+    console.log('Tabla users no existe o está vacía, continuando...');
+  }
+
+  // Crear usuarios administradores
+  console.log('👤 Creando usuarios...');
+  const hashedDefaultPassword = await bcrypt.hash('123456', 10);
+  const hashedAdminPassword = await bcrypt.hash('admin123', 10);
+
+  // Crear usuario admin principal (SIEMPRE debe existir)
+  const adminUser = await prisma.user.create({
+    data: {
+      username: 'admin',
+      email: 'admin@alquileres.com',
+      password: hashedAdminPassword,
+    }
+  });
+
+  // Crear usuarios adicionales
+  const additionalUsers = await Promise.all([
+    prisma.user.create({
+      data: {
+        username: 'carlos.admin',
+        email: 'carlos@alquileres.com',
+        password: hashedDefaultPassword,
+      }
+    }),
+    prisma.user.create({
+      data: {
+        username: 'maria.admin',
+        email: 'maria@alquileres.com',
+        password: hashedDefaultPassword,
+      }
+    })
+  ]);
+
+  const users = [adminUser, ...additionalUsers];
+
+  // Crear inquilinos
+  console.log('👥 Creando inquilinos...');
+  const tenants: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+    documentId: string;
+    address: string | null;
+    birthDate: Date | null;
+    numeroLocal: string | null;
+    rubro: Rubro | null;
+    fechaInicioContrato: Date | null;
+    estadoPago: EstadoPago;
+    createdAt: Date;
+    updatedAt: Date;
+  }[] = [];
+  for (let i = 0; i < 5; i++) {
+    const firstName = getRandomElement(peruvianNames);
+    const lastName1 = getRandomElement(peruvianLastNames);
+    const lastName2 = getRandomElement(peruvianLastNames);
+    const district = getRandomElement(limaDistricts);
+    const street = getRandomElement(streets);
+
+    // Generar datos comerciales - TODOS los tenants tienen negocio
+    const numeroLocal = (i + 1).toString(); // Incremental: 1, 2, 3, 4, 5
+    const rubro = businessRubros[i % businessRubros.length]; // Alternar entre rubros
+
+    // Fecha de inicio de contrato (últimos 2 años) - TODOS los tenants tienen contrato
+    const fechaInicioContrato = getRandomDate(new Date(2022, 0, 1), new Date());
+
+    tenants.push(await prisma.tenant.create({
+      data: {
+        firstName,
+        lastName: `${lastName1} ${lastName2}`,
+        phone: generatePhone(),
+        documentId: generateDNI(),
+        address: `${street} ${getRandomNumber(100, 999)}, ${district}, Lima`,
+        birthDate: getRandomDate(new Date(1950, 0, 1), new Date(2000, 11, 31)),
+        numeroLocal,
+        rubro,
+        fechaInicioContrato,
+        estadoPago: EstadoPago.AL_DIA, // Inicialmente todos al día
+      }
+    }));
+  }
+
+  // Crear propiedades (cada propiedad pertenece a un inquilino)
+  console.log('🏠 Creando propiedades...');
+  const properties: {
+    id: number;
+    localNumber: number;
+    ubicacion: UbicacionType;
+    propertyType: PropertyType;
+    monthlyRent: any;
+    description: string | null;
+    isAvailable: boolean;
+    tenantId: number | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }[] = [];
+
+  // Asignar propiedades a inquilinos (cada inquilino tiene 2 propiedades)
+  let localNumberCounter = 1; // Contador incremental para números de local
+  for (const tenant of tenants) {
+    const numProperties = 2; // 2 propiedades por inquilino
+
+    for (let i = 0; i < numProperties; i++) {
+      const currentLocalNumber = localNumberCounter++;
+      const monthlyRent = 1000 + (currentLocalNumber * 100); // Incremental: 1100, 1200, 1300...
+      const propertyType = i % 2 === 0 ? PropertyType.INSIDE : PropertyType.OUTSIDE; // Alternar tipo
+
+      // Distribuir ubicaciones alternadamente: BOULEVARD, SAN_MARTIN, BOULEVARD...
+      const ubicacion = currentLocalNumber % 2 === 1 ? UbicacionType.BOULEVARD : UbicacionType.SAN_MARTIN;
+
+      const property = await prisma.property.create({
+        data: {
+          localNumber: currentLocalNumber, // Incremental: 1, 2, 3, 4...
+          ubicacion,
+          propertyType,
+          monthlyRent,
+          isAvailable: currentLocalNumber % 3 !== 0, // 2 de cada 3 disponibles
+          tenantId: tenant.id, // Asignar propiedad al inquilino
+        }
+      });
+
+      properties.push(property);
+    }
+  }
+
+  // Nota: Ya no necesitamos crear rentals separados
+  // Solo datos de la planilla: inquilinos y propiedades sin contratos ni pagos
+
+  // Crear contratos adicionales para variedad
+  console.log('📄 Creando contratos adicionales...');
+  if (tenants.length > 3 && properties.length > 3) {
+    const candidates = [1, 2, 3].map(i => ({
+      tenant: tenants[i],
+      property: properties.find(p => p.tenantId === tenants[i].id) || properties[(i + 2) % properties.length],
+      offset: [-5, -1, 1][i - 1], // inicio hace 5m, 1m o futuro +1m
+      monthsPaid: [3, 1, 0][i - 1] // cantidad de meses pagados
+    }));
+
+    for (const c of candidates) {
+      const startDate = new Date();
+      startDate.setMonth(startDate.getMonth() + c.offset);
+      const endDate = new Date(startDate);
+      endDate.setFullYear(endDate.getFullYear() + 1);
+
+      const contract = await prisma.contract.create({
+        data: {
+          tenantId: c.tenant.id,
+          propertyId: c.property.id,
+          tenantFullName: `${c.tenant.firstName} ${c.tenant.lastName}`,
+          startDate,
+          endDate,
+          monthlyRent: c.property.monthlyRent,
+          status: ContractStatus.ACTIVE,
+        }
+      });
+      console.log(`✅ Contrato creado: ID ${contract.id} para ${c.tenant.firstName} ${c.tenant.lastName}`);
+
+      // Crear solo pagos para meses pagados
+      for (let month = 1; month <= c.monthsPaid; month++) {
+        const dueDate = new Date(startDate);
+        dueDate.setMonth(dueDate.getMonth() + month - 1);
+        dueDate.setDate(5);
+        const paymentDate = new Date(dueDate);
+        paymentDate.setDate(paymentDate.getDate() - 2); // Pagado 2 días antes
+
+        await prisma.payment.create({
+          data: {
+            tenantId: c.tenant.id,
+            propertyId: c.property.id,
+            contractId: contract.id,
+            monthNumber: month,
+            tenantFullName: `${c.tenant.firstName} ${c.tenant.lastName}`,
+            tenantPhone: c.tenant.phone,
+            amount: c.property.monthlyRent,
+            paymentDate,
+            dueDate,
+            paymentMethod: PaymentMethod.YAPE, // Simplificado a YAPE
+            pentamontSettled: month % 2 === 0, // Alternar entre true/false
+            notes: 'Pago de cuota'
+          }
+        });
+      }
+    }
+  }
+  // Crear algunos pagos adicionales para otras propiedades (sin contrato)
+  console.log('💰 Creando pagos adicionales...');
+  for (const property of properties.slice(1)) { // Saltar la primera propiedad que ya tiene contrato
+    const numPayments = 2; // 2 pagos por propiedad
+
+    for (let i = 0; i < numPayments; i++) {
+      // Crear fechas de pago basadas en la fecha de creación de la propiedad
+      const paymentDate = new Date(property.createdAt);
+      paymentDate.setMonth(paymentDate.getMonth() + i);
+
+      const dueDate = new Date(paymentDate);
+      dueDate.setDate(5); // Vencimiento el día 5 de cada mes
+
+      // Pagos completados (todos pagados)
+      const paymentDateValue = new Date(paymentDate);
+      paymentDateValue.setDate(paymentDateValue.getDate() - 2); // Pagado 2 días antes del vencimiento
+
+      await prisma.payment.create({
+        data: {
+          tenantId: property.tenantId,
+          propertyId: property.id,
+          amount: property.monthlyRent,
+          paymentDate: paymentDateValue,
+          dueDate,
+          paymentMethod: PaymentMethod.YAPE, // Simplificado a YAPE
+          pentamontSettled: i % 2 === 0, // Alternar entre true/false
+          notes: null,
+        }
+      });
+    }
+  }
+
+  const contractsCount = await prisma.contract.count();
+  const paymentsCount = await prisma.payment.count();
+
+  console.log('✅ Seed completado exitosamente!');
+  console.log(`📊 Resumen:`);
+  console.log(`   👤 Usuarios: ${users.length}`);
+  console.log(`   👥 Inquilinos: ${tenants.length}`);
+  console.log(`   🏠 Propiedades: ${properties.length}`);
+  console.log(`   📄 Contratos: ${contractsCount}`);
+  console.log(`   💰 Pagos: ${paymentsCount}`);
+
+  console.log('\n🔐 Credenciales de acceso:');
+  console.log('   👑 ADMIN PRINCIPAL (acceso completo):');
+  console.log('      Usuario: admin');
+  console.log('      Email: admin@alquileres.com');
+  console.log('      Contraseña: admin123');
+  console.log('   👤 Otros admins:');
+  console.log('      carlos.admin / carlos@alquileres.com / 123456');
+  console.log('      maria.admin / maria@alquileres.com / 123456');
+}
+
+main()
+  .catch((e) => {
+    console.error('❌ Error en el seed:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

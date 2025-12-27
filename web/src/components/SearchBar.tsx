@@ -72,8 +72,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
         '& .MuiFormHelperText-root': {
           fontSize: '0.75rem'
         },
-        minWidth: 250,
-        maxWidth: 400
+        minWidth: { xs: '100%', sm: 250 },
+        maxWidth: { xs: '100%', sm: 400 },
+        width: { xs: '100%', sm: 'auto' }
       }}
     />
   );

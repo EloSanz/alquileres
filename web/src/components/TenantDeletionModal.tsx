@@ -69,7 +69,7 @@ const TenantDeletionModal: React.FC<TenantDeletionModalProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent>
+      <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography sx={{ mb: 2 }}>
           ¿Estás seguro de que quieres eliminar al inquilino{' '}
           <strong>

@@ -71,8 +71,8 @@ const LoginPage = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center' }}>
-      <Paper elevation={8} sx={{ p: 4, width: '100%', borderRadius: 3 }}>
+    <Container maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', py: { xs: 2, sm: 0 } }}>
+      <Paper elevation={8} sx={{ p: { xs: 2, sm: 4 }, width: '100%', borderRadius: 3 }}>
         <Box sx={{ textAlign: 'center', mb: 3 }}>
           <Typography variant="h4" component="h1" gutterBottom color="primary">
             Gestión de Alquileres

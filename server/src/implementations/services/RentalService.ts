@@ -4,6 +4,7 @@ import { ITenantRepository } from '../../interfaces/repositories/ITenantReposito
 import { IPropertyRepository } from '../../interfaces/repositories/IPropertyRepository';
 import { RentalDTO, CreateRentalDTO, UpdateRentalDTO } from '../../dtos/rental.dto';
 import { RentalEntity } from '../../entities/Rental.entity';
+import { NotFoundError, BadRequestError } from '../../exceptions';
 
 export class RentalService implements IRentalService {
   constructor(
@@ -39,7 +40,7 @@ export class RentalService implements IRentalService {
           if (property) {
             dto.property = {
               id: property.id,
-              name: property.name,
+              ubicacion: property.ubicacion,
               localNumber: property.localNumber,
             };
           }
@@ -55,7 +56,7 @@ export class RentalService implements IRentalService {
   async getRentalById(id: number, _userId: number): Promise<RentalDTO> {
     const entity = await this.rentalRepository.findById(id);
     if (!entity) {
-      throw new Error('Rental not found');
+      throw new NotFoundError('Rental', id);
     }
 
     const dto = entity.toDTO() as RentalDTO & { tenant?: any; property?: any };
@@ -79,7 +80,7 @@ export class RentalService implements IRentalService {
       if (property) {
         dto.property = {
           id: property.id,
-          name: property.name,
+          ubicacion: property.ubicacion,
           localNumber: property.localNumber,
         };
       }
@@ -92,23 +93,23 @@ export class RentalService implements IRentalService {
     // Validate that tenant exists
     const tenant = await this.tenantRepository.findById(data.tenantId);
     if (!tenant) {
-      throw new Error('Tenant not found');
+      throw new NotFoundError('Tenant', data.tenantId);
     }
 
-    // Validate that property exists and is available
+    // Validate that property exists and is available (tenantId is null)
     const property = await this.propertyRepository.findById(data.propertyId);
     if (!property) {
-      throw new Error('Property not found');
+      throw new NotFoundError('Property', data.propertyId);
     }
-    if (!property.isAvailable) {
-      throw new Error('Property is not available for rental');
+    if (property.tenantId !== null) {
+      throw new BadRequestError('Property is not available for rental');
     }
 
     const entity = RentalEntity.create(data);
     const savedEntity = await this.rentalRepository.create(entity);
 
-    // Mark property as not available
-    property.isAvailable = false;
+    // Mark property as not available by assigning tenant
+    property.tenantId = data.tenantId;
     await this.propertyRepository.update(property);
 
     return savedEntity.toDTO();
@@ -117,34 +118,34 @@ export class RentalService implements IRentalService {
   async updateRental(id: number, data: UpdateRentalDTO, _userId: number): Promise<RentalDTO> {
     const existingEntity = await this.rentalRepository.findById(id);
     if (!existingEntity) {
-      throw new Error('Rental not found');
+      throw new NotFoundError('Rental', id);
     }
 
     // If changing tenant, validate new tenant exists
     if (data.tenantId && data.tenantId !== existingEntity.tenantId) {
       const tenant = await this.tenantRepository.findById(data.tenantId);
       if (!tenant) {
-        throw new Error('New tenant not found');
+        throw new NotFoundError('Tenant', data.tenantId);
       }
     }
 
-    // If changing property, validate new property exists and is available
+    // If changing property, validate new property exists and is available (tenantId is null)
     if (data.propertyId && data.propertyId !== existingEntity.propertyId) {
       const property = await this.propertyRepository.findById(data.propertyId);
       if (!property) {
-        throw new Error('New property not found');
+        throw new NotFoundError('Property', data.propertyId);
       }
-      if (!property.isAvailable) {
-        throw new Error('New property is not available for rental');
+      if (property.tenantId !== null) {
+        throw new BadRequestError('New property is not available for rental');
       }
 
-      // Mark old property as available and new property as not available
+      // Mark old property as available (set tenantId to null) and new property as not available (assign tenant)
       const oldProperty = await this.propertyRepository.findById(existingEntity.propertyId);
       if (oldProperty) {
-        oldProperty.isAvailable = true;
+        oldProperty.tenantId = null;
         await this.propertyRepository.update(oldProperty);
       }
-      property.isAvailable = false;
+      property.tenantId = data.tenantId || existingEntity.tenantId;
       await this.propertyRepository.update(property);
     }
 
@@ -159,10 +160,10 @@ export class RentalService implements IRentalService {
       return false; // Rental not found
     }
 
-    // Mark property as available again
+    // Mark property as available again (set tenantId to null)
     const property = await this.propertyRepository.findById(entity.propertyId);
     if (property) {
-      property.isAvailable = true;
+      property.tenantId = null;
       await this.propertyRepository.update(property);
     }
 

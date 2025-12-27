@@ -12,6 +12,10 @@ import PropertyPage from './pages/PropertyPage';
 import TenantPage from './pages/TenantPage';
 import PaymentPage from './pages/PaymentPage';
 import ContractPage from './pages/ContractPage';
+import ServicePage from './pages/ServicePage';
+import TaxPage from './pages/TaxPage';
+import GuaranteePage from './pages/GuaranteePage';
+import MaintenancePage from './pages/MaintenancePage';
 
 // Component to protect authenticated routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -96,6 +100,38 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <ContractPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/services"
+            element={
+              <ProtectedRoute>
+                <ServicePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/taxes"
+            element={
+              <ProtectedRoute>
+                <TaxPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/guarantees"
+            element={
+              <ProtectedRoute>
+                <GuaranteePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/maintenances"
+            element={
+              <ProtectedRoute>
+                <MaintenancePage />
               </ProtectedRoute>
             }
           />

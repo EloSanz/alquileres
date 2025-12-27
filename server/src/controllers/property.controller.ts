@@ -1,5 +1,6 @@
 import { IPropertyService } from '../interfaces/services/IPropertyService';
-import { CreatePropertyDTO, UpdatePropertyDTO } from '../dtos/property.dto';
+import { CreateProperty, UpdateProperty } from '../../../shared/types/Property';
+import { ValidationError } from '../exceptions';
 
 export class PropertyController {
   constructor(private propertyService: IPropertyService) {}
@@ -32,10 +33,15 @@ export class PropertyController {
     body,
     userId,
   }: {
-    body: CreatePropertyDTO;
+    body: any;
     userId: number;
   }) => {
-    const property = await this.propertyService.createProperty(body, userId);
+    const createProperty = CreateProperty.fromJSON(body);
+    const errors = createProperty.validate();
+    if (errors.length > 0) {
+      throw new ValidationError('Validation failed', errors);
+    }
+    const property = await this.propertyService.createProperty(createProperty.toDTO(), userId);
     return {
       success: true,
       message: 'Property created successfully',
@@ -49,10 +55,15 @@ export class PropertyController {
     userId,
   }: {
     params: { id: number };
-    body: UpdatePropertyDTO;
+    body: any;
     userId: number;
   }) => {
-    const property = await this.propertyService.updateProperty(id, body, userId);
+    const updateProperty = UpdateProperty.fromJSON(body);
+    const errors = updateProperty.validate();
+    if (errors.length > 0) {
+      throw new ValidationError('Validation failed', errors);
+    }
+    const property = await this.propertyService.updateProperty(id, updateProperty.toDTO(), userId);
     return {
       success: true,
       message: 'Property updated successfully',

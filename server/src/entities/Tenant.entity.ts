@@ -1,5 +1,7 @@
 // Import the enums
 import { EstadoPago, Rubro } from '@prisma/client';
+import { TenantDTO } from '../dtos/tenant.dto';
+import { Tenant } from '../../../shared/types/Tenant';
 
 // Helper function to convert string to Rubro enum
 function stringToRubro(value: string | null): Rubro | null {
@@ -18,8 +20,6 @@ export class TenantEntity {
     public lastName: string,
     public phone: string | null,
     public documentId: string,
-    public address: string | null,
-    public birthDate: Date | null,
     public numeroLocal: string | null | undefined,
     public rubro: Rubro | null,
     public fechaInicioContrato: Date | null,
@@ -35,8 +35,6 @@ export class TenantEntity {
       prismaData.lastName,
       prismaData.phone,
       prismaData.documentId,
-      prismaData.address,
-      prismaData.birthDate,
       prismaData.numeroLocal,
       stringToRubro(prismaData.rubro),
       prismaData.fechaInicioContrato,
@@ -53,8 +51,6 @@ export class TenantEntity {
       lastName: this.lastName,
       phone: this.phone,
       documentId: this.documentId,
-      address: this.address,
-      birthDate: this.birthDate,
       numeroLocal: this.numeroLocal ?? null,
       rubro: this.rubro,
       fechaInicioContrato: this.fechaInicioContrato,
@@ -65,21 +61,19 @@ export class TenantEntity {
   }
 
   toDTO(): TenantDTO {
-    return {
+    return Tenant.fromJSON({
       id: this.id!,
       firstName: this.firstName,
       lastName: this.lastName,
       phone: this.phone,
       documentId: this.documentId,
-      address: this.address,
-      birthDate: this.birthDate ? this.birthDate.toISOString() : null,
       numeroLocal: this.numeroLocal ?? null,
-      rubro: this.rubro,
+      rubro: this.rubro ? this.rubro.toString() : null,
       fechaInicioContrato: this.fechaInicioContrato ? this.fechaInicioContrato.toISOString() : null,
       estadoPago: this.estadoPago.toString(),
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    };
+    });
   }
 
   validate(): void {
@@ -98,42 +92,3 @@ export class TenantEntity {
   }
 }
 
-// DTO types
-export interface TenantDTO {
-  id: number;
-  firstName: string;
-  lastName: string;
-  phone: string | null;
-  documentId: string;
-  address: string | null;
-  birthDate: string | null;
-  numeroLocal: string | null;
-  rubro: Rubro | null;
-  fechaInicioContrato: string | null;
-  estadoPago: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateTenantDTO {
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  documentId: string;
-  address?: string;
-  birthDate?: string;
-  numeroLocal?: string;
-  rubro?: string;
-  fechaInicioContrato?: string;
-}
-
-export interface UpdateTenantDTO {
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  address?: string;
-  birthDate?: string;
-  numeroLocal?: string;
-  rubro?: string;
-  fechaInicioContrato?: string;
-}

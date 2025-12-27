@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -13,12 +13,18 @@ import {
   TableRow,
   Paper,
   Chip,
+  Fab,
+  Tooltip,
 } from '@mui/material';
+import { Add as AddIcon, PictureAsPdf as PdfIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
-import { useContractService, type Contract } from '../services/contractService';
+import { useContractService } from '../services/contractService';
+import { Contract } from '../../../shared/types/Contract';
 import ContractDetailsModal from '../components/ContractDetailsModal';
+import ContractEditorModal from '../components/contract-editor/ContractEditorModal';
+import CreateContractModal from '../components/CreateContractModal';
 
 const ContractPage = () => {
   const contractService = useContractService()
@@ -32,6 +38,19 @@ const ContractPage = () => {
   const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({
     status: ''
   });
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [createContractOpen, setCreateContractOpen] = useState(false);
+
+  // Helper para traducir estados a español
+  const getStatusLabel = (status: string): string => {
+    const labels: Record<string, string> = {
+      'ACTIVE': 'Activo',
+      'COMPLETED': 'Completado',
+      'CANCELLED': 'Cancelado',
+      'TERMINATED': 'Terminado'
+    };
+    return labels[status] || status;
+  };
 
   const contractFilters: FilterConfig[] = [
     {
@@ -118,7 +137,11 @@ const ContractPage = () => {
     setFilteredContracts(filtered);
   };
 
+  const hasFetchedRef = useRef(false);
+  
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchContracts();
   }, []);
 
@@ -127,21 +150,31 @@ const ContractPage = () => {
     setDetailsOpen(true);
   };
 
+  const handleCreateContractSuccess = () => {
+    setCreateContractOpen(false);
+    fetchContracts();
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ 
+          display: { xs: 'block', sm: 'flex' }, 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          mb: 2 
+        }}>
           <Typography variant="h4" component="h1" gutterBottom>
             Contratos
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
-          <Box sx={{ flex: 1, maxWidth: 400 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
+          <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 250 }, maxWidth: { xs: '100%', sm: 400 } }}>
             <SearchBar
               searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
               onClearSearch={handleClearSearch}
-              placeholder="Buscar por ID, inquilino, propiedad, estado..."
+              placeholder="Buscar por inquilino, propiedad, estado..."
               label="Buscar contratos"
             />
           </Box>
@@ -168,23 +201,22 @@ const ContractPage = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell><strong>ID</strong></TableCell>
                 <TableCell><strong>Inquilino</strong></TableCell>
-                <TableCell><strong>Local / N°</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Local / N°</strong></TableCell>
                 <TableCell><strong>Estado</strong></TableCell>
-                <TableCell><strong>Fecha Inicio</strong></TableCell>
-                <TableCell><strong>Fecha Fin</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Inicio</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Fin</strong></TableCell>
                 <TableCell><strong>Alquiler Mensual</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredContracts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
                       {contracts.length === 0
                         ? 'No hay contratos registrados'
@@ -198,23 +230,22 @@ const ContractPage = () => {
                     key={contract.id}
                     hover
                     onClick={() => handleRowClick(contract)}
-                    sx={{ cursor: 'pointer' }}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: 'rgba(25, 118, 210, 0.12)'
+                      }
+                    }}
                   >
-                    <TableCell>{contract.id}</TableCell>
                     <TableCell>
                       {contract.tenantFullName || `ID: ${contract.tenantId}`}
                     </TableCell>
-                    <TableCell>
-                      {contract.propertyName || `ID: ${contract.propertyId}`}
-                      {contract.propertyLocalNumber !== undefined && (
-                        <Box component="span" sx={{ color: 'text.secondary', ml: 1 }}>
-                          / N° {contract.propertyLocalNumber}
-                        </Box>
-                      )}
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                      N° {contract.propertyLocalNumber || 'N/A'}
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={contract.status}
+                        label={getStatusLabel(contract.status)}
                         color={
                           contract.status === 'ACTIVE'
                             ? 'success'
@@ -227,12 +258,12 @@ const ContractPage = () => {
                         size="small"
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       {contract.startDate
                         ? new Date(contract.startDate).toLocaleDateString()
                         : '-'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       {contract.endDate
                         ? new Date(contract.endDate).toLocaleDateString()
                         : '-'}
@@ -252,6 +283,61 @@ const ContractPage = () => {
         contract={selectedContract}
         onClose={() => setDetailsOpen(false)}
       />
+
+      {/* Editor Modal para PDF */}
+      <ContractEditorModal
+        open={editorOpen}
+        onClose={() => setEditorOpen(false)}
+      />
+
+      {/* Modal para crear contrato */}
+      <CreateContractModal
+        open={createContractOpen}
+        onClose={() => setCreateContractOpen(false)}
+        onSuccess={handleCreateContractSuccess}
+      />
+
+      {/* FAB para generar PDF */}
+      <Tooltip title="Generar contrato PDF" placement="left">
+        <Fab
+          color="secondary"
+          variant="extended"
+          size="large"
+          aria-label="generar pdf"
+          onClick={() => setEditorOpen(true)}
+          sx={{
+            position: 'fixed',
+            bottom: 32,
+            right: 32,
+            px: 3,
+            py: 1.5
+          }}
+        >
+          <PdfIcon sx={{ mr: 1 }} />
+          Generar PDF
+        </Fab>
+      </Tooltip>
+
+      {/* FAB para agregar contrato */}
+      <Tooltip title="Agregar nuevo contrato" placement="left">
+        <Fab
+          color="primary"
+          variant="extended"
+          size="large"
+          aria-label="agregar contrato"
+          onClick={() => setCreateContractOpen(true)}
+          sx={{
+            position: 'fixed',
+            bottom: 112,
+            right: 32,
+            px: 3,
+            py: 1.5
+          }}
+        >
+          <AddIcon sx={{ mr: 1 }} />
+          Agregar Contrato
+        </Fab>
+      </Tooltip>
     </Container>
   );
 };

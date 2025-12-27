@@ -25,6 +25,13 @@ export class PrismaPropertyRepository implements IPropertyRepository {
     return properties.map(property => PropertyEntity.fromPrisma(property));
   }
 
+  async findByLocalNumber(localNumber: number): Promise<PropertyEntity | null> {
+    const property = await prisma.property.findFirst({
+      where: { localNumber }
+    });
+    return property ? PropertyEntity.fromPrisma(property) : null;
+  }
+
   async create(entity: PropertyEntity): Promise<PropertyEntity> {
     const data = entity.toPrisma();
     // Remove id for creation since it's auto-generated

@@ -1,4 +1,6 @@
 import bcrypt from 'bcryptjs'
+import { UserDTO } from '../dtos/user.dto';
+import { User } from '../../../shared/types/User';
 
 export class UserEntity {
   constructor(
@@ -33,13 +35,13 @@ export class UserEntity {
   }
 
   toDTO(): UserDTO {
-    return {
+    return User.fromJSON({
       id: this.id!,
       username: this.username,
       email: this.email,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    };
+    });
   }
 
   toAuthDTO(token: string): AuthUserDTO {
@@ -70,24 +72,10 @@ export class UserEntity {
   }
 }
 
-// DTO types
-export interface UserDTO {
-  id: number;
-  username: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
+// Auth DTO types (not shared, specific to auth flow)
 export interface AuthUserDTO {
   user: UserDTO;
   token: string;
-}
-
-export interface CreateUserDTO {
-  username: string;
-  email: string;
-  password: string;
 }
 
 export interface LoginDTO {

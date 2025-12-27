@@ -1,43 +1,5 @@
 import { useApi } from '../contexts/ApiContext'
-
-export interface Tenant {
-  id: number
-  firstName: string
-  lastName: string
-  phone?: string | null
-  documentId: string
-  address?: string | null
-  birthDate?: string | null
-  numeroLocal?: string | null
-  rubro?: string | null
-  fechaInicioContrato?: string | null
-  estadoPago: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface CreateTenantData {
-  firstName: string
-  lastName: string
-  phone?: string
-  documentId: string
-  address?: string
-  birthDate?: string
-  numeroLocal?: string
-  rubro?: string
-  fechaInicioContrato?: string
-}
-
-export interface UpdateTenantData {
-  firstName?: string
-  lastName?: string
-  phone?: string
-  address?: string
-  birthDate?: string
-  numeroLocal?: string
-  rubro?: string
-  fechaInicioContrato?: string
-}
+import { Tenant, CreateTenant, UpdateTenant } from '../../../shared/types/Tenant'
 
 export const useTenantService = () => {
   const api = useApi()
@@ -54,7 +16,7 @@ export const useTenantService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch tenants')
       }
-      return response.data.data || []
+      return (response.data.data || []).map((item: any) => Tenant.fromJSON(item))
     },
     
     getTenantById: async (id: number): Promise<Tenant> => {
@@ -68,7 +30,7 @@ export const useTenantService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch tenant')
       }
-      return response.data.data
+      return Tenant.fromJSON(response.data.data)
     },
     
     getTenantByDocumentId: async (documentId: string): Promise<Tenant> => {
@@ -82,11 +44,15 @@ export const useTenantService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to fetch tenant')
       }
-      return response.data.data
+      return Tenant.fromJSON(response.data.data)
     },
     
-    createTenant: async (tenantData: CreateTenantData): Promise<Tenant> => {
-      const response = await api.api.tenants.post(tenantData as any)
+    createTenant: async (tenantData: CreateTenant): Promise<Tenant> => {
+      const errors = tenantData.validate();
+      if (errors.length > 0) {
+        throw new Error(errors.join(', '));
+      }
+      const response = await api.api.tenants.post(tenantData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -96,11 +62,15 @@ export const useTenantService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to create tenant')
       }
-      return response.data.data
+      return Tenant.fromJSON(response.data.data)
     },
     
-    updateTenant: async (id: number, tenantData: UpdateTenantData): Promise<Tenant> => {
-      const response = await api.api.tenants({ id }).put(tenantData)
+    updateTenant: async (id: number, tenantData: UpdateTenant): Promise<Tenant> => {
+      const errors = tenantData.validate();
+      if (errors.length > 0) {
+        throw new Error(errors.join(', '));
+      }
+      const response = await api.api.tenants({ id }).put(tenantData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -110,7 +80,7 @@ export const useTenantService = () => {
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Failed to update tenant')
       }
-      return response.data.data
+      return Tenant.fromJSON(response.data.data)
     },
     
     deleteTenant: async (id: number): Promise<void> => {

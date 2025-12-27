@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -25,12 +25,15 @@ import {
   Switch,
   FormControlLabel,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
-import { usePropertyService, type Property } from '../services/propertyService';
-import { usePaymentService, type Payment, type CreatePaymentData } from '../services/paymentService';
+import { usePropertyService } from '../services/propertyService';
+import { Property } from '../../../shared/types/Property';
+import { usePaymentService } from '../services/paymentService';
+import { Payment, CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { FilterConfig } from '../components/FilterBar';
+import PaymentDetailsModal from '../components/PaymentDetailsModal';
 
 const PaymentPage = () => {
   const propertyService = usePropertyService()
@@ -82,12 +85,17 @@ const PaymentPage = () => {
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [receiptImageFile, setReceiptImageFile] = useState<File | null>(null);
+  const [receiptImagePreview, setReceiptImagePreview] = useState<string | null>(null);
 
   // Toggle Pentamont persisted in backend
   const handleTogglePentamont = async (payment: Payment) => {
     try {
       const next = !payment.pentamontSettled;
-      await paymentService.updatePayment(payment.id, { pentamontSettled: next });
+      const updateData = new UpdatePayment(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, next, undefined);
+      await paymentService.updatePayment(payment.id, updateData);
       setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
       setFilteredPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
     } catch (e: any) {
@@ -195,21 +203,31 @@ const PaymentPage = () => {
     }
 
     try {
-      const paymentData: CreatePaymentData = {
-        tenantId: selectedProperty.tenantId || undefined,
-        propertyId: selectedProperty.id,
-        amount: parseFloat(createForm.amount),
-        paymentDate: createForm.paymentDate,
-        dueDate: createForm.dueDate,
-        paymentMethod: createForm.paymentMethod,
-        notes: createForm.notes || undefined,
-      };
-
-      await paymentService.createPayment(paymentData);
+      const tenantId = selectedProperty.tenantId;
+      if (!tenantId) {
+        setError('La propiedad seleccionada no tiene un inquilino asignado');
+        return;
+      }
+      
+      const paymentData = new CreatePayment(
+        tenantId,
+        selectedProperty.id,
+        parseFloat(createForm.amount),
+        createForm.dueDate,
+        createForm.paymentDate,
+        createForm.paymentMethod,
+        undefined,
+        createForm.notes || undefined
+      );
+      (paymentData as any).receiptImage = receiptImageFile || null; // Para mantener compatibilidad con CreatePaymentData
+      
+      await paymentService.createPayment(paymentData as any);
 
       setCreateDialogOpen(false);
       setSelectedProperty(null);
       setAmountError('');
+      setReceiptImageFile(null);
+      setReceiptImagePreview(null);
       setCreateForm({
         tenantId: '',
         propertyId: '',
@@ -225,7 +243,11 @@ const PaymentPage = () => {
     }
   };
 
+  const hasFetchedRef = useRef(false);
+  
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchPayments();
     fetchProperties();
   }, []);
@@ -256,10 +278,24 @@ const PaymentPage = () => {
     setAmountError(error);
   };
 
-  const handleViewDetails = (payment: Payment) => {
-    // TODO: Navigate to payment details page
-    console.log('View details for payment:', payment.id);
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setReceiptImageFile(file);
+      // Crear preview de la imagen seleccionada
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReceiptImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
+
+  const handleRemoveImage = () => {
+    setReceiptImageFile(null);
+    setReceiptImagePreview(null);
+  };
+
 
   const handleEdit = (payment: Payment) => {
     setEditingPayment(payment);
@@ -297,15 +333,20 @@ const PaymentPage = () => {
     if (!editingPayment) return;
 
     try {
-      const paymentData: Partial<CreatePaymentData> = {
-        tenantId: parseInt(editForm.tenantId),
-        propertyId: parseInt(editForm.propertyId),
-        amount: parseFloat(editForm.amount),
-        paymentDate: editForm.paymentDate,
-        dueDate: editForm.dueDate,
-        paymentMethod: editForm.paymentMethod,
-        notes: editForm.notes || undefined,
-      };
+      const paymentData = new UpdatePayment(
+        parseInt(editForm.tenantId),
+        parseInt(editForm.propertyId),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        parseFloat(editForm.amount),
+        editForm.paymentDate,
+        editForm.dueDate,
+        editForm.paymentMethod,
+        undefined,
+        editForm.notes || undefined
+      );
 
       await paymentService.updatePayment(editingPayment.id, paymentData);
 
@@ -338,15 +379,20 @@ const PaymentPage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ 
+          display: { xs: 'block', sm: 'flex' }, 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          mb: 2 
+        }}>
           <Typography variant="h4" component="h1" gutterBottom>
             Pagos
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
-          <Box sx={{ flex: 1, maxWidth: 400 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
+          <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 250 }, maxWidth: { xs: '100%', sm: 400 } }}>
             <SearchBar
               searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
@@ -378,28 +424,36 @@ const PaymentPage = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell><strong>ID</strong></TableCell>
                 <TableCell><strong>Inquilino</strong></TableCell>
                 <TableCell><strong>Monto</strong></TableCell>
-                <TableCell><strong>Fecha Pago</strong></TableCell>
-                <TableCell><strong>Fecha Vencimiento</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Pago</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Vencimiento</strong></TableCell>
                 <TableCell><strong>Medio de Pago</strong></TableCell>
                 <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredPayments.map((payment) => (
-                <TableRow key={payment.id} hover>
-                  <TableCell>{payment.id}</TableCell>
+                <TableRow 
+                  key={payment.id} 
+                  hover
+                  onClick={() => handleEdit(payment)}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.12)'
+                    }
+                  }}
+                >
                   <TableCell>{payment.tenantFullName || `ID: ${payment.tenantId}`}</TableCell>
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                  <TableCell>{formatDate(payment.paymentDate)}</TableCell>
-                  <TableCell>{formatDate(payment.dueDate)}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatDate(payment.paymentDate)}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatDate(payment.dueDate)}</TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography variant="body2">
                         {payment.paymentMethod === 'YAPE' ? 'Yape' :
@@ -415,24 +469,25 @@ const PaymentPage = () => {
                             <Switch
                               size="small"
                               checked={!!payment.pentamontSettled}
-                              onChange={() => handleTogglePentamont(payment)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleTogglePentamont(payment);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
                             />
                           }
+                          onClick={(e) => e.stopPropagation()}
                         />
                       )}
                     </Box>
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="center" onClick={(e) => e.stopPropagation()}>
                     <IconButton
                       size="small"
-                      onClick={() => handleViewDetails(payment)}
-                      title="Ver detalles"
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEdit(payment)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(payment);
+                      }}
                       title="Editar"
                       color="primary"
                     >
@@ -440,7 +495,10 @@ const PaymentPage = () => {
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => handleDelete(payment)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(payment);
+                      }}
                       title="Eliminar"
                       color="error"
                     >
@@ -451,7 +509,7 @@ const PaymentPage = () => {
               ))}
               {payments.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
                       No hay pagos registrados
                     </Typography>
@@ -466,23 +524,41 @@ const PaymentPage = () => {
       {/* Floating Action Button for creating new payment */}
       <Fab
         color="primary"
+        variant="extended"
+        size="large"
         aria-label="add"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          px: 3,
+          py: 1.5
+        }}
         onClick={() => setCreateDialogOpen(true)}
       >
-        <AddIcon />
+        <AddIcon sx={{ mr: 1 }} />
+        Agregar Pago
       </Fab>
 
       {/* Create Payment Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Crear Nuevo Pago</DialogTitle>
-        <DialogContent>
+      <Dialog 
+        open={createDialogOpen} 
+        onClose={() => {
+          setCreateDialogOpen(false);
+          setReceiptImageFile(null);
+          setReceiptImagePreview(null);
+        }} 
+        maxWidth="md" 
+        fullWidth
+      >
+        <DialogTitle>Agregar Pago</DialogTitle>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Box component="form" sx={{ mt: 2 }}>
             <Autocomplete
               fullWidth
               options={properties}
               getOptionLabel={(property) =>
-                `${property.name} - Local N° ${property.localNumber}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
+                `Local N° ${property.localNumber} - ${property.ubicacion === 'BOULEVARD' ? 'Boulevard' : property.ubicacion === 'SAN_MARTIN' ? 'San Martin' : property.ubicacion}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
               }
               value={selectedProperty}
               onChange={(_, newValue) => {
@@ -566,7 +642,71 @@ const PaymentPage = () => {
               onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
               multiline
               rows={2}
+              sx={{ mb: 2 }}
             />
+            
+            {/* Upload de Comprobante */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                Comprobante de Pago
+              </Typography>
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="receipt-image-upload"
+                type="file"
+                onChange={handleImageChange}
+                key={receiptImageFile ? receiptImageFile.name : 'file-input'}
+              />
+              <label htmlFor="receipt-image-upload">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<CloudUploadIcon />}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                >
+                  {receiptImageFile ? receiptImageFile.name : 'Seleccionar Imagen del Comprobante'}
+                </Button>
+              </label>
+              
+              {/* Preview de la imagen */}
+              {receiptImagePreview && (
+                <Box sx={{ mt: 2, position: 'relative' }}>
+                  <Box
+                    component="img"
+                    src={receiptImagePreview}
+                    alt="Preview del comprobante"
+                    sx={{
+                      maxWidth: '100%',
+                      maxHeight: '200px',
+                      objectFit: 'contain',
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      p: 1,
+                      bgcolor: 'grey.50',
+                    }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={handleRemoveImage}
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      bgcolor: 'background.paper',
+                      '&:hover': { bgcolor: 'error.light', color: 'error.contrastText' }
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              )}
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                Por ahora, cualquier imagen seleccionada será mockeada y se usará la imagen de prueba
+              </Typography>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -584,7 +724,7 @@ const PaymentPage = () => {
       {/* Edit Payment Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Editar Pago</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Box component="form" sx={{ mt: 2 }}>
             <TextField
               fullWidth
@@ -667,7 +807,7 @@ const PaymentPage = () => {
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Confirmar Eliminación</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Typography>
             ¿Estás seguro de que quieres eliminar este pago de{' '}
             <strong>{formatCurrency(paymentToDelete?.amount || 0)}</strong>?
@@ -683,6 +823,16 @@ const PaymentPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Payment Details Modal */}
+      <PaymentDetailsModal
+        open={detailsModalOpen}
+        payment={selectedPayment}
+        onClose={() => {
+          setDetailsModalOpen(false);
+          setSelectedPayment(null);
+        }}
+      />
     </Container>
   );
 };

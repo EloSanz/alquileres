@@ -1,15 +1,23 @@
 import { IAuthService } from '../interfaces/services/IAuthService';
-import { CreateUserDTO, LoginDTO } from '../entities/User.entity';
+import { LoginDTO } from '../entities/User.entity';
+import { CreateUser } from '../../../shared/types/User';
 
 export class AuthController {
   constructor(private authService: IAuthService) {}
 
-  register = async ({ body }: { body: CreateUserDTO }) => ({
-    success: true,
-    message: 'User registered successfully',
-    data: await this.authService.register(body),
-    timestamp: new Date().toISOString()
-  });
+  register = async ({ body }: { body: any }) => {
+    const createUser = CreateUser.fromJSON(body);
+    const errors = createUser.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    return {
+      success: true,
+      message: 'User registered successfully',
+      data: await this.authService.register(createUser.toDTO()),
+      timestamp: new Date().toISOString()
+    };
+  };
 
   login = async ({ body }: { body: LoginDTO }) => ({
     success: true,

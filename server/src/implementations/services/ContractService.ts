@@ -117,7 +117,7 @@ export class ContractService implements IContractService {
       throw new Error('Contract not found');
     }
 
-    const updatedEntity = entity.update(data);
+    const updatedEntity = entity.update(data as any);
     const saved = await this.contractRepository.update(updatedEntity);
     return saved.toDTO();
   }
