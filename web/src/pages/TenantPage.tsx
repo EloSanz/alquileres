@@ -204,6 +204,9 @@ const TenantPage = () => {
 
   const handleCreateTenant = async () => {
     try {
+      // Convert empty strings to undefined for fechaInicioContrato
+      const fechaInicioContrato = createForm.fechaInicioContrato?.trim() || undefined;
+      
       const tenantData = new CreateTenant(
         createForm.firstName,
         createForm.lastName,
@@ -213,7 +216,7 @@ const TenantPage = () => {
         undefined,
         createForm.numeroLocal || undefined,
         createForm.rubro || undefined,
-        createForm.fechaInicioContrato || undefined
+        fechaInicioContrato
       );
 
       await tenantService.createTenant(tenantData);
@@ -285,6 +288,9 @@ const TenantPage = () => {
     if (!editingTenant) return;
 
     try {
+      // Convert empty strings to undefined for fechaInicioContrato
+      const fechaInicioContrato = editForm.fechaInicioContrato?.trim() || undefined;
+      
       const tenantData = new UpdateTenant(
         editForm.firstName,
         editForm.lastName,
@@ -293,7 +299,7 @@ const TenantPage = () => {
         undefined,
         editForm.numeroLocal || undefined,
         editForm.rubro || undefined,
-        editForm.fechaInicioContrato || undefined
+        fechaInicioContrato
       );
 
       await tenantService.updateTenant(editingTenant.id, tenantData);

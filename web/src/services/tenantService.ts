@@ -76,6 +76,10 @@ export const useTenantService = () => {
       }
       const response = await api.pentamont.api.tenants({ id }).put(tenantData.toJSON())
       if (response.error) {
+        // Verificar si es un error de autenticación y redirigir
+        if (checkAuthError(response.error)) {
+          throw new Error('Authentication required')
+        }
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
           : (response.error.value as any)?.message || 'Failed to update tenant'

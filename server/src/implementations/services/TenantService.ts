@@ -171,7 +171,21 @@ export class TenantService implements ITenantService {
     if (data.numeroLocal !== undefined) entity.numeroLocal = data.numeroLocal;
     if (data.rubro !== undefined) entity.rubro = stringToRubro(data.rubro);
     if (data.fechaInicioContrato !== undefined) {
-      entity.fechaInicioContrato = data.fechaInicioContrato ? new Date(data.fechaInicioContrato) : null;
+      // Handle empty strings and validate date
+      const dateStr = typeof data.fechaInicioContrato === 'string' 
+        ? data.fechaInicioContrato.trim() 
+        : data.fechaInicioContrato;
+      
+      if (!dateStr || dateStr === '') {
+        entity.fechaInicioContrato = null;
+      } else {
+        const date = new Date(dateStr);
+        // Validate that the date is valid
+        if (isNaN(date.getTime())) {
+          throw new Error(`Invalid date format: ${dateStr}`);
+        }
+        entity.fechaInicioContrato = date;
+      }
     }
 
     entity.updatedAt = new Date();
