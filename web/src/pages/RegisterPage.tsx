@@ -62,21 +62,53 @@ const RegisterPage = () => {
     setError('');
 
     try {
-      // TODO: Implement register API call when backend route is available
-      // For now, simulate registration
-      if (formData.username && formData.email && formData.password) {
-        const mockUser = {
-          id: 1,
+      // Llamar al endpoint de registro del backend
+      const response = await fetch(`${window.location.origin}/pentamont/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           username: formData.username,
           email: formData.email,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        const mockToken = 'mock-jwt-token';
-        login(mockToken, mockUser);
+          password: formData.password,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error al registrar usuario' }));
+        setError(errorData.message || `Error ${response.status}`);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        // Asegurar que el token esté limpio (sin espacios ni comillas)
+        const token = String(data.data.token || '').trim().replace(/^["']|["']$/g, '');
+        const user = data.data.user;
+        
+        if (!token) {
+          setError('Token no recibido del servidor');
+          return;
+        }
+        
+        // Validar formato JWT (debe tener 3 partes separadas por puntos)
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) {
+          console.error('Token malformado recibido:', {
+            length: token.length,
+            parts: tokenParts.length,
+            preview: token.substring(0, 20) + '...'
+          });
+          setError('Token inválido recibido del servidor');
+          return;
+        }
+        
+        login(token, user);
         navigate('/');
       } else {
-        setError('Datos inválidos');
+        setError(data.message || 'Error al registrar usuario');
       }
     } catch (err: any) {
       setError(err.message || 'Error al registrar usuario');
