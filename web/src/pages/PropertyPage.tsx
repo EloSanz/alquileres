@@ -25,7 +25,7 @@ import {
   Grid,
   Autocomplete,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Payment as PaymentIcon } from '@mui/icons-material';
 import { usePropertyService } from '../services/propertyService';
 import { Property, CreateProperty, UpdateProperty } from '../../../shared/types/Property';
 import { useTenantService } from '../services/tenantService';
@@ -33,6 +33,7 @@ import { Tenant } from '../../../shared/types/Tenant';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import PropertyDetailsModal from '../components/PropertyDetailsModal';
+import PaymentByPropertyView from '../components/PaymentByPropertyView';
 
 const PropertyPage = () => {
   const propertyService = usePropertyService()
@@ -62,6 +63,7 @@ const PropertyPage = () => {
   const [localNumberError, setLocalNumberError] = useState<string>('');
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [paymentByPropertyViewOpen, setPaymentByPropertyViewOpen] = useState(false);
 
   const fetchProperties = async () => {
     try {
@@ -286,6 +288,14 @@ const PropertyPage = () => {
           <Typography variant="h4" component="h1" gutterBottom>
             Locales
           </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<PaymentIcon />}
+            onClick={() => setPaymentByPropertyViewOpen(true)}
+            sx={{ mt: { xs: 2, sm: 0 } }}
+          >
+            Ver Pagos por Local
+          </Button>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
           <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 250 }, maxWidth: { xs: '100%', sm: 400 } }}>
@@ -629,6 +639,12 @@ const PropertyPage = () => {
           setDetailsModalOpen(false);
           setSelectedProperty(null);
         }}
+      />
+
+      {/* Payment By Property View Modal */}
+      <PaymentByPropertyView
+        open={paymentByPropertyViewOpen}
+        onClose={() => setPaymentByPropertyViewOpen(false)}
       />
     </Container>
   );

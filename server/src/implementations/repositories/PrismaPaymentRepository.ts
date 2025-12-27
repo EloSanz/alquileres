@@ -1,6 +1,7 @@
 import { IPaymentRepository } from '../../interfaces/repositories/IPaymentRepository';
 import { PaymentEntity } from '../../entities/Payment.entity';
 import { prisma } from '../../lib/prisma';
+import { logInfo, logDebug, logError } from '../../utils/logger';
 
 export class PrismaPaymentRepository implements IPaymentRepository {
   async findAll(): Promise<PaymentEntity[]> {
@@ -65,10 +66,12 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     delete (data as any).contractId;
     // Exclude receiptImageUrl - not in Prisma schema yet (will be added in future migration)
     delete (data as any).receiptImageUrl;
+    
     const payment = await prisma.payment.update({
       where: { id: entity.id! },
       data: data as any // Allow null values
     });
+    
     return PaymentEntity.fromPrisma(payment);
   }
 

@@ -30,7 +30,9 @@ import NavigationTabs from '../components/NavigationTabs';
 import { usePropertyService } from '../services/propertyService';
 import { Property } from '../../../shared/types/Property';
 import { usePaymentService } from '../services/paymentService';
+import { useTenantService } from '../services/tenantService';
 import { Payment, CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
+import { Tenant } from '../../../shared/types/Tenant';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { FilterConfig } from '../components/FilterBar';
 import PaymentDetailsModal from '../components/PaymentDetailsModal';
@@ -38,8 +40,11 @@ import PaymentDetailsModal from '../components/PaymentDetailsModal';
 const PaymentPage = () => {
   const propertyService = usePropertyService()
   const paymentService = usePaymentService()
+  const tenantService = useTenantService()
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -113,11 +118,21 @@ const PaymentPage = () => {
     }
   };
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (tenantId?: number | null) => {
     try {
       setLoading(true);
       setError(''); // Limpiar error anterior
-      const data = await paymentService.getAllPayments();
+      const targetTenantId = tenantId !== undefined ? tenantId : selectedTenantId;
+      let data: Payment[];
+      
+      if (targetTenantId !== null && targetTenantId !== undefined) {
+        // Cargar solo pagos del inquilino seleccionado
+        data = await paymentService.getPaymentsByTenantId(targetTenantId);
+      } else {
+        // Si no hay inquilino seleccionado, cargar todos (fallback)
+        data = await paymentService.getAllPayments();
+      }
+      
       setPayments(data);
       const filtered = filterPayments(searchQuery, filterValues, data);
       setFilteredPayments(filtered);
@@ -204,6 +219,20 @@ const PaymentPage = () => {
     }
   };
 
+  const fetchTenants = async () => {
+    try {
+      const data = await tenantService.getAllTenants();
+      setTenants(data);
+      // Seleccionar el primer inquilino por defecto
+      if (data.length > 0 && selectedTenantId === null) {
+        setSelectedTenantId(data[0].id);
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch tenants:', err);
+      // No mostrar error en UI ya que es secundario
+    }
+  };
+
   const handleCreatePayment = async () => {
     // Validar monto antes de enviar
     const amountError = validateAmount(createForm.amount);
@@ -253,7 +282,7 @@ const PaymentPage = () => {
         paymentMethod: 'YAPE',
         notes: '',
       });
-      fetchPayments(); // Refresh the list
+      fetchPayments(selectedTenantId); // Refresh the list manteniendo el filtro de inquilino
     } catch (err: any) {
       setError(err.message || 'Failed to create payment');
     }
@@ -262,11 +291,26 @@ const PaymentPage = () => {
   const hasFetchedRef = useRef(false);
   
   useEffect(() => {
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
-    fetchPayments();
-    fetchProperties();
+    const loadInitialData = async () => {
+      if (hasFetchedRef.current) return;
+      hasFetchedRef.current = true;
+      
+      // Cargar inquilinos primero
+      await fetchTenants();
+      // Luego cargar propiedades
+      await fetchProperties();
+      // Los pagos se cargarán cuando se seleccione el primer inquilino
+    };
+    
+    loadInitialData();
   }, []);
+
+  // Cargar pagos cuando cambie el inquilino seleccionado
+  useEffect(() => {
+    if (selectedTenantId !== null && tenants.length > 0) {
+      fetchPayments(selectedTenantId);
+    }
+  }, [selectedTenantId]);
 
   // Aplicar filtros cuando cambien los criterios
   useEffect(() => {
@@ -339,7 +383,7 @@ const PaymentPage = () => {
       await paymentService.deletePayment(paymentToDelete.id);
       setDeleteDialogOpen(false);
       setPaymentToDelete(null);
-      fetchPayments(); // Refresh the list
+      fetchPayments(selectedTenantId); // Refresh the list manteniendo el filtro de inquilino
     } catch (err: any) {
       setError(err.message || 'Failed to delete payment');
     }
@@ -365,11 +409,10 @@ const PaymentPage = () => {
         editForm.notes || undefined
       );
 
-      const updatedPayment = await paymentService.updatePayment(editingPayment.id, paymentData);
+      await paymentService.updatePayment(editingPayment.id, paymentData);
 
-      // Actualizar estado local manteniendo el orden
-      setPayments(prev => prev.map(p => p.id === updatedPayment.id ? updatedPayment : p));
-      // El useEffect se encargará de re-filtrar filteredPayments
+      // Recargar pagos desde el servidor para mantener consistencia con el filtro de inquilino
+      await fetchPayments(selectedTenantId);
 
       setEditDialogOpen(false);
       setEditingPayment(null);
@@ -411,7 +454,27 @@ const PaymentPage = () => {
             Pagos
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap', mb: 2 }}>
+          {tenants.length > 0 && (
+            <TextField
+              select
+              label="Filtrar por Inquilino"
+              value={selectedTenantId || ''}
+              onChange={(e) => setSelectedTenantId(Number(e.target.value))}
+              sx={{ minWidth: { xs: '100%', sm: 250 }, maxWidth: { xs: '100%', sm: 300 } }}
+            >
+              {tenants.map((tenant) => (
+                <MenuItem key={tenant.id} value={tenant.id}>
+                  {tenant.firstName} {tenant.lastName}
+                  {tenant.localNumbers && tenant.localNumbers.length > 0 && (
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (Locales: {tenant.localNumbers.join(', ')})
+                    </Typography>
+                  )}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
           <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 250 }, maxWidth: { xs: '100%', sm: 400 } }}>
             <SearchBar
               searchQuery={searchQuery}
@@ -461,7 +524,10 @@ const PaymentPage = () => {
                 <TableRow 
                   key={payment.id} 
                   hover
-                  onClick={() => handleEdit(payment)}
+                  onClick={() => {
+                    setSelectedPayment(payment);
+                    setDetailsModalOpen(true);
+                  }}
                   sx={{
                     cursor: 'pointer',
                     '&:hover': {

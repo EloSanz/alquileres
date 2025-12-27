@@ -1,4 +1,4 @@
-import { type Payment } from '../../../shared/types/Payment';
+import { type Payment, PaymentStatus } from '../../../shared/types/Payment';
 
 export type ContractMonthStatus = 'PAID' | 'DUE' | 'FUTURE';
 
@@ -37,12 +37,25 @@ export function buildContractTimeline(startDateInput: string | Date, payments: P
 
     let status: ContractMonthStatus;
     if (p) {
-      if (p.paymentDate && new Date(p.paymentDate) <= now) {
+      // Usar el campo status del pago si está disponible
+      // Comparar tanto con el enum como con el string para mayor robustez
+      const paymentStatus = String(p.status).toUpperCase();
+
+      if (paymentStatus === PaymentStatus.PAGADO || paymentStatus === 'PAGADO') {
         status = 'PAID';
-      } else if (new Date(p.dueDate) < now) {
+      } else if (paymentStatus === PaymentStatus.VENCIDO || paymentStatus === 'VENCIDO') {
         status = 'DUE';
-      } else {
+      } else if (paymentStatus === PaymentStatus.FUTURO || paymentStatus === 'FUTURO') {
         status = 'FUTURE';
+      } else {
+        // Fallback: calcular basándose en fechas si no hay status
+        if (p.paymentDate && new Date(p.paymentDate) <= now) {
+          status = 'PAID';
+        } else if (new Date(p.dueDate) < now) {
+          status = 'DUE';
+        } else {
+          status = 'FUTURE';
+        }
       }
     } else {
       status = dueDate < now ? 'DUE' : 'FUTURE';
@@ -58,5 +71,3 @@ export function buildContractTimeline(startDateInput: string | Date, payments: P
 
   return timeline;
 }
-
-

@@ -1,7 +1,41 @@
 // Import the enum
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
+import { PaymentStatus as FrontendPaymentStatus } from '../../../shared/types/Payment';
 import { PaymentDTO } from '../dtos/payment.dto';
 import { Payment } from '../../../shared/types/Payment';
+
+// Helper function to convert frontend PaymentStatus to Prisma PaymentStatus
+function convertFrontendStatusToPrisma(frontendStatus: string | FrontendPaymentStatus): PaymentStatus {
+  switch (frontendStatus) {
+    case FrontendPaymentStatus.PAGADO:
+    case 'PAGADO':
+      return PaymentStatus.PAGADO;
+    case FrontendPaymentStatus.VENCIDO:
+    case 'VENCIDO':
+      return PaymentStatus.VENCIDO;
+    case FrontendPaymentStatus.FUTURO:
+    case 'FUTURO':
+      return PaymentStatus.FUTURO;
+    default:
+      console.warn('[PaymentEntity] Unknown status:', frontendStatus, 'defaulting to FUTURO');
+      return PaymentStatus.FUTURO;
+  }
+}
+
+// Helper function to convert Prisma PaymentStatus to frontend PaymentStatus
+function convertPrismaStatusToFrontend(prismaStatus: PaymentStatus): FrontendPaymentStatus {
+  switch (prismaStatus) {
+    case PaymentStatus.PAGADO:
+      return FrontendPaymentStatus.PAGADO;
+    case PaymentStatus.VENCIDO:
+      return FrontendPaymentStatus.VENCIDO;
+    case PaymentStatus.FUTURO:
+      return FrontendPaymentStatus.FUTURO;
+    default:
+      console.warn('[PaymentEntity] Unknown Prisma status:', prismaStatus, 'defaulting to FUTURO');
+      return FrontendPaymentStatus.FUTURO;
+  }
+}
 
 export class PaymentEntity {
   constructor(
@@ -67,15 +101,14 @@ export class PaymentEntity {
       paymentDate,
       dueDate,
       (data.paymentMethod as PaymentMethod) || PaymentMethod.YAPE,
-      PaymentStatus.FUTURO, // temporal, se calculará después
+      convertFrontendStatusToPrisma(data.status || FrontendPaymentStatus.FUTURO), // convertir a Prisma enum
       data.pentamontSettled ?? false,
       data.notes || null,
       data.receiptImageUrl || null,
       new Date(), // createdAt
       new Date()  // updatedAt
     );
-    // Calcular status automáticamente
-    entity.status = data.status || entity.calculateStatus();
+    // El status ya se calculó arriba, no sobreescribir si ya se proporcionó
     return entity;
   }
 
@@ -106,7 +139,7 @@ export class PaymentEntity {
     if (data.dueDate !== undefined) this.dueDate = new Date(data.dueDate);
     if (data.paymentMethod !== undefined) this.paymentMethod = data.paymentMethod as PaymentMethod;
     if (data.status !== undefined) {
-      this.status = data.status;
+      this.status = convertFrontendStatusToPrisma(data.status);
     } else {
       // Recalcular status si cambió paymentDate o dueDate
       if (data.paymentDate !== undefined || data.dueDate !== undefined) {
@@ -184,7 +217,7 @@ export class PaymentEntity {
       paymentDate: this.paymentDate.toISOString().split('T')[0],
       dueDate: this.dueDate.toISOString().split('T')[0],
       paymentMethod: this.paymentMethod.toString(),
-      status: this.status.toString(),
+      status: convertPrismaStatusToFrontend(this.status),
       pentamontSettled: this.pentamontSettled,
       notes: this.notes,
       receiptImageUrl: this.receiptImageUrl || '/comprobante.png',

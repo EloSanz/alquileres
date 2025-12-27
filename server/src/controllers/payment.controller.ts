@@ -1,5 +1,6 @@
 import { IPaymentService } from '../interfaces/services/IPaymentService';
 import { CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
+import { logInfo, logError, logDebug } from '../utils/logger';
 
 export class PaymentController {
   constructor(private paymentService: IPaymentService) {}
@@ -25,6 +26,21 @@ export class PaymentController {
       success: true,
       message: 'Payment retrieved successfully',
       data: payment,
+    };
+  };
+
+  getByTenantId = async ({
+    params: { tenantId },
+    userId,
+  }: {
+    params: { tenantId: number };
+    userId: number;
+  }) => {
+    const payments = await this.paymentService.getPaymentsByTenantId(tenantId, userId);
+    return {
+      success: true,
+      message: 'Payments retrieved successfully',
+      data: payments,
     };
   };
 
@@ -62,7 +78,9 @@ export class PaymentController {
     if (errors.length > 0) {
       throw new Error(errors.join(', '));
     }
+    
     const payment = await this.paymentService.updatePayment(id, updatePayment.toDTO(), userId);
+    
     return {
       success: true,
       message: 'Payment updated successfully',

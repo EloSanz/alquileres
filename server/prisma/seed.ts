@@ -12,8 +12,18 @@ async function main() {
     const sqlPath = path.join(__dirname, 'seed.sql');
     const sqlContent = fs.readFileSync(sqlPath, 'utf-8');
 
-    // Dividir por líneas y procesar cada statement
-    const lines = sqlContent.split('\n');
+    // Dividir por bloques DO $$ primero (estos deben ejecutarse completos)
+    const doBlockRegex = /DO\s+\$\$[\s\S]*?\$\$;/g;
+    const doBlocks = sqlContent.match(doBlockRegex) || [];
+    
+    // Remover los bloques DO $$ del contenido original para procesar el resto
+    let contentWithoutDoBlocks = sqlContent;
+    doBlocks.forEach(block => {
+      contentWithoutDoBlocks = contentWithoutDoBlocks.replace(block, '');
+    });
+
+    // Procesar statements normales (sin bloques DO $$)
+    const lines = contentWithoutDoBlocks.split('\n');
     let currentStatement = '';
 
     for (const line of lines) {
@@ -37,11 +47,16 @@ async function main() {
       }
     }
 
+    // Ejecutar bloques DO $$ completos
+    for (const block of doBlocks) {
+      await prisma.$executeRawUnsafe(block.trim());
+    }
+
     console.log('✅ Seed SQL ejecutado exitosamente!');
     console.log('📊 Datos insertados:');
-    console.log('   👥 15 Inquilinos únicos');
+    console.log('   👥 24 Inquilinos (ROGER VASQUEZ tiene locales 9 y 10)');
     console.log('   🏠 25 Propiedades');
-    console.log('   📄 Contratos y pagos registrados históricos');
+    console.log('   📄 Contratos y pagos registrados');
 
   } catch (error) {
     console.error('❌ Error ejecutando seed SQL:', error);
