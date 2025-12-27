@@ -41,7 +41,7 @@ export const useTaxService = () => {
 
   return {
     getAllTaxes: async (): Promise<TaxDTO[]> => {
-      const response = await api.api.taxes.get();
+      const response = await api.pentamont.api.taxes.get();
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -55,7 +55,7 @@ export const useTaxService = () => {
     },
 
     getTaxById: async (id: number): Promise<TaxDTO> => {
-      const response = await api.api.taxes({ id }).get();
+      const response = await api.pentamont.api.taxes({ id }).get();
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -69,7 +69,7 @@ export const useTaxService = () => {
     },
 
     createTax: async (data: CreateTaxDTO): Promise<TaxDTO> => {
-      const response = await api.api.taxes.post(data);
+      const response = await api.pentamont.api.taxes.post(data);
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -83,7 +83,7 @@ export const useTaxService = () => {
     },
 
     updateTax: async (id: number, data: UpdateTaxDTO): Promise<TaxDTO> => {
-      const response = await api.api.taxes({ id }).put(data);
+      const response = await api.pentamont.api.taxes({ id }).put(data);
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -97,7 +97,7 @@ export const useTaxService = () => {
     },
 
     deleteTax: async (id: number): Promise<void> => {
-      const response = await api.api.taxes({ id }).delete();
+      const response = await api.pentamont.api.taxes({ id }).delete();
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value

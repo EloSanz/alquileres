@@ -1,4 +1,4 @@
-import { useApi } from '../contexts/ApiContext'
+import { useApi, checkAuthError } from '../contexts/ApiContext'
 import { Property, CreateProperty, UpdateProperty } from '../../../shared/types/Property'
 
 export const usePropertyService = () => {
@@ -6,8 +6,12 @@ export const usePropertyService = () => {
   
   return {
     getAllProperties: async (): Promise<Property[]> => {
-      const response = await api.api.properties.get()
+      const response = await api.pentamont.api.properties.get()
       if (response.error) {
+        // Verificar si es un error de autenticación y redirigir
+        if (checkAuthError(response.error)) {
+          throw new Error('Authentication required')
+        }
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
           : (response.error.value as any)?.message || 'Failed to fetch properties'
@@ -20,7 +24,7 @@ export const usePropertyService = () => {
     },
     
     getPropertyById: async (id: number): Promise<Property> => {
-      const response = await api.api.properties({ id }).get()
+      const response = await api.pentamont.api.properties({ id }).get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -38,7 +42,7 @@ export const usePropertyService = () => {
       if (errors.length > 0) {
         throw new Error(errors.join(', '));
       }
-      const response = await api.api.properties.post(propertyData.toJSON())
+      const response = await api.pentamont.api.properties.post(propertyData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -56,7 +60,7 @@ export const usePropertyService = () => {
       if (errors.length > 0) {
         throw new Error(errors.join(', '));
       }
-      const response = await api.api.properties({ id }).put(propertyData.toJSON())
+      const response = await api.pentamont.api.properties({ id }).put(propertyData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -70,7 +74,7 @@ export const usePropertyService = () => {
     },
     
     deleteProperty: async (id: number): Promise<void> => {
-      const response = await api.api.properties({ id }).delete()
+      const response = await api.pentamont.api.properties({ id }).delete()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -83,7 +87,7 @@ export const usePropertyService = () => {
     },
     
     releaseProperty: async (id: number): Promise<Property> => {
-      const response = await api.api.properties({ id }).release.put()
+      const response = await api.pentamont.api.properties({ id }).release.put()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 

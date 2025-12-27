@@ -12,17 +12,43 @@ export const useApi = () => {
   return context
 }
 
+// Función para manejar token inválido y redirigir al login
+export const handleInvalidToken = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  // Redirigir al login usando window.location para asegurar recarga completa
+  window.location.href = '/pentamont/login'
+}
+
+// Función helper para verificar errores de autenticación en respuestas
+export const checkAuthError = (error: any): boolean => {
+  if (!error) return false
+  
+  const errorValue = typeof error === 'object' && error.error ? error.error.value : error
+  const errorMessage = typeof errorValue === 'string' 
+    ? errorValue 
+    : (errorValue as any)?.message || ''
+  
+  const isAuthError = errorMessage.includes('Invalid token') || 
+                     errorMessage.includes('No token provided') ||
+                     errorMessage.includes('Unauthorized') ||
+                     (typeof errorValue === 'object' && (errorValue as any)?.status === 401) ||
+                     (error as any)?.status === 401
+  
+  if (isAuthError) {
+    console.warn('Error de autenticación detectado, redirigiendo al login')
+    handleInvalidToken()
+  }
+  
+  return isAuthError
+}
+
 export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
-  // Construir URL completa basada en el origen actual
+  // Usar solo el origen para que Eden Treaty maneje las rutas correctamente
+  // Las rutas se accederán como api.pentamont.api.tenants.get()
   // En desarrollo: Vite proxy maneja /pentamont/api -> localhost:4000
   // En producción: Nginx maneja /pentamont/api -> localhost:4000
-  const basePath = import.meta.env.VITE_API_URL || '/pentamont'
-  
-  // Eden Treaty necesita URL completa para funcionar correctamente
-  // Construir URL completa usando window.location.origin
-  const apiUrl = basePath.startsWith('http') 
-    ? basePath 
-    : `${window.location.origin}${basePath.startsWith('/') ? basePath : `/${basePath}`}`
+  const apiUrl = window.location.origin
   
   const api = treaty<App>(apiUrl, {
     headers: () => {
@@ -35,14 +61,9 @@ export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
         if (cleanToken && cleanToken.split('.').length === 3) {
           return { Authorization: `Bearer ${cleanToken}` } as HeadersInit
         } else {
-          // Token malformado, limpiarlo
-          console.error('Token malformado detectado, limpiando localStorage', {
-            length: cleanToken.length,
-            parts: cleanToken.split('.').length,
-            preview: cleanToken.substring(0, 20)
-          })
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
+          // Token malformado, limpiarlo y redirigir
+          console.error('Token malformado detectado, redirigiendo al login')
+          handleInvalidToken()
         }
       }
       return undefined

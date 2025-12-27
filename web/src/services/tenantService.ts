@@ -1,4 +1,4 @@
-import { useApi } from '../contexts/ApiContext'
+import { useApi, checkAuthError } from '../contexts/ApiContext'
 import { Tenant, CreateTenant, UpdateTenant } from '../../../shared/types/Tenant'
 
 export const useTenantService = () => {
@@ -6,8 +6,12 @@ export const useTenantService = () => {
   
   return {
     getAllTenants: async (): Promise<Tenant[]> => {
-      const response = await api.api.tenants.get()
+      const response = await api.pentamont.api.tenants.get()
       if (response.error) {
+        // Verificar si es un error de autenticación y redirigir
+        if (checkAuthError(response.error)) {
+          throw new Error('Authentication required')
+        }
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
           : (response.error.value as any)?.message || 'Failed to fetch tenants'
@@ -20,7 +24,7 @@ export const useTenantService = () => {
     },
     
     getTenantById: async (id: number): Promise<Tenant> => {
-      const response = await api.api.tenants({ id }).get()
+      const response = await api.pentamont.api.tenants({ id }).get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -34,7 +38,7 @@ export const useTenantService = () => {
     },
     
     getTenantByDocumentId: async (documentId: string): Promise<Tenant> => {
-      const response = await api.api.tenants.document({ documentId }).get()
+      const response = await api.pentamont.api.tenants.document({ documentId }).get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -52,7 +56,7 @@ export const useTenantService = () => {
       if (errors.length > 0) {
         throw new Error(errors.join(', '));
       }
-      const response = await api.api.tenants.post(tenantData.toJSON())
+      const response = await api.pentamont.api.tenants.post(tenantData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -70,7 +74,7 @@ export const useTenantService = () => {
       if (errors.length > 0) {
         throw new Error(errors.join(', '));
       }
-      const response = await api.api.tenants({ id }).put(tenantData.toJSON())
+      const response = await api.pentamont.api.tenants({ id }).put(tenantData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -84,7 +88,7 @@ export const useTenantService = () => {
     },
     
     deleteTenant: async (id: number): Promise<void> => {
-      const response = await api.api.tenants({ id }).delete()
+      const response = await api.pentamont.api.tenants({ id }).delete()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 

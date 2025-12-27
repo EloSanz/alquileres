@@ -11,7 +11,7 @@ export const usePaymentService = () => {
   
   return {
     getAllPayments: async (): Promise<Payment[]> => {
-      const response = await api.api.payments.get()
+      const response = await api.pentamont.api.payments.get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -25,7 +25,7 @@ export const usePaymentService = () => {
     },
     
     getPaymentById: async (id: number): Promise<Payment> => {
-      const response = await api.api.payments({ id }).get()
+      const response = await api.pentamont.api.payments({ id }).get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -60,7 +60,7 @@ export const usePaymentService = () => {
         throw new Error(errors.join(', '));
       }
       
-      const response = await api.api.payments.post(createPayment.toJSON())
+      const response = await api.pentamont.api.payments.post(createPayment.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -78,7 +78,7 @@ export const usePaymentService = () => {
       if (errors.length > 0) {
         throw new Error(errors.join(', '));
       }
-      const response = await api.api.payments({ id }).put(paymentData.toJSON())
+      const response = await api.pentamont.api.payments({ id }).put(paymentData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -92,7 +92,7 @@ export const usePaymentService = () => {
     },
     
     deletePayment: async (id: number): Promise<void> => {
-      const response = await api.api.payments({ id }).delete()
+      const response = await api.pentamont.api.payments({ id }).delete()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 

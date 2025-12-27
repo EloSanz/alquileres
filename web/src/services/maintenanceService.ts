@@ -47,7 +47,7 @@ export const useMaintenanceService = () => {
 
   return {
     getAllMaintenances: async (): Promise<MaintenanceDTO[]> => {
-      const response = await api.api.maintenances.get();
+      const response = await api.pentamont.api.maintenances.get();
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -61,7 +61,7 @@ export const useMaintenanceService = () => {
     },
 
     getMaintenanceById: async (id: number): Promise<MaintenanceDTO> => {
-      const response = await api.api.maintenances({ id }).get();
+      const response = await api.pentamont.api.maintenances({ id }).get();
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -75,7 +75,7 @@ export const useMaintenanceService = () => {
     },
 
     createMaintenance: async (data: CreateMaintenanceDTO): Promise<MaintenanceDTO> => {
-      const response = await api.api.maintenances.post(data);
+      const response = await api.pentamont.api.maintenances.post(data);
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -89,7 +89,7 @@ export const useMaintenanceService = () => {
     },
 
     updateMaintenance: async (id: number, data: UpdateMaintenanceDTO): Promise<MaintenanceDTO> => {
-      const response = await api.api.maintenances({ id }).put(data);
+      const response = await api.pentamont.api.maintenances({ id }).put(data);
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -103,7 +103,7 @@ export const useMaintenanceService = () => {
     },
 
     deleteMaintenance: async (id: number): Promise<void> => {
-      const response = await api.api.maintenances({ id }).delete();
+      const response = await api.pentamont.api.maintenances({ id }).delete();
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value

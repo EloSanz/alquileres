@@ -6,7 +6,7 @@ export const useContractService = () => {
   
   return {
     getAllContracts: async (): Promise<Contract[]> => {
-      const response = await api.api.contracts.get()
+      const response = await api.pentamont.api.contracts.get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -20,7 +20,7 @@ export const useContractService = () => {
     },
     
     getContractById: async (id: number): Promise<Contract> => {
-      const response = await api.api.contracts({ id }).get()
+      const response = await api.pentamont.api.contracts({ id }).get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -34,7 +34,7 @@ export const useContractService = () => {
     },
     
     getContractProgress: async (id: number) => {
-      const response = await api.api.contracts({ id }).progress.get()
+      const response = await api.pentamont.api.contracts({ id }).progress.get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -48,7 +48,7 @@ export const useContractService = () => {
     },
     
     getActiveByTenant: async (tenantId: number): Promise<Contract | null> => {
-      const response = await api.api.contracts.tenant({ tenantId }).active.get()
+      const response = await api.pentamont.api.contracts.tenant({ tenantId }).active.get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -62,7 +62,7 @@ export const useContractService = () => {
     },
     
     getActiveByProperty: async (propertyId: number): Promise<Contract | null> => {
-      const response = await api.api.contracts.property({ propertyId }).active.get()
+      const response = await api.pentamont.api.contracts.property({ propertyId }).active.get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -80,7 +80,7 @@ export const useContractService = () => {
       if (errors.length > 0) {
         throw new Error(errors.join(', '));
       }
-      const response = await api.api.contracts.post(contractData.toJSON())
+      const response = await api.pentamont.api.contracts.post(contractData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -98,7 +98,7 @@ export const useContractService = () => {
       if (errors.length > 0) {
         throw new Error(errors.join(', '));
       }
-      const response = await api.api.contracts({ id }).put(contractData.toJSON())
+      const response = await api.pentamont.api.contracts({ id }).put(contractData.toJSON())
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -112,7 +112,7 @@ export const useContractService = () => {
     },
     
     deleteContract: async (id: number): Promise<void> => {
-      const response = await api.api.contracts({ id }).delete()
+      const response = await api.pentamont.api.contracts({ id }).delete()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
