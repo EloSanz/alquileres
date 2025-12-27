@@ -17,10 +17,15 @@ export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
   // En desarrollo: Vite proxy maneja /pentamont/api -> localhost:4000
   // En producción: Nginx maneja /pentamont/api -> localhost:4000
   const basePath = import.meta.env.VITE_API_URL || '/pentamont'
-  // Construir URL completa usando el origen actual
+  
+  // En desarrollo local, usar ruta relativa para que Vite proxy funcione
+  // En producción, usar URL completa
+  const isDevelopment = import.meta.env.DEV
   const apiUrl = basePath.startsWith('http') 
     ? basePath 
-    : `${window.location.origin}${basePath.startsWith('/') ? basePath : `/${basePath}`}`
+    : isDevelopment
+      ? basePath  // Ruta relativa para desarrollo (Vite proxy)
+      : `${window.location.origin}${basePath.startsWith('/') ? basePath : `/${basePath}`}`  // URL completa para producción
   
   const api = treaty<App>(apiUrl, {
     headers: () => {
