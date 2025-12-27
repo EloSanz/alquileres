@@ -149,7 +149,7 @@ export function useContractDraftService() {
 
   return {
     async getAllDrafts(): Promise<ContractDraft[]> {
-      const response = await api.api['contract-drafts'].get()
+      const response = await api.pentamont.api['contract-drafts'].get()
       if (response.error) {
         throw new Error((response.error as any)?.value?.message || 'Failed to fetch contract drafts')
       }
@@ -157,7 +157,7 @@ export function useContractDraftService() {
     },
 
     async getDraftById(id: number): Promise<ContractDraft> {
-      const response = await api.api['contract-drafts']({ id }).get()
+      const response = await api.pentamont.api['contract-drafts']({ id }).get()
       if (response.error) {
         throw new Error((response.error as any)?.value?.message || 'Failed to fetch contract draft')
       }
@@ -165,7 +165,7 @@ export function useContractDraftService() {
     },
 
     async createDraft(data: CreateContractDraftData): Promise<ContractDraft> {
-      const response = await api.api['contract-drafts'].post(data as any)
+      const response = await api.pentamont.api['contract-drafts'].post(data as any)
       if (response.error) {
         throw new Error((response.error as any)?.value?.message || 'Failed to create contract draft')
       }
@@ -173,7 +173,7 @@ export function useContractDraftService() {
     },
 
     async updateDraft(id: number, data: UpdateContractDraftData): Promise<ContractDraft> {
-      const response = await api.api['contract-drafts']({ id }).put(data as any)
+      const response = await api.pentamont.api['contract-drafts']({ id }).put(data as any)
       if (response.error) {
         throw new Error((response.error as any)?.value?.message || 'Failed to update contract draft')
       }
@@ -181,7 +181,7 @@ export function useContractDraftService() {
     },
 
     async deleteDraft(id: number): Promise<boolean> {
-      const response = await api.api['contract-drafts']({ id }).delete()
+      const response = await api.pentamont.api['contract-drafts']({ id }).delete()
       if (response.error) {
         throw new Error((response.error as any)?.value?.message || 'Failed to delete contract draft')
       }

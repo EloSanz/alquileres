@@ -128,8 +128,6 @@ export default function CreateContractModal({
     }
   };
 
-  const selectedTenant = tenants.find((t) => t.id.toString() === formData.tenantId);
-  const selectedProperty = properties.find((p) => p.id.toString() === formData.propertyId);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
