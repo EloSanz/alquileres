@@ -39,13 +39,9 @@ async function main() {
 
     console.log('✅ Seed SQL ejecutado exitosamente!');
     console.log('📊 Datos insertados:');
-    console.log('   👤 1 Usuario admin');
     console.log('   👥 15 Inquilinos únicos');
     console.log('   🏠 25 Propiedades');
     console.log('   📄 Contratos y pagos registrados históricos');
-
-    console.log('\n🔐 Credenciales de acceso:');
-    console.log('   👑 ADMIN: admin / admin@alquileres.com / admin123');
 
   } catch (error) {
     console.error('❌ Error ejecutando seed SQL:', error);

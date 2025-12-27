@@ -8,7 +8,7 @@ async function updatePassword() {
     console.log('✅ Hash generado:', hash);
     
     console.log('\n📝 Actualizando contraseña en la base de datos...');
-    const updateCmd = `PGPASSWORD=postgres psql -U postgres -d alquileres_db -c "UPDATE users SET password = '${hash}' WHERE username = 'admin';"`;
+    const updateCmd = `PGPASSWORD=postgres psql -h localhost -U postgres -d alquileres_db -c "UPDATE users SET password = '${hash}' WHERE username = 'admin';"`;
     execSync(updateCmd, { stdio: 'inherit' });
     
     console.log('\n✅ Contraseña actualizada correctamente');
@@ -19,7 +19,7 @@ async function updatePassword() {
     
     // Verificar que se actualizó
     console.log('\n🔍 Verificando actualización...');
-    const verifyCmd = `PGPASSWORD=postgres psql -U postgres -d alquileres_db -c "SELECT username, email FROM users WHERE username = 'admin';"`;
+    const verifyCmd = `PGPASSWORD=postgres psql -h localhost -U postgres -d alquileres_db -c "SELECT username, email FROM users WHERE username = 'admin';"`;
     execSync(verifyCmd, { stdio: 'inherit' });
     
     // Probar que el hash funciona
