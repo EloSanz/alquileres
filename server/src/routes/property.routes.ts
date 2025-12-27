@@ -23,16 +23,14 @@ const idParamsSchema = t.Object({
 
 const createPropertyBodySchema = t.Object({
   localNumber: t.Number({ minimum: 1 }),
-  ubicacion: t.Union([t.Literal('BOULEVARD'), t.Literal('SAN_MARTIN')]),
-  propertyType: t.String(),
+  ubicacion: t.Union([t.Literal('BOULEVAR'), t.Literal('SAN_MARTIN'), t.Literal('PATIO')]),
   monthlyRent: t.Number({ minimum: 0 }),
   tenantId: t.Union([t.Number({ minimum: 1 }), t.Null()])
 });
 
 const updatePropertyBodySchema = t.Object({
   localNumber: t.Optional(t.Number({ minimum: 1 })),
-  ubicacion: t.Optional(t.Union([t.Literal('BOULEVARD'), t.Literal('SAN_MARTIN')])),
-  propertyType: t.Optional(t.String()),
+  ubicacion: t.Optional(t.Union([t.Literal('BOULEVAR'), t.Literal('SAN_MARTIN'), t.Literal('PATIO')])),
   monthlyRent: t.Optional(t.Number({ minimum: 0 }))
 });
 

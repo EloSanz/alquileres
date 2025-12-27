@@ -8,7 +8,6 @@ export class PropertyEntity {
     public id: number | null,
     public localNumber: number,
     public ubicacion: UbicacionType,
-    public propertyType: PropertyType,
     public monthlyRent: number,
     public status: PropertyStatus,
     public tenantId: number | null,
@@ -19,7 +18,6 @@ export class PropertyEntity {
   static create(data: {
     localNumber: number;
     ubicacion: string;
-    propertyType: string;
     monthlyRent: number;
     tenantId: number | null;
   }): PropertyEntity {
@@ -27,7 +25,6 @@ export class PropertyEntity {
       null, // id
       data.localNumber,
       data.ubicacion as UbicacionType,
-      data.propertyType as PropertyType,
       data.monthlyRent,
       PropertyStatus.ACTIVE, // status
       data.tenantId,
@@ -39,14 +36,12 @@ export class PropertyEntity {
   update(data: {
     localNumber?: number;
     ubicacion?: string;
-    propertyType?: string;
     monthlyRent?: number;
     status?: PropertyStatus;
     tenantId?: number | null;
   }): PropertyEntity {
     if (data.localNumber !== undefined) this.localNumber = data.localNumber;
     if (data.ubicacion !== undefined) this.ubicacion = data.ubicacion as UbicacionType;
-    if (data.propertyType !== undefined) this.propertyType = data.propertyType as PropertyType;
     if (data.monthlyRent !== undefined) this.monthlyRent = data.monthlyRent;
     if (data.status !== undefined) this.status = data.status;
     if (data.tenantId !== undefined) this.tenantId = data.tenantId;
@@ -60,7 +55,6 @@ export class PropertyEntity {
       prismaData.id,
       prismaData.localNumber,
       prismaData.ubicacion,
-      prismaData.propertyType,
       Number(prismaData.monthlyRent),
       prismaData.status as PropertyStatus || PropertyStatus.ACTIVE,
       prismaData.tenantId,
@@ -74,7 +68,6 @@ export class PropertyEntity {
       id: this.id || undefined,
       localNumber: this.localNumber,
       ubicacion: this.ubicacion,
-      propertyType: this.propertyType,
       monthlyRent: this.monthlyRent,
       status: this.status,
       tenantId: this.tenantId,
@@ -88,7 +81,6 @@ export class PropertyEntity {
       id: this.id!,
       localNumber: this.localNumber,
       ubicacion: this.ubicacion,
-      propertyType: this.propertyType,
       monthlyRent: this.monthlyRent,
       status: this.status.toString(),
       tenantId: this.tenantId,
@@ -108,11 +100,5 @@ export class PropertyEntity {
       throw new Error('Monthly rent must be greater than 0');
     }
   }
-}
-
-// Enums
-export enum PropertyType {
-  INSIDE = 'INSIDE',  // Local adentro
-  OUTSIDE = 'OUTSIDE' // Local afuera
 }
 

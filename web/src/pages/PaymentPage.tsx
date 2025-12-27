@@ -44,7 +44,8 @@ const PaymentPage = () => {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({
-    paymentMethod: ''
+    paymentMethod: '',
+    status: ''
   });
 
   const paymentFilters: FilterConfig[] = [
@@ -55,6 +56,15 @@ const PaymentPage = () => {
         { value: 'YAPE', label: 'Yape' },
         { value: 'DEPOSITO', label: 'Depósito' },
         { value: 'TRANSFERENCIA_VIRTUAL', label: 'Transferencia Virtual' }
+      ]
+    },
+    {
+      key: 'status',
+      label: 'Estado',
+      options: [
+        { value: 'PAGADO', label: 'Pagado' },
+        { value: 'VENCIDO', label: 'Vencido' },
+        { value: 'FUTURO', label: 'Futuro' }
       ]
     }
   ];
@@ -94,7 +104,7 @@ const PaymentPage = () => {
   const handleTogglePentamont = async (payment: Payment) => {
     try {
       const next = !payment.pentamontSettled;
-      const updateData = new UpdatePayment(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, next, undefined);
+      const updateData = new UpdatePayment(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, next, undefined);
       await paymentService.updatePayment(payment.id, updateData);
       setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
       setFilteredPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
@@ -142,6 +152,11 @@ const PaymentPage = () => {
 
       // Filtro por medio de pago
       if (_filters.paymentMethod && payment.paymentMethod !== _filters.paymentMethod) {
+        return false;
+      }
+
+      // Filtro por status
+      if (_filters.status && payment.status !== _filters.status) {
         return false;
       }
 
@@ -216,7 +231,8 @@ const PaymentPage = () => {
         createForm.dueDate,
         createForm.paymentDate,
         createForm.paymentMethod,
-        undefined,
+        undefined, // status - se calculará automáticamente
+        undefined, // pentamontSettled
         createForm.notes || undefined
       );
       (paymentData as any).receiptImage = receiptImageFile || null; // Para mantener compatibilidad con CreatePaymentData
@@ -344,7 +360,8 @@ const PaymentPage = () => {
         editForm.paymentDate,
         editForm.dueDate,
         editForm.paymentMethod,
-        undefined,
+        undefined, // status - se recalculará automáticamente
+        undefined, // pentamontSettled
         editForm.notes || undefined
       );
 
@@ -561,7 +578,7 @@ const PaymentPage = () => {
               fullWidth
               options={properties}
               getOptionLabel={(property) =>
-                `Local N° ${property.localNumber} - ${property.ubicacion === 'BOULEVARD' ? 'Boulevard' : property.ubicacion === 'SAN_MARTIN' ? 'San Martin' : property.ubicacion}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
+                `Local N° ${property.localNumber} - ${property.ubicacion === 'BOULEVAR' ? 'Boulevard' : property.ubicacion === 'SAN_MARTIN' ? 'San Martin' : property.ubicacion}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
               }
               value={selectedProperty}
               onChange={(_, newValue) => {

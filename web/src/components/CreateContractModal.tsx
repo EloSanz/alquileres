@@ -102,6 +102,13 @@ export default function CreateContractModal({
       return;
     }
 
+    // Validar que el inquilino tenga DNI
+    const selectedTenant = tenants.find(tenant => tenant.id.toString() === formData.tenantId);
+    if (!selectedTenant?.documentId || selectedTenant.documentId.trim().length < 5) {
+      setError('El inquilino debe tener un DNI válido para crear un contrato');
+      return;
+    }
+
     const monthlyRentNum = parseFloat(formData.monthlyRent);
     if (isNaN(monthlyRentNum) || monthlyRentNum <= 0) {
       setError('La renta mensual debe ser un número mayor a 0');

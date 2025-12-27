@@ -155,3 +155,13 @@ coverage/
 # package-lock.json
 # yarn.lock
 
+
+# Local DB backups
+server/backups/
+server/server/backups/
+server/**/backup_*.sql
+
+# DB backups
+server/backups/
+server/server/backups/
+server/**/backup_*.sql

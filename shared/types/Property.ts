@@ -2,8 +2,7 @@ export class Property {
   constructor(
     public id: number,
     public localNumber: number,
-    public ubicacion: 'BOULEVARD' | 'SAN_MARTIN',
-    public propertyType: string,
+    public ubicacion: 'BOULEVAR' | 'SAN_MARTIN' | 'PATIO',
     public monthlyRent: number,
     public status: string,
     public tenantId: number | null,
@@ -17,7 +16,6 @@ export class Property {
     if (this.localNumber <= 0) errors.push('Local number must be greater than 0');
     if (this.monthlyRent <= 0) errors.push('Monthly rent must be greater than 0');
     if (!this.ubicacion) errors.push('Ubicacion is required');
-    if (!this.propertyType) errors.push('Property type is required');
     return errors;
   }
 
@@ -30,7 +28,6 @@ export class Property {
       data.id,
       data.localNumber,
       data.ubicacion,
-      data.propertyType,
       data.monthlyRent,
       data.status,
       data.tenantId,
@@ -48,8 +45,7 @@ export class Property {
 export class CreateProperty {
   constructor(
     public localNumber: number,
-    public ubicacion: 'BOULEVARD' | 'SAN_MARTIN',
-    public propertyType: string,
+    public ubicacion: 'BOULEVAR' | 'SAN_MARTIN' | 'PATIO',
     public monthlyRent: number,
     public tenantId: number | null
   ) {}
@@ -58,7 +54,6 @@ export class CreateProperty {
     const errors: string[] = [];
     if (this.localNumber <= 0) errors.push('Local number must be greater than 0');
     if (!this.ubicacion) errors.push('Ubicacion is required');
-    if (!this.propertyType) errors.push('Property type is required');
     if (this.monthlyRent <= 0) errors.push('Monthly rent must be greater than 0');
     return errors;
   }
@@ -71,7 +66,6 @@ export class CreateProperty {
     return new CreateProperty(
       data.localNumber,
       data.ubicacion,
-      data.propertyType,
       data.monthlyRent,
       data.tenantId ?? null
     );
@@ -85,8 +79,7 @@ export class CreateProperty {
 export class UpdateProperty {
   constructor(
     public localNumber?: number,
-    public ubicacion?: 'BOULEVARD' | 'SAN_MARTIN',
-    public propertyType?: string,
+    public ubicacion?: 'BOULEVAR' | 'SAN_MARTIN' | 'PATIO',
     public monthlyRent?: number
   ) {}
 
@@ -105,7 +98,6 @@ export class UpdateProperty {
     const result: any = {};
     if (this.localNumber !== undefined) result.localNumber = this.localNumber;
     if (this.ubicacion !== undefined) result.ubicacion = this.ubicacion;
-    if (this.propertyType !== undefined) result.propertyType = this.propertyType;
     if (this.monthlyRent !== undefined) result.monthlyRent = this.monthlyRent;
     return result;
   }
@@ -114,7 +106,6 @@ export class UpdateProperty {
     return new UpdateProperty(
       data.localNumber,
       data.ubicacion,
-      data.propertyType,
       data.monthlyRent
     );
   }

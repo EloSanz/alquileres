@@ -1,5 +1,5 @@
 // Import the enum
-import { PaymentMethod } from '@prisma/client';
+import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PaymentDTO } from '../dtos/payment.dto';
 import { Payment } from '../../../shared/types/Payment';
 
@@ -16,12 +16,26 @@ export class PaymentEntity {
     public paymentDate: Date,
     public dueDate: Date,
     public paymentMethod: PaymentMethod,
+    public status: PaymentStatus,
     public pentamontSettled: boolean,
     public notes: string | null,
     public receiptImageUrl: string | null,
     public createdAt: Date,
     public updatedAt: Date
   ) {  }
+
+  calculateStatus(now: Date = new Date()): PaymentStatus {
+    // Si tiene paymentDate y es <= ahora, está pagado
+    if (this.paymentDate && this.paymentDate <= now) {
+      return PaymentStatus.PAGADO;
+    }
+    // Si dueDate < ahora y no está pagado, está vencido
+    if (this.dueDate < now) {
+      return PaymentStatus.VENCIDO;
+    }
+    // Si dueDate >= ahora y no está pagado, es futuro
+    return PaymentStatus.FUTURO;
+  }
 
   static create(data: {
     tenantId: number | null;
@@ -34,11 +48,14 @@ export class PaymentEntity {
     paymentDate?: string;
     dueDate: string;
     paymentMethod?: string;
+    status?: PaymentStatus;
     pentamontSettled?: boolean;
     notes?: string;
     receiptImageUrl?: string | null;
   }): PaymentEntity {
-    return new PaymentEntity(
+    const paymentDate = data.paymentDate ? new Date(data.paymentDate) : new Date();
+    const dueDate = new Date(data.dueDate);
+    const entity = new PaymentEntity(
       null, // id
       data.tenantId,
       data.propertyId,
@@ -47,15 +64,19 @@ export class PaymentEntity {
       data.tenantFullName || null,
       data.tenantPhone || null,
       data.amount,
-      data.paymentDate ? new Date(data.paymentDate) : new Date(),
-      new Date(data.dueDate),
+      paymentDate,
+      dueDate,
       (data.paymentMethod as PaymentMethod) || PaymentMethod.YAPE,
+      PaymentStatus.FUTURO, // temporal, se calculará después
       data.pentamontSettled ?? false,
       data.notes || null,
       data.receiptImageUrl || null,
       new Date(), // createdAt
       new Date()  // updatedAt
     );
+    // Calcular status automáticamente
+    entity.status = data.status || entity.calculateStatus();
+    return entity;
   }
 
   update(data: {
@@ -69,6 +90,7 @@ export class PaymentEntity {
     paymentDate?: string;
     dueDate?: string;
     paymentMethod?: string;
+    status?: PaymentStatus;
     pentamontSettled?: boolean;
     notes?: string;
     receiptImageUrl?: string | null;
@@ -83,6 +105,14 @@ export class PaymentEntity {
     if (data.paymentDate !== undefined) this.paymentDate = new Date(data.paymentDate);
     if (data.dueDate !== undefined) this.dueDate = new Date(data.dueDate);
     if (data.paymentMethod !== undefined) this.paymentMethod = data.paymentMethod as PaymentMethod;
+    if (data.status !== undefined) {
+      this.status = data.status;
+    } else {
+      // Recalcular status si cambió paymentDate o dueDate
+      if (data.paymentDate !== undefined || data.dueDate !== undefined) {
+        this.status = this.calculateStatus();
+      }
+    }
     if (data.pentamontSettled !== undefined) this.pentamontSettled = data.pentamontSettled;
     if (data.notes !== undefined) this.notes = data.notes;
     if (data.receiptImageUrl !== undefined) this.receiptImageUrl = data.receiptImageUrl;
@@ -104,6 +134,7 @@ export class PaymentEntity {
       prismaData.paymentDate,
       prismaData.dueDate,
       prismaData.paymentMethod,
+      prismaData.status || PaymentStatus.FUTURO,
       prismaData.pentamontSettled ?? false,
       prismaData.notes,
       prismaData.receiptImageUrl || null,
@@ -131,6 +162,7 @@ export class PaymentEntity {
       paymentDate: this.paymentDate,
       dueDate: this.dueDate,
       paymentMethod: this.paymentMethod,
+      status: this.status,
       pentamontSettled: this.pentamontSettled,
       notes: this.notes,
       receiptImageUrl: this.receiptImageUrl,
@@ -152,6 +184,7 @@ export class PaymentEntity {
       paymentDate: this.paymentDate.toISOString().split('T')[0],
       dueDate: this.dueDate.toISOString().split('T')[0],
       paymentMethod: this.paymentMethod.toString(),
+      status: this.status.toString(),
       pentamontSettled: this.pentamontSettled,
       notes: this.notes,
       receiptImageUrl: this.receiptImageUrl || '/comprobante.png',

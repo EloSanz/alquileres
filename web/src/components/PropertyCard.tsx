@@ -33,13 +33,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, on
           Local N° {property.localNumber}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {property.ubicacion === 'BOULEVARD' ? 'Boulevard' : property.ubicacion === 'SAN_MARTIN' ? 'San Martin' : property.ubicacion}
+          {property.ubicacion === 'BOULEVAR' ? 'Boulevar' : 
+           property.ubicacion === 'SAN_MARTIN' ? 'San Martín' : 
+           property.ubicacion === 'PATIO' ? 'Patio' : 
+           property.ubicacion}
         </Typography>
         <Typography variant="h5" color="primary" sx={{ mb: 2 }}>
           ${property.monthlyRent.toLocaleString()}/mes
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-          <Chip label={property.propertyType === 'INSIDE' ? 'Adentro' : 'Afuera'} size="small" variant="outlined" />
           <Chip
             label={getAvailabilityLabel(property.tenantId)}
             size="small"
