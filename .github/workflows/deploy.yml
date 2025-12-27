@@ -1,0 +1,135 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    environment: hostinger
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+
+    steps:
+    - name: Verify SSH credentials exist
+      run: |
+        if [ -z "${{ secrets.SSH_HOST }}" ]; then echo "❌ SSH_HOST no está configurado"; exit 1; fi
+        if [ -z "${{ secrets.SSH_PASSWORD }}" ]; then echo "❌ SSH_PASSWORD no está configurado"; exit 1; fi
+        echo "✔ Credenciales SSH verificadas"
+    
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: root
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: 22
+        timeout: 30s
+        script: |
+          echo "➡️ Actualizando proyecto en VPS..."
+          cd /var/www/alquileres-app || exit 1
+          git fetch origin develop && git reset --hard origin/develop
+          git clean -fd
+
+          echo "➡️ Configurando PATH..."
+          export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+          echo "➡️ Instalando dependencias del backend..."
+          cd /var/www/alquileres-app/server
+          npm install
+
+          echo "➡️ Aplicando migraciones y generando cliente Prisma..."
+          npx prisma migrate deploy
+          npx prisma generate
+
+          echo "➡️ Construyendo backend..."
+          npm run build
+
+          echo "➡️ Instalando dependencias del frontend..."
+          cd /var/www/alquileres-app/web
+          npm install
+
+          echo "➡️ Construyendo frontend..."
+          npm run build
+
+          echo "➡️ Configurando Nginx..."
+          cd /var/www/alquileres-app
+          
+          # Verificar si Nginx está instalado
+          if ! command -v nginx &> /dev/null; then
+            echo "⚠️  Nginx no está instalado. Instalando..."
+            apt-get update -qq
+            apt-get install -y nginx
+          fi
+          
+          # Deshabilitar configuración por defecto si existe
+          if [ -L /etc/nginx/sites-enabled/default ]; then
+            rm /etc/nginx/sites-enabled/default
+            echo "✅ Configuración por defecto de Nginx deshabilitada"
+          fi
+          
+          # Determinar qué configuración usar
+          # Verificar si el frontend está construido (producción) o necesita proxy (desarrollo)
+          if [ -d "web/dist" ] && [ "$(ls -A web/dist 2>/dev/null)" ]; then
+            echo "✅ Frontend construido detectado. Usando configuración de producción..."
+            USE_PRODUCTION=true
+          else
+            echo "ℹ️  Frontend no construido. Usando configuración de desarrollo (proxy a Vite)..."
+            USE_PRODUCTION=false
+          fi
+          
+          # Buscar cualquier certificado SSL disponible
+          SSL_CERT_DIR=$(find /etc/letsencrypt/live -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -1)
+          if [ -n "$SSL_CERT_DIR" ] && [ -d "$SSL_CERT_DIR" ]; then
+            echo "✅ Certificado SSL encontrado en $SSL_CERT_DIR. Usando configuración HTTPS..."
+            if [ "$USE_PRODUCTION" = true ]; then
+              CONFIG_FILE="nginx/alquileres-app.conf.https"
+            else
+              CONFIG_FILE="nginx/alquileres-app.conf.https.development"
+            fi
+            # Actualizar el archivo de configuración con la ruta correcta del certificado
+            DOMAIN_NAME=$(basename "$SSL_CERT_DIR")
+            sed -i "s|/etc/letsencrypt/live/icards.fun|/etc/letsencrypt/live/$DOMAIN_NAME|g" "$CONFIG_FILE" 2>/dev/null || true
+          else
+            echo "ℹ️  No hay certificado SSL. Usando configuración HTTP..."
+            if [ "$USE_PRODUCTION" = true ]; then
+              CONFIG_FILE="nginx/alquileres-app.conf.http.production"
+            else
+              CONFIG_FILE="nginx/alquileres-app.conf.http"
+            fi
+          fi
+          
+          # Copiar configuración de Nginx si existe
+          if [ -f "$CONFIG_FILE" ]; then
+            cp "$CONFIG_FILE" /etc/nginx/sites-available/alquileres-app.conf
+            
+            # Crear enlace simbólico si no existe
+            if [ ! -L /etc/nginx/sites-enabled/alquileres-app.conf ]; then
+              ln -s /etc/nginx/sites-available/alquileres-app.conf /etc/nginx/sites-enabled/alquileres-app.conf
+              echo "✅ Configuración de Nginx habilitada"
+            fi
+            
+            # Verificar y recargar Nginx
+            if nginx -t; then
+              echo "✅ Configuración de Nginx válida"
+              systemctl reload nginx
+              echo "✅ Nginx recargado"
+            else
+              echo "❌ Error en la configuración de Nginx"
+              exit 1
+            fi
+          else
+            echo "⚠️  Archivo de configuración de Nginx no encontrado. Saltando configuración..."
+          fi
+          
+          # Asegurar que Nginx esté habilitado para iniciar al arrancar
+          systemctl enable nginx
+
+          echo "➡️ Iniciando servicios Backend y Frontend con Screen..."
+          chmod +x start_services_screen.sh
+          ./start_services_screen.sh
+          echo "✅ Servicios levantados con Screen"
+
