@@ -26,7 +26,6 @@ const createPropertyBodySchema = t.Object({
   ubicacion: t.Union([t.Literal('BOULEVARD'), t.Literal('SAN_MARTIN')]),
   propertyType: t.String(),
   monthlyRent: t.Number({ minimum: 0 }),
-  isAvailable: t.Optional(t.Boolean()),
   tenantId: t.Union([t.Number({ minimum: 1 }), t.Null()])
 });
 
@@ -34,8 +33,7 @@ const updatePropertyBodySchema = t.Object({
   localNumber: t.Optional(t.Number({ minimum: 1 })),
   ubicacion: t.Optional(t.Union([t.Literal('BOULEVARD'), t.Literal('SAN_MARTIN')])),
   propertyType: t.Optional(t.String()),
-  monthlyRent: t.Optional(t.Number({ minimum: 0 })),
-  isAvailable: t.Optional(t.Boolean())
+  monthlyRent: t.Optional(t.Number({ minimum: 0 }))
 });
 
 export const propertyRoutes = new Elysia({ prefix: '/properties' })

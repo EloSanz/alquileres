@@ -60,7 +60,7 @@ export default function PaymentDetailsModal({
       <DialogTitle>
         Detalle del Pago {payment ? `#${payment.id}` : ''}
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent dividers sx={{ p: { xs: 2, sm: 3 } }}>
         {payment ? (
           <Stack spacing={3}>
             {/* Información del Pago */}

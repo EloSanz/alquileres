@@ -32,13 +32,16 @@ const HomePage = () => {
 
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       {/* Header */}
       <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={4}
+        sx={{
+          display: { xs: 'block', sm: 'flex' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          mb: 4,
+          gap: 2
+        }}
       >
         <Box>
           <Typography variant="h4" component="h1" gutterBottom>
@@ -52,6 +55,11 @@ const HomePage = () => {
           variant="outlined"
           startIcon={<LogoutIcon />}
           onClick={handleLogout}
+          fullWidth={false}
+          sx={{ 
+            width: { xs: '100%', sm: 'auto' },
+            mt: { xs: 2, sm: 0 }
+          }}
         >
           Cerrar Sesión
         </Button>
@@ -282,70 +290,6 @@ const HomePage = () => {
           </Card>
         </Grid>
       </Grid>
-
-      {/* Quick Actions */}
-      <Box sx={{ mt: 6 }}>
-        <Typography variant="h6" component="h3" gutterBottom>
-          Acciones Rápidas
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={2.4}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<PeopleIcon />}
-              onClick={() => navigate('/tenants')}
-              sx={{ py: 2 }}
-            >
-              Nuevo Inquilino
-            </Button>
-          </Grid>
-          <Grid item xs={12} sm={6} md={2.4}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<HomeIcon />}
-              onClick={() => navigate('/property')}
-              sx={{ py: 2 }}
-            >
-              Nuevo Local
-            </Button>
-          </Grid>
-          <Grid item xs={12} sm={6} md={2.4}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<PaymentIcon />}
-              onClick={() => navigate('/payments')}
-              sx={{ py: 2 }}
-            >
-              Nuevo Pago
-            </Button>
-          </Grid>
-          <Grid item xs={12} sm={6} md={2.4}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<ContractIcon />}
-              onClick={() => navigate('/contracts')}
-              sx={{ py: 2 }}
-            >
-              Ver Contratos
-            </Button>
-          </Grid>
-          <Grid item xs={12} sm={6} md={2.4}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<TaxIcon />}
-              onClick={() => navigate('/taxes')}
-              sx={{ py: 2 }}
-            >
-              Nuevo Impuesto
-            </Button>
-          </Grid>
-        </Grid>
-      </Box>
     </Container>
   );
 };

@@ -4,6 +4,7 @@ import { ITenantRepository } from '../../interfaces/repositories/ITenantReposito
 import { IPaymentRepository } from '../../interfaces/repositories/IPaymentRepository';
 import { PropertyDTO, CreatePropertyDTO, UpdatePropertyDTO } from '../../dtos/property.dto';
 import { PropertyEntity } from '../../entities/Property.entity';
+import { NotFoundError, ConflictError, BadRequestError } from '../../exceptions';
 
 export class PropertyService implements IPropertyService {
   constructor(
@@ -31,7 +32,7 @@ export class PropertyService implements IPropertyService {
               id: tenant.id,
               firstName: tenant.firstName,
               lastName: tenant.lastName,
-              documentId: tenant.documentId,
+              email: '', // Tenant model doesn't have email field
             };
           }
         }
@@ -46,7 +47,7 @@ export class PropertyService implements IPropertyService {
   async getPropertyById(id: number, _userId: number): Promise<PropertyDTO> {
     const entity = await this.propertyRepository.findById(id);
     if (!entity) {
-      throw new Error('Property not found');
+      throw new NotFoundError('Property', id);
     }
 
     const dto = entity.toDTO() as PropertyDTO & { tenant?: any };
@@ -59,7 +60,7 @@ export class PropertyService implements IPropertyService {
           id: tenant.id,
           firstName: tenant.firstName,
           lastName: tenant.lastName,
-          documentId: tenant.documentId,
+          email: '', // Tenant model doesn't have email field
         };
       }
     }
@@ -71,7 +72,7 @@ export class PropertyService implements IPropertyService {
     // Validar que no exista un local con el mismo número
     const existingProperty = await this.propertyRepository.findByLocalNumber(data.localNumber);
     if (existingProperty) {
-      throw new Error(`Ya existe un local con el número ${data.localNumber}`);
+      throw new ConflictError(`Ya existe un local con el número ${data.localNumber}`);
     }
 
     const entity = PropertyEntity.create(data);
@@ -82,7 +83,7 @@ export class PropertyService implements IPropertyService {
   async updateProperty(id: number, data: UpdatePropertyDTO, _userId: number): Promise<PropertyDTO> {
     const existingEntity = await this.propertyRepository.findById(id);
     if (!existingEntity) {
-      throw new Error('Property not found');
+      throw new NotFoundError('Property', id);
     }
 
     const updatedEntity = existingEntity.update(data);
@@ -93,11 +94,11 @@ export class PropertyService implements IPropertyService {
   async releaseProperty(id: number, _userId: number): Promise<PropertyDTO> {
     const property = await this.propertyRepository.findById(id);
     if (!property) {
-      throw new Error('Property not found');
+      throw new NotFoundError('Property', id);
     }
 
     if (!property.tenantId) {
-      throw new Error('Property is already available (no tenant assigned)');
+      throw new BadRequestError('Property is already available (no tenant assigned)');
     }
 
     // Liberar la propiedad cambiando tenantId a null
@@ -115,7 +116,7 @@ export class PropertyService implements IPropertyService {
     // Verificar que la propiedad existe
     const property = await this.propertyRepository.findById(id);
     if (!property) {
-      throw new Error('Property not found');
+      throw new NotFoundError('Property', id);
     }
 
     // Liberar todos los pagos asociados (poner propertyId = null)

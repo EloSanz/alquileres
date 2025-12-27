@@ -1,5 +1,6 @@
 import { ITenantService } from '../interfaces/services/ITenantService';
 import { CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
+import { ValidationError } from '../exceptions';
 
 export class TenantController {
   constructor(private tenantService: ITenantService) {}
@@ -54,7 +55,7 @@ export class TenantController {
     const createTenant = CreateTenant.fromJSON(body);
     const errors = createTenant.validate();
     if (errors.length > 0) {
-      throw new Error(errors.join(', '));
+      throw new ValidationError('Validation failed', errors);
     }
     const tenant = await this.tenantService.createTenant(createTenant.toDTO(), userId);
     return {
@@ -76,7 +77,7 @@ export class TenantController {
     const updateTenant = UpdateTenant.fromJSON(body);
     const errors = updateTenant.validate();
     if (errors.length > 0) {
-      throw new Error(errors.join(', '));
+      throw new ValidationError('Validation failed', errors);
     }
     const tenant = await this.tenantService.updateTenant(id, updateTenant.toDTO(), userId);
     return {

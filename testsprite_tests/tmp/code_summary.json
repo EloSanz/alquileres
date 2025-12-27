@@ -1,0 +1,134 @@
+{
+  "tech_stack": [
+    "TypeScript",
+    "React",
+    "Vite",
+    "Material UI",
+    "Elysia.js",
+    "Prisma",
+    "PostgreSQL",
+    "JWT",
+    "Eden Treaty"
+  ],
+  "features": [
+    {
+      "name": "Authentication System",
+      "description": "JWT-based authentication with login/logout functionality and protected routes",
+      "files": [
+        "server/src/routes/auth.routes.ts",
+        "server/src/controllers/auth.controller.ts",
+        "server/src/plugins/auth.plugin.ts",
+        "web/src/contexts/AuthContext.tsx",
+        "web/src/pages/Login.tsx"
+      ]
+    },
+    {
+      "name": "Tenant Management",
+      "description": "CRUD operations for tenant information including personal data, contact info, and rental history",
+      "files": [
+        "server/src/routes/tenant.routes.ts",
+        "server/src/controllers/tenant.controller.ts",
+        "server/src/entities/Tenant.entity.ts",
+        "server/src/interfaces/repositories/ITenantRepository.ts",
+        "server/src/interfaces/services/ITenantService.ts",
+        "server/src/implementations/repositories/TenantRepository.ts",
+        "server/src/implementations/services/TenantService.ts",
+        "web/src/pages/Tenants.tsx",
+        "web/src/components/TenantForm.tsx",
+        "web/src/components/TenantDeletionModal.tsx"
+      ]
+    },
+    {
+      "name": "Property Management",
+      "description": "Property catalog with detailed information, contracts, and availability status",
+      "files": [
+        "server/src/routes/property.routes.ts",
+        "server/src/controllers/property.controller.ts",
+        "server/src/entities/Property.entity.ts",
+        "server/src/interfaces/repositories/IPropertyRepository.ts",
+        "server/src/interfaces/services/IPropertyService.ts",
+        "server/src/implementations/repositories/PropertyRepository.ts",
+        "server/src/implementations/services/PropertyService.ts",
+        "web/src/pages/Properties.tsx",
+        "web/src/components/PropertyDetailsModal.tsx",
+        "web/src/components/PropertyForm.tsx"
+      ]
+    },
+    {
+      "name": "Payment System",
+      "description": "Payment tracking, debt management, receipt generation, and due date alerts",
+      "files": [
+        "server/src/routes/payment.routes.ts",
+        "server/src/controllers/payment.controller.ts",
+        "server/src/entities/Payment.entity.ts",
+        "server/src/interfaces/repositories/IPaymentRepository.ts",
+        "server/src/interfaces/services/IPaymentService.ts",
+        "server/src/implementations/repositories/PaymentRepository.ts",
+        "server/src/implementations/services/PaymentService.ts",
+        "web/src/pages/Payments.tsx",
+        "web/src/components/PaymentForm.tsx"
+      ]
+    },
+    {
+      "name": "Contract Management",
+      "description": "Rental contract management including draft contracts and active agreements",
+      "files": [
+        "server/src/routes/contract.routes.ts",
+        "server/src/controllers/contract.controller.ts",
+        "server/src/entities/Contract.entity.ts",
+        "server/src/interfaces/repositories/IContractRepository.ts",
+        "server/src/interfaces/services/IContractService.ts",
+        "server/src/implementations/repositories/ContractRepository.ts",
+        "server/src/implementations/services/ContractService.ts",
+        "web/src/pages/Contracts.tsx"
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "description": "Administrative dashboard with business overview, income reports, and user management",
+      "files": [
+        "web/src/pages/Dashboard.tsx",
+        "web/src/components/DashboardStats.tsx",
+        "web/src/components/RecentActivity.tsx"
+      ]
+    },
+    {
+      "name": "User Interface Components",
+      "description": "Reusable UI components built with Material UI for consistent design",
+      "files": [
+        "web/src/components/Layout.tsx",
+        "web/src/components/Navigation.tsx",
+        "web/src/components/DataTable.tsx",
+        "web/src/components/FormDialog.tsx",
+        "web/src/components/ConfirmDialog.tsx"
+      ]
+    },
+    {
+      "name": "API Integration",
+      "description": "Type-safe API communication using Eden Treaty for end-to-end type safety",
+      "files": [
+        "web/src/contexts/ApiContext.tsx",
+        "web/src/services/api.ts",
+        "shared/types/api.types.ts"
+      ]
+    },
+    {
+      "name": "Database Layer",
+      "description": "Prisma ORM integration with PostgreSQL for data persistence and migrations",
+      "files": [
+        "server/src/lib/prisma.ts",
+        "server/prisma/schema.prisma",
+        "server/prisma/seed.ts"
+      ]
+    },
+    {
+      "name": "Error Handling",
+      "description": "Centralized error handling and logging system",
+      "files": [
+        "server/src/plugins/error.plugin.ts",
+        "server/src/exceptions/*.ts",
+        "server/src/utils/logger.ts"
+      ]
+    }
+  ]
+}

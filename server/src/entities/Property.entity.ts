@@ -10,7 +10,6 @@ export class PropertyEntity {
     public ubicacion: UbicacionType,
     public propertyType: PropertyType,
     public monthlyRent: number,
-    public isAvailable: boolean,
     public status: PropertyStatus,
     public tenantId: number | null,
     public createdAt: Date,
@@ -22,7 +21,6 @@ export class PropertyEntity {
     ubicacion: string;
     propertyType: string;
     monthlyRent: number;
-    isAvailable?: boolean;
     tenantId: number | null;
   }): PropertyEntity {
     return new PropertyEntity(
@@ -31,7 +29,6 @@ export class PropertyEntity {
       data.ubicacion as UbicacionType,
       data.propertyType as PropertyType,
       data.monthlyRent,
-      data.isAvailable ?? true,
       PropertyStatus.ACTIVE, // status
       data.tenantId,
       new Date(), // createdAt
@@ -44,7 +41,6 @@ export class PropertyEntity {
     ubicacion?: string;
     propertyType?: string;
     monthlyRent?: number;
-    isAvailable?: boolean;
     status?: PropertyStatus;
     tenantId?: number | null;
   }): PropertyEntity {
@@ -52,7 +48,6 @@ export class PropertyEntity {
     if (data.ubicacion !== undefined) this.ubicacion = data.ubicacion as UbicacionType;
     if (data.propertyType !== undefined) this.propertyType = data.propertyType as PropertyType;
     if (data.monthlyRent !== undefined) this.monthlyRent = data.monthlyRent;
-    if (data.isAvailable !== undefined) this.isAvailable = data.isAvailable;
     if (data.status !== undefined) this.status = data.status;
     if (data.tenantId !== undefined) this.tenantId = data.tenantId;
     this.updatedAt = new Date();
@@ -67,7 +62,6 @@ export class PropertyEntity {
       prismaData.ubicacion,
       prismaData.propertyType,
       Number(prismaData.monthlyRent),
-      prismaData.isAvailable,
       prismaData.status as PropertyStatus || PropertyStatus.ACTIVE,
       prismaData.tenantId,
       prismaData.createdAt,
@@ -82,7 +76,6 @@ export class PropertyEntity {
       ubicacion: this.ubicacion,
       propertyType: this.propertyType,
       monthlyRent: this.monthlyRent,
-      isAvailable: this.isAvailable,
       status: this.status,
       tenantId: this.tenantId,
       createdAt: this.createdAt,
@@ -97,7 +90,6 @@ export class PropertyEntity {
       ubicacion: this.ubicacion,
       propertyType: this.propertyType,
       monthlyRent: this.monthlyRent,
-      isAvailable: this.isAvailable,
       status: this.status.toString(),
       tenantId: this.tenantId,
       createdAt: this.createdAt.toISOString(),

@@ -30,8 +30,6 @@ const createTenantBodySchema = t.Object({
   lastName: t.String({ minLength: 2 }),
   phone: t.Optional(t.String()),
   documentId: t.String({ minLength: 5 }),
-  address: t.Optional(t.String()),
-  birthDate: t.Optional(t.String()),
   numeroLocal: t.Optional(t.String()),
   rubro: t.Optional(t.String()),
   fechaInicioContrato: t.Optional(t.String())
@@ -41,8 +39,6 @@ const updateTenantBodySchema = t.Object({
   firstName: t.Optional(t.String({ minLength: 2 })),
   lastName: t.Optional(t.String({ minLength: 2 })),
   phone: t.Optional(t.String()),
-  address: t.Optional(t.String()),
-  birthDate: t.Optional(t.String()),
   numeroLocal: t.Optional(t.String()),
   rubro: t.Optional(t.String()),
   fechaInicioContrato: t.Optional(t.String())

@@ -109,7 +109,7 @@ export default function ContractDetailsModal({
       <DialogTitle>
         Detalle del Contrato {contract ? `#${contract.id}` : ''}
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent dividers sx={{ p: { xs: 2, sm: 3 } }}>
         {/* Helpers */}
         {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
         {null}
@@ -123,7 +123,7 @@ export default function ContractDetailsModal({
             Inquilino: <strong>{contract?.tenantFullName || `ID: ${contract?.tenantId}`}</strong>
           </Typography>
           <Typography variant="body2">
-            Local: <strong>{contract?.propertyName || `ID: ${contract?.propertyId}`}</strong>
+            Local: <strong>{contract?.propertyName} </strong>
             {contract?.propertyLocalNumber !== undefined && (
               <Box component="span" sx={{ color: 'text.secondary', ml: 1 }}>
                 / N° {contract.propertyLocalNumber}

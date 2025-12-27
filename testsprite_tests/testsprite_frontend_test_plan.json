@@ -1,0 +1,459 @@
+[
+  {
+    "id": "TC001",
+    "title": "User login with valid credentials",
+    "description": "Verify that a user can successfully log in using valid username and password, receiving a valid JWT token and access to protected routes.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid username and password"
+      },
+      {
+        "type": "action",
+        "description": "Click the login button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the login is successful and a JWT token is returned"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user is redirected to the dashboard and protected routes are accessible"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "User login failure with invalid credentials",
+    "description": "Verify that login fails with incorrect username or password, and no token is issued.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Enter an invalid username or password"
+      },
+      {
+        "type": "action",
+        "description": "Click the login button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that login is rejected and an appropriate error message is shown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no JWT token is returned and access to protected routes remains blocked"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "JWT token expiration and logout",
+    "description": "Validate that JWT tokens expire correctly and logout functionality invalidates tokens preventing further access.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login and obtain a JWT token"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the token to expire or manually set token expiry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that access to protected routes is denied after token expiry"
+      },
+      {
+        "type": "action",
+        "description": "Perform logout operation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the JWT token is invalidated and user cannot access protected routes"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Create tenant with valid data",
+    "description": "Verify creation of a tenant record with complete valid personal, contact, and rental history information.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to tenant management page"
+      },
+      {
+        "type": "action",
+        "description": "Open new tenant form and input valid personal and contact data, including rental history"
+      },
+      {
+        "type": "action",
+        "description": "Submit the tenant creation form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that tenant is created and visible in tenant list with correct details"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Fail tenant creation with missing mandatory fields",
+    "description": "Verify appropriate validation errors are shown when mandatory tenant fields are missing during creation.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to tenant creation form"
+      },
+      {
+        "type": "action",
+        "description": "Leave mandatory fields empty and submit the form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation error messages appear for required fields"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that tenant is not created"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Update tenant information",
+    "description": "Verify that tenant information can be updated with valid changes and changes persist correctly.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select an existing tenant from the list"
+      },
+      {
+        "type": "action",
+        "description": "Edit personal and contact information fields"
+      },
+      {
+        "type": "action",
+        "description": "Submit the update"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated data is saved and displayed correctly"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Delete tenant record",
+    "description": "Verify tenant records can be deleted after confirmation, and no longer accessible after deletion.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select a tenant record for deletion"
+      },
+      {
+        "type": "action",
+        "description": "Confirm deletion in modal dialog"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify tenant is removed from list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify tenant data is no longer retrievable from the backend"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "View property details and availability",
+    "description": "Verify that properties list displays detailed information and current availability status correctly.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to properties management page"
+      },
+      {
+        "type": "action",
+        "description": "Select a property to view details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that property information is accurate including contracts and availability"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Create and update property record",
+    "description": "Verify creation of a new property and the ability to modify property details and save changes.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open new property form and provide valid information"
+      },
+      {
+        "type": "action",
+        "description": "Submit creation form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify property appears in the list with correct details"
+      },
+      {
+        "type": "action",
+        "description": "Edit the property details"
+      },
+      {
+        "type": "action",
+        "description": "Save the updated property information"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify changes persist and are correctly displayed"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Register payment and handle debts",
+    "description": "Validate registering payments, updating tenant debt status, generating receipts and triggering alerts on due debts.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to payment management page"
+      },
+      {
+        "type": "action",
+        "description": "Register a new payment linked to a tenant"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify payment is logged correctly and tenant debt is updated"
+      },
+      {
+        "type": "action",
+        "description": "Generate payment receipt"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify receipt details match payment data"
+      },
+      {
+        "type": "action",
+        "description": "Verify alerts appear for overdue debts"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Fail payment registration with invalid inputs",
+    "description": "Ensure payment registration fails gracefully with invalid or incomplete payment data and appropriate user feedback.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to register a payment without required fields or invalid amounts"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation error messages and rejection of payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no unintended changes to tenant debt or payment records"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Create, save and update rental contracts",
+    "description": "Verify flow for creating draft rental contracts, editing them, activating contracts, and viewing contract statuses.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to contract management page"
+      },
+      {
+        "type": "action",
+        "description": "Create a new contract draft with required details"
+      },
+      {
+        "type": "action",
+        "description": "Save the draft contract"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify draft contract is saved and listed with status 'Draft'"
+      },
+      {
+        "type": "action",
+        "description": "Edit draft and update contract information"
+      },
+      {
+        "type": "action",
+        "description": "Activate the contract"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify contract status changes to 'Active' and details are updated correctly"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Dashboard displays accurate business overview and reports",
+    "description": "Verify dashboard loads correctly with real-time financial reports, income statistics, and user management data displayed appropriately.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as admin user"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to dashboard page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify current financial data and reports are rendered accurately"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify recent activities and user management summaries are correct"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "API communication with type-safety enforced",
+    "description": "Test that frontend and backend communicate using Eden Treaty API, enforcing type safety and consistency on requests and responses.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Perform API calls from frontend for tenant CRUD operations"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the API enforces correct request/response structure and types without runtime errors"
+      },
+      {
+        "type": "action",
+        "description": "Perform invalid API calls with malformed data"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify API returns correct validation errors and no unhandled exceptions"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Database migrations preserve data integrity",
+    "description": "Test that database migrations apply correctly and data remains consistent without loss or corruption.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Seed database with test data"
+      },
+      {
+        "type": "action",
+        "description": "Apply new Prisma migrations"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify schema changes applied correctly"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify test data remains intact and queries return expected results"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Centralized error handling and logging",
+    "description": "Verify errors in API and frontend are captured, logged, and appropriate user-friendly messages are displayed.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Force errors in backend API routes (e.g., invalid database queries)"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that errors are logged centrally and meaningful error responses are sent"
+      },
+      {
+        "type": "action",
+        "description": "Cause error conditions in frontend components"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that error modals or notifications are shown to users gracefully"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Consistent UI rendering with Material UI components",
+    "description": "Verify the user interface uses Material UI components consistently, ensuring no layout or styling regressions across pages and dialogs.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate through all main pages (login, tenants, properties, payments, contracts, dashboard)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI components render correctly with consistent styling and expected behavior"
+      },
+      {
+        "type": "action",
+        "description": "Open forms and dialogs, interact with UI controls"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify responsiveness and visual consistency using Material UI standards"
+      }
+    ]
+  }
+]

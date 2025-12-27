@@ -27,13 +27,10 @@ model Tenant {
   lastName              String
   phone                 String?
   documentId            String       @unique // DNI, Cedula, etc.
-  address               String?
-  birthDate             DateTime?
   numeroLocal           String?      // Número de local comercial
   rubro                 Rubro?       // Rubro del negocio
   fechaInicioContrato   DateTime?    // Fecha de inicio del contrato de alquiler
   estadoPago            EstadoPago   @default(AL_DIA) // Estado de pagos del inquilino
-  status                TenantStatus @default(ACTIVE) // Soft delete/status
   deletedAt             DateTime?    // Soft delete timestamp
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
@@ -55,7 +52,6 @@ model Property {
   ubicacion   UbicacionType @default(BOULEVARD)
   propertyType PropertyType
   monthlyRent Decimal
-  isAvailable Boolean     @default(true)
   status      PropertyStatus @default(ACTIVE) // Property status
   deletedAt   DateTime?    // Soft delete timestamp
   createdAt   DateTime    @default(now())

@@ -53,7 +53,9 @@ const TenantPage = () => {
         { value: 'firstName', label: 'Nombre (A-Z)' },
         { value: 'lastName', label: 'Apellido (A-Z)' },
         { value: 'firstName_desc', label: 'Nombre (Z-A)' },
-        { value: 'lastName_desc', label: 'Apellido (Z-A)' }
+        { value: 'lastName_desc', label: 'Apellido (Z-A)' },
+        { value: 'localNumber', label: 'N° Local (menor a mayor)' },
+        { value: 'localNumber_desc', label: 'N° Local (mayor a menor)' }
       ]
     }
   ];
@@ -140,31 +142,34 @@ const TenantPage = () => {
     // Aplicar ordenamiento
     const sortBy = filters.sortBy as string;
     filtered.sort((a, b) => {
-      let aValue: string, bValue: string;
-
       switch (sortBy) {
-        case 'firstName':
-          aValue = a.firstName;
-          bValue = b.firstName;
-          break;
-        case 'lastName':
-          aValue = a.lastName;
-          bValue = b.lastName;
-          break;
-        case 'firstName_desc':
-          aValue = b.firstName;
-          bValue = a.firstName;
-          break;
-        case 'lastName_desc':
-          aValue = b.lastName;
-          bValue = a.lastName;
-          break;
-        default:
-          aValue = a.firstName;
-          bValue = b.firstName;
-      }
+        case 'localNumber':
+          // Ordenar por el número de local más bajo
+          const aMinLocal = a.localNumbers && a.localNumbers.length > 0 ? Math.min(...a.localNumbers) : 999999;
+          const bMinLocal = b.localNumbers && b.localNumbers.length > 0 ? Math.min(...b.localNumbers) : 999999;
+          return aMinLocal - bMinLocal;
 
-      return aValue.localeCompare(bValue);
+        case 'localNumber_desc':
+          // Ordenar por el número de local más alto (descendente)
+          const aMaxLocal = a.localNumbers && a.localNumbers.length > 0 ? Math.max(...a.localNumbers) : 0;
+          const bMaxLocal = b.localNumbers && b.localNumbers.length > 0 ? Math.max(...b.localNumbers) : 0;
+          return bMaxLocal - aMaxLocal;
+
+        case 'firstName':
+          return a.firstName.localeCompare(b.firstName);
+
+        case 'lastName':
+          return a.lastName.localeCompare(b.lastName);
+
+        case 'firstName_desc':
+          return b.firstName.localeCompare(a.firstName);
+
+        case 'lastName_desc':
+          return b.lastName.localeCompare(a.lastName);
+
+        default:
+          return a.firstName.localeCompare(b.firstName);
+      }
     });
 
     return filtered;
@@ -321,15 +326,20 @@ const TenantPage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ 
+          display: { xs: 'block', sm: 'flex' }, 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          mb: 2 
+        }}>
           <Typography variant="h4" component="h1" gutterBottom>
             Inquilinos
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
-          <Box sx={{ flex: 1, maxWidth: 400 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
+          <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 250 }, maxWidth: { xs: '100%', sm: 400 } }}>
             <SearchBar
               searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
@@ -361,18 +371,17 @@ const TenantPage = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell><strong>ID</strong></TableCell>
                 <TableCell><strong>Nombre</strong></TableCell>
-                <TableCell><strong>Teléfono</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Teléfono</strong></TableCell>
                 <TableCell><strong>DNI</strong></TableCell>
-                <TableCell><strong>N° Local</strong></TableCell>
-                <TableCell><strong>Rubro</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Locales</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Rubro</strong></TableCell>
                 <TableCell><strong>Estado Pago</strong></TableCell>
-                <TableCell><strong>Fecha Inicio</strong></TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Inicio</strong></TableCell>
                 <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
             </TableHead>
@@ -389,14 +398,18 @@ const TenantPage = () => {
                     },
                   }}
                 >
-                  <TableCell>{tenant.id}</TableCell>
                   <TableCell>
                     {tenant.firstName} {tenant.lastName}
                   </TableCell>
-                  <TableCell>{tenant.phone || '-'}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tenant.phone || '-'}</TableCell>
                   <TableCell>{tenant.documentId}</TableCell>
-                  <TableCell>{tenant.numeroLocal ?? '-'}</TableCell>
-                  <TableCell>{tenant.rubro || '-'}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    {tenant.localNumbers && tenant.localNumbers.length > 0
+                      ? tenant.localNumbers.join(', ')
+                      : tenant.numeroLocal ?? '-'
+                    }
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tenant.rubro || '-'}</TableCell>
                   <TableCell>
                     <Chip
                       label={tenant.estadoPago === 'AL_DIA' ? 'Al día' : 'Con deuda'}
@@ -404,7 +417,7 @@ const TenantPage = () => {
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>{tenant.fechaInicioContrato ? formatDate(tenant.fechaInicioContrato) : '-'}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tenant.fechaInicioContrato ? formatDate(tenant.fechaInicioContrato) : '-'}</TableCell>
                   <TableCell align="center" onClick={(e) => e.stopPropagation()}>
                     <IconButton
                       size="small"
@@ -461,7 +474,7 @@ const TenantPage = () => {
       {/* Create Tenant Dialog */}
       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Agregar Inquilino</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Box component="form" sx={{ mt: 2 }}>
             <TextField
               fullWidth
@@ -534,7 +547,7 @@ const TenantPage = () => {
       {/* Edit Tenant Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Editar Inquilino</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Box component="form" sx={{ mt: 2 }}>
             <TextField
               fullWidth
@@ -607,7 +620,7 @@ const TenantPage = () => {
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Confirmar Eliminación</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Typography>
             ¿Estás seguro de que quieres eliminar al inquilino{' '}
             <strong>

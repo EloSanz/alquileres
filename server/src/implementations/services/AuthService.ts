@@ -4,6 +4,7 @@ import { AuthUserDTO, LoginDTO, UserEntity } from '../../entities/User.entity';
 import { CreateUserDTO, UserDTO } from '../../dtos/user.dto';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../../types/jwt.types';
+import { ConflictError, UnauthorizedError, NotFoundError } from '../../exceptions';
 
 export class AuthService implements IAuthService {
   constructor(
@@ -15,13 +16,13 @@ export class AuthService implements IAuthService {
     // Check if email already exists
     const existingEmail = await this.userRepository.findByEmail(data.email);
     if (existingEmail) {
-      throw new Error('Email already registered');
+      throw new ConflictError('Email already registered');
     }
 
     // Check if username already exists
     const existingUsername = await this.userRepository.findByUsername(data.username);
     if (existingUsername) {
-      throw new Error('Username already taken');
+      throw new ConflictError('Username already taken');
     }
 
     // Create user entity
@@ -59,13 +60,13 @@ export class AuthService implements IAuthService {
     }
 
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     // Validate password
     const isValidPassword = await user.validatePassword(data.password);
     if (!isValidPassword) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     // Generate token
@@ -77,7 +78,7 @@ export class AuthService implements IAuthService {
   async getCurrentUser(userId: number): Promise<UserDTO> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundError('User', userId);
     }
     return user.toDTO();
   }

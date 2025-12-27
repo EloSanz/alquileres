@@ -17,12 +17,12 @@ interface PropertyCardProps {
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, onEdit }) => {
-  const getAvailabilityColor = (isAvailable?: boolean) => {
-    return isAvailable ? 'success' : 'warning';
+  const getAvailabilityColor = (tenantId: number | null) => {
+    return tenantId === null ? 'success' : 'warning';
   };
 
-  const getAvailabilityLabel = (isAvailable?: boolean) => {
-    return isAvailable ? 'Disponible' : 'No Disponible';
+  const getAvailabilityLabel = (tenantId: number | null) => {
+    return tenantId === null ? 'Disponible' : 'No Disponible';
   };
 
 
@@ -41,9 +41,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, on
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
           <Chip label={property.propertyType === 'INSIDE' ? 'Adentro' : 'Afuera'} size="small" variant="outlined" />
           <Chip
-            label={getAvailabilityLabel(property.isAvailable)}
+            label={getAvailabilityLabel(property.tenantId)}
             size="small"
-            color={getAvailabilityColor(property.isAvailable) as any}
+            color={getAvailabilityColor(property.tenantId) as any}
           />
         </Box>
       </CardContent>

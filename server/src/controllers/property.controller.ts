@@ -1,5 +1,6 @@
 import { IPropertyService } from '../interfaces/services/IPropertyService';
 import { CreateProperty, UpdateProperty } from '../../../shared/types/Property';
+import { ValidationError } from '../exceptions';
 
 export class PropertyController {
   constructor(private propertyService: IPropertyService) {}
@@ -38,7 +39,7 @@ export class PropertyController {
     const createProperty = CreateProperty.fromJSON(body);
     const errors = createProperty.validate();
     if (errors.length > 0) {
-      throw new Error(errors.join(', '));
+      throw new ValidationError('Validation failed', errors);
     }
     const property = await this.propertyService.createProperty(createProperty.toDTO(), userId);
     return {
@@ -60,7 +61,7 @@ export class PropertyController {
     const updateProperty = UpdateProperty.fromJSON(body);
     const errors = updateProperty.validate();
     if (errors.length > 0) {
-      throw new Error(errors.join(', '));
+      throw new ValidationError('Validation failed', errors);
     }
     const property = await this.propertyService.updateProperty(id, updateProperty.toDTO(), userId);
     return {

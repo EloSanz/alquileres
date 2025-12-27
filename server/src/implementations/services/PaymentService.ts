@@ -2,6 +2,7 @@ import { IPaymentService } from '../../interfaces/services/IPaymentService';
 import { IPaymentRepository } from '../../interfaces/repositories/IPaymentRepository';
 import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '../../dtos/payment.dto';
 import { PaymentEntity } from '../../entities/Payment.entity';
+import { NotFoundError } from '../../exceptions';
 
 export class PaymentService implements IPaymentService {
   constructor(private paymentRepository: IPaymentRepository) {}
@@ -14,7 +15,7 @@ export class PaymentService implements IPaymentService {
   async getPaymentById(id: number, _userId: number): Promise<PaymentDTO> {
     const entity = await this.paymentRepository.findById(id);
     if (!entity) {
-      throw new Error('Payment not found');
+      throw new NotFoundError('Payment', id);
     }
     return entity.toDTO();
   }
@@ -28,7 +29,7 @@ export class PaymentService implements IPaymentService {
   async updatePayment(id: number, data: UpdatePaymentDTO, _userId: number): Promise<PaymentDTO> {
     const existingEntity = await this.paymentRepository.findById(id);
     if (!existingEntity) {
-      throw new Error('Payment not found');
+      throw new NotFoundError('Payment', id);
     }
 
     const updatedEntity = existingEntity.update(data);

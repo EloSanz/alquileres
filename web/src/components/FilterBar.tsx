@@ -49,9 +49,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
   return (
     <Box sx={{
       display: 'flex',
-      gap: 2,
+      gap: { xs: 1, sm: 2 },
       alignItems: 'flex-start',
-      flexWrap: 'wrap'
+      flexWrap: 'wrap',
+      width: { xs: '100%', sm: 'auto' }
     }}>
       {filters.map((filter) => {
         const currentValue = filterValues[filter.key] || (filter.multiple ? [] : '');
@@ -61,7 +62,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
             key={filter.key}
             size="small"
             sx={{
-              minWidth: filter.multiple ? 180 : 140,
+              minWidth: { xs: '100%', sm: filter.multiple ? 180 : 140 },
+              width: { xs: '100%', sm: 'auto' },
               '& .MuiInputBase-root': {
                 fontSize: '0.875rem'
               },

@@ -5,6 +5,7 @@ import { IPropertyRepository } from '../../interfaces/repositories/IPropertyRepo
 import { TenantDTO, CreateTenantDTO, UpdateTenantDTO } from '../../dtos/tenant.dto';
 import { TenantEntity } from '../../entities/Tenant.entity';
 import { EstadoPago, Rubro } from '@prisma/client';
+import { NotFoundError, ConflictError } from '../../exceptions';
 
 // Helper function to convert string to Rubro enum
 function stringToRubro(value: string | null): Rubro | null {
@@ -82,7 +83,7 @@ export class TenantService implements ITenantService {
   async getAllTenants(_userId: number): Promise<TenantDTO[]> {
     const entities = await this.tenantRepository.findAll();
 
-    // Actualizar estado de pago para cada tenant
+    // Actualizar estado de pago para cada tenant y obtener sus propiedades
     const updatedEntities = await Promise.all(
       entities.map(async (entity) => {
         if (entity.fechaInicioContrato) {
@@ -95,17 +96,25 @@ export class TenantService implements ITenantService {
           }
         }
 
-        return entity;
+        // Obtener las propiedades asociadas al tenant
+        const properties = await this.propertyRepository.findByTenantId(entity.id!);
+        const localNumbers = properties.map(p => p.localNumber).sort((a, b) => a - b);
+
+        // Agregar los números de local al DTO
+        const dto = entity.toDTO();
+        (dto as any).localNumbers = localNumbers;
+
+        return dto;
       })
     );
 
-    return updatedEntities.map(entity => entity.toDTO());
+    return updatedEntities;
   }
 
   async getTenantById(id: number, _userId: number): Promise<TenantDTO> {
     const entity = await this.tenantRepository.findById(id);
     if (!entity) {
-      throw new Error('Tenant not found');
+      throw new NotFoundError('Tenant', id);
     }
     return entity.toDTO();
   }
@@ -114,7 +123,7 @@ export class TenantService implements ITenantService {
   async getTenantByDocumentId(documentId: string, _userId: number): Promise<TenantDTO> {
     const entity = await this.tenantRepository.findByDocumentId(documentId);
     if (!entity) {
-      throw new Error('Tenant not found');
+      throw new NotFoundError('Tenant', documentId);
     }
     return entity.toDTO();
   }
@@ -123,7 +132,7 @@ export class TenantService implements ITenantService {
     // Check if document ID already exists
     const existingDocument = await this.tenantRepository.findByDocumentId(data.documentId);
     if (existingDocument) {
-      throw new Error('Document ID already registered');
+      throw new ConflictError(`Document ID ${data.documentId} already registered`);
     }
 
     // Create entity
@@ -133,8 +142,6 @@ export class TenantService implements ITenantService {
       data.lastName,
       data.phone || null,
       data.documentId,
-      data.address || null,
-      data.birthDate ? new Date(data.birthDate) : null,
       data.numeroLocal || null,
       stringToRubro(data.rubro !== undefined ? data.rubro : null),
       data.fechaInicioContrato ? new Date(data.fechaInicioContrato) : null,
@@ -154,17 +161,13 @@ export class TenantService implements ITenantService {
   async updateTenant(id: number, data: UpdateTenantDTO, _userId: number): Promise<TenantDTO> {
     const entity = await this.tenantRepository.findById(id);
     if (!entity) {
-      throw new Error('Tenant not found');
+      throw new NotFoundError('Tenant', id);
     }
 
     // Update fields
     if (data.firstName !== undefined) entity.firstName = data.firstName;
     if (data.lastName !== undefined) entity.lastName = data.lastName;
     if (data.phone !== undefined) entity.phone = data.phone;
-    if (data.address !== undefined) entity.address = data.address;
-    if (data.birthDate !== undefined) {
-      entity.birthDate = data.birthDate ? new Date(data.birthDate) : null;
-    }
     if (data.numeroLocal !== undefined) entity.numeroLocal = data.numeroLocal;
     if (data.rubro !== undefined) entity.rubro = stringToRubro(data.rubro);
     if (data.fechaInicioContrato !== undefined) {
@@ -182,7 +185,7 @@ export class TenantService implements ITenantService {
     // Obtener el tenant para acceder a sus datos
     const tenant = await this.tenantRepository.findById(id);
     if (!tenant) {
-      throw new Error('Tenant not found');
+      throw new NotFoundError('Tenant', id);
     }
 
     // Actualizar pagos históricos con datos del tenant antes de eliminarlo

@@ -1,5 +1,22 @@
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import { Home as HomeIcon, Brightness4 as ThemeIcon } from '@mui/icons-material';
+import { useState } from 'react';
+import { 
+  AppBar, 
+  Toolbar, 
+  Typography, 
+  Button, 
+  Box, 
+  useMediaQuery, 
+  useTheme,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider
+} from '@mui/material';
+import { Home as HomeIcon, Brightness4 as ThemeIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppTheme } from '../contexts/ThemeContext';
@@ -8,10 +25,14 @@ const Navigation = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
   const { themeName, setTheme } = useAppTheme();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+    setDrawerOpen(false);
   };
 
   const toggleTheme = () => {
@@ -21,15 +42,57 @@ const Navigation = () => {
     setTheme(themes[nextIndex]);
   };
 
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    setDrawerOpen(false);
+  };
+
   if (!isAuthenticated) return null;
 
+  const menuItems = (
+    <>
+      <ListItem disablePadding>
+        <ListItemButton onClick={() => handleNavigate('/')}>
+          <ListItemIcon>
+            <HomeIcon />
+          </ListItemIcon>
+          <ListItemText primary="Inicio" />
+        </ListItemButton>
+      </ListItem>
+      <ListItem disablePadding>
+        <ListItemButton onClick={toggleTheme}>
+          <ListItemIcon>
+            <ThemeIcon />
+          </ListItemIcon>
+          <ListItemText primary={`Tema: ${themeName}`} />
+        </ListItemButton>
+      </ListItem>
+      <Divider />
+      <ListItem disablePadding>
+        <ListItemButton onClick={handleLogout}>
+          <ListItemText primary="Cerrar Sesión" />
+        </ListItemButton>
+      </ListItem>
+    </>
+  );
+
   return (
+    <>
     <AppBar position="static" elevation={2}>
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           Gestión de Alquileres
         </Typography>
 
+          {isMobile ? (
+            <IconButton
+              color="inherit"
+              edge="end"
+              onClick={() => setDrawerOpen(true)}
+            >
+              <MenuIcon />
+            </IconButton>
+          ) : (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Button
             color="inherit"
@@ -54,8 +117,22 @@ const Navigation = () => {
             Cerrar Sesión
           </Button>
         </Box>
+          )}
       </Toolbar>
     </AppBar>
+
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      >
+        <Box sx={{ width: 250 }}>
+          <List>
+            {menuItems}
+          </List>
+        </Box>
+      </Drawer>
+    </>
   );
 };
 

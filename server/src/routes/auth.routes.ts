@@ -5,6 +5,7 @@ import { PrismaUserRepository } from '../implementations/repositories/PrismaUser
 import { JWT_SECRET } from '../types/jwt.types';
 import { verify as jwtVerify } from 'jsonwebtoken';
 import { logError, logInfo } from '../utils/logger';
+import { UnauthorizedError } from '../exceptions';
 
 // Dependency injection
 const userRepository = new PrismaUserRepository();
@@ -17,7 +18,7 @@ const verifyToken = (token: string): number => {
     const decoded = jwtVerify(token, JWT_SECRET) as any;
     return decoded.userId;
   } catch (error) {
-    throw new Error('Invalid token');
+    throw new UnauthorizedError('Invalid token');
   }
 };
 

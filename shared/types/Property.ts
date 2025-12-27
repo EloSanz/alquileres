@@ -5,7 +5,6 @@ export class Property {
     public ubicacion: 'BOULEVARD' | 'SAN_MARTIN',
     public propertyType: string,
     public monthlyRent: number,
-    public isAvailable: boolean,
     public status: string,
     public tenantId: number | null,
     public createdAt: string,
@@ -33,7 +32,6 @@ export class Property {
       data.ubicacion,
       data.propertyType,
       data.monthlyRent,
-      data.isAvailable,
       data.status,
       data.tenantId,
       data.createdAt,
@@ -53,8 +51,7 @@ export class CreateProperty {
     public ubicacion: 'BOULEVARD' | 'SAN_MARTIN',
     public propertyType: string,
     public monthlyRent: number,
-    public tenantId: number | null,
-    public isAvailable?: boolean
+    public tenantId: number | null
   ) {}
 
   validate(): string[] {
@@ -76,8 +73,7 @@ export class CreateProperty {
       data.ubicacion,
       data.propertyType,
       data.monthlyRent,
-      data.tenantId ?? null,
-      data.isAvailable
+      data.tenantId ?? null
     );
   }
 
@@ -91,8 +87,7 @@ export class UpdateProperty {
     public localNumber?: number,
     public ubicacion?: 'BOULEVARD' | 'SAN_MARTIN',
     public propertyType?: string,
-    public monthlyRent?: number,
-    public isAvailable?: boolean
+    public monthlyRent?: number
   ) {}
 
   validate(): string[] {
@@ -112,7 +107,6 @@ export class UpdateProperty {
     if (this.ubicacion !== undefined) result.ubicacion = this.ubicacion;
     if (this.propertyType !== undefined) result.propertyType = this.propertyType;
     if (this.monthlyRent !== undefined) result.monthlyRent = this.monthlyRent;
-    if (this.isAvailable !== undefined) result.isAvailable = this.isAvailable;
     return result;
   }
 
@@ -121,8 +115,7 @@ export class UpdateProperty {
       data.localNumber,
       data.ubicacion,
       data.propertyType,
-      data.monthlyRent,
-      data.isAvailable
+      data.monthlyRent
     );
   }
 

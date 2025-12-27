@@ -5,14 +5,13 @@ export class Tenant {
     public lastName: string,
     public phone: string | null,
     public documentId: string,
-    public address: string | null,
-    public birthDate: string | null,
     public numeroLocal: string | null,
     public rubro: string | null,
     public fechaInicioContrato: string | null,
     public estadoPago: string,
     public createdAt: string,
-    public updatedAt: string
+    public updatedAt: string,
+    public localNumbers?: number[] // Números de locales asociados al tenant
   ) {}
 
   validate(): string[] {
@@ -34,14 +33,13 @@ export class Tenant {
       data.lastName,
       data.phone,
       data.documentId,
-      data.address,
-      data.birthDate,
       data.numeroLocal,
       data.rubro,
       data.fechaInicioContrato,
       data.estadoPago,
       data.createdAt,
-      data.updatedAt
+      data.updatedAt,
+      data.localNumbers
     );
   }
 
@@ -56,8 +54,6 @@ export class CreateTenant {
     public lastName: string,
     public documentId: string,
     public phone?: string,
-    public address?: string,
-    public birthDate?: string,
     public numeroLocal?: string,
     public rubro?: string,
     public fechaInicioContrato?: string
@@ -81,8 +77,6 @@ export class CreateTenant {
       data.lastName,
       data.documentId,
       data.phone,
-      data.address,
-      data.birthDate,
       data.numeroLocal,
       data.rubro,
       data.fechaInicioContrato
@@ -99,8 +93,6 @@ export class UpdateTenant {
     public firstName?: string,
     public lastName?: string,
     public phone?: string,
-    public address?: string,
-    public birthDate?: string,
     public numeroLocal?: string,
     public rubro?: string,
     public fechaInicioContrato?: string
@@ -122,8 +114,6 @@ export class UpdateTenant {
     if (this.firstName !== undefined) result.firstName = this.firstName;
     if (this.lastName !== undefined) result.lastName = this.lastName;
     if (this.phone !== undefined) result.phone = this.phone;
-    if (this.address !== undefined) result.address = this.address;
-    if (this.birthDate !== undefined) result.birthDate = this.birthDate;
     if (this.numeroLocal !== undefined) result.numeroLocal = this.numeroLocal;
     if (this.rubro !== undefined) result.rubro = this.rubro;
     if (this.fechaInicioContrato !== undefined) result.fechaInicioContrato = this.fechaInicioContrato;
@@ -135,8 +125,6 @@ export class UpdateTenant {
       data.firstName,
       data.lastName,
       data.phone,
-      data.address,
-      data.birthDate,
       data.numeroLocal,
       data.rubro,
       data.fechaInicioContrato
