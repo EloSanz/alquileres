@@ -39,10 +39,26 @@ jobs:
         echo "✔ SSH_HOST está configurado (longitud: $HOST_LENGTH caracteres)"
         echo "✔ SSH_PASSWORD está configurado"
         
+        # Limpiar espacios al inicio y final
+        HOST_TRIMMED=$(echo "$HOST" | xargs)
+        HOST_TRIMMED_LENGTH=${#HOST_TRIMMED}
+        
         # Verificar que no tenga espacios
         if [[ "$HOST" =~ [[:space:]] ]]; then
-          echo "❌ ERROR: SSH_HOST contiene espacios. Esto causará el error 'no such host'"
-          echo "Por favor, verifica que el valor no tenga espacios al inicio o final"
+          echo "⚠️  ADVERTENCIA: SSH_HOST contiene espacios"
+          echo "   Longitud original: $HOST_LENGTH caracteres"
+          echo "   Longitud sin espacios: $HOST_TRIMMED_LENGTH caracteres"
+          echo ""
+          echo "🔧 Solución:"
+          echo "   1. Ve a: Settings > Environments > 'penta mont' > Secrets"
+          echo "   2. Edita SSH_HOST"
+          echo "   3. Elimina TODOS los espacios (inicio, final, y en medio)"
+          echo "   4. El valor debe ser solo: IP o hostname"
+          echo "      Ejemplo correcto: 123.45.67.89"
+          echo "      Ejemplo correcto: vps.tu-dominio.com"
+          echo ""
+          echo "   Si el valor tiene espacios en medio, probablemente copiaste mal."
+          echo "   Copia solo la IP o hostname, sin espacios."
           exit 1
         fi
         
