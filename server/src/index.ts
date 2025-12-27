@@ -46,7 +46,7 @@ const app = new Elysia()
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
   }))
-  .group('/pentamont/lodemas', app => app
+  .group('/pentamont', app => app
     .use(authRoutes)  // Auth routes don't need auth plugin (register/login are public)
     .use(userRoutes)
     .group('/api', app => app
