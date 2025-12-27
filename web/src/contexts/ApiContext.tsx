@@ -18,11 +18,11 @@ export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
   // En producción: Nginx maneja /pentamont/api -> localhost:4000
   const basePath = import.meta.env.VITE_API_URL || '/pentamont'
   
-  // Siempre usar ruta relativa si no es una URL completa
-  // Esto funciona tanto en desarrollo (Vite proxy) como en producción (Nginx)
+  // Eden Treaty necesita URL completa para funcionar correctamente
+  // Construir URL completa usando window.location.origin
   const apiUrl = basePath.startsWith('http') 
     ? basePath 
-    : basePath  // Ruta relativa - funciona con proxy de Vite y Nginx
+    : `${window.location.origin}${basePath.startsWith('/') ? basePath : `/${basePath}`}`
   
   const api = treaty<App>(apiUrl, {
     headers: () => {
