@@ -31,7 +31,7 @@ async function main() {
 
     console.log('✅ Seed SQL ejecutado exitosamente!');
     console.log('📊 Datos insertados:');
-    console.log('   👥 24 Inquilinos (ROGER VASQUEZ tiene locales 9 y 10)');
+    console.log('   👥 24 Inquilinos');
     console.log('   🏠 25 Propiedades');
     console.log('   📄 Contratos y pagos registrados');
 
