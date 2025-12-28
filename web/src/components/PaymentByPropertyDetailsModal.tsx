@@ -57,7 +57,6 @@ export default function PaymentByPropertyDetailsModal({
       setError('');
       const contractId = contract.id;
       const tenantId = contract.tenantId;
-      console.log('[PaymentByPropertyDetailsModal] loadPayments iniciado', { contractId, tenantId });
       
       const tenantPayments = await paymentService.getPaymentsByTenantId(tenantId);
       
@@ -155,8 +154,10 @@ export default function PaymentByPropertyDetailsModal({
       setEditingPayment(payment);
       setEditForm({
         amount: payment.amount.toString(),
-        paymentDate: new Date(payment.paymentDate).toISOString().split('T')[0],
-        dueDate: new Date(payment.dueDate).toISOString().split('T')[0],
+        // paymentDate y dueDate siempre son strings ISO en Payment
+        // Extraer solo la parte de fecha (YYYY-MM-DD) para el input
+        paymentDate: payment.paymentDate.split('T')[0],
+        dueDate: payment.dueDate.split('T')[0],
         paymentMethod: payment.paymentMethod || 'YAPE',
         status: payment.status || PaymentStatus.FUTURO,
         notes: payment.notes || '',
@@ -231,7 +232,6 @@ export default function PaymentByPropertyDetailsModal({
         await paymentService.createPayment(paymentPayload as any);
       } else {
         // Actualizar pago existente
-        // Solo pasar campos editables - el backend recalculará el status automáticamente
         const paymentData = new UpdatePayment(
           undefined, // tenantId - no editable
           undefined, // propertyId - no editable
@@ -243,15 +243,25 @@ export default function PaymentByPropertyDetailsModal({
           editForm.paymentDate,
           editForm.dueDate,
           editForm.paymentMethod,
-          undefined, // status - se recalculará automáticamente basado en fechas
+          editForm.status, // status - usar el valor del formulario (editable por el usuario)
           editingPayment.pentamontSettled,
           editForm.notes || undefined
         );
 
-        await paymentService.updatePayment(editingPayment.id, paymentData);
+        const updatedPayment = await paymentService.updatePayment(editingPayment.id, paymentData);
+        
+        // Actualizar el pago específico en el estado inmediatamente para reflejo instantáneo en la UI
+        setPayments(prevPayments => 
+          prevPayments.map(p => 
+            p.id === updatedPayment.id ? Payment.fromJSON(updatedPayment.toJSON()) : p
+          )
+        );
+        
+        // Incrementar versión para forzar re-render del timeline
+        setPaymentsVersion(prev => prev + 1);
       }
       
-      // Recargar pagos para reflejar los cambios en el grid
+      // Recargar pagos para asegurar sincronización completa con el backend
       await loadPayments();
 
       // Cerrar el diálogo después de asegurar que el estado se actualizó
@@ -329,8 +339,8 @@ export default function PaymentByPropertyDetailsModal({
               const status = mi.status as MonthStatus;
               const payment = getPaymentByMonth(mi.monthNumber);
               
-              // Key incluye monthNumber y status para forzar re-render cuando cambie el status
-              const gridKey = `${mi.monthNumber}-${status}-${payment?.id || 'none'}`;
+              // Key incluye monthNumber, status, paymentId y updatedAt para forzar re-render cuando cambie cualquier cosa
+              const gridKey = `${mi.monthNumber}-${status}-${payment?.id || 'none'}-${payment?.updatedAt || 'no-payment'}`;
               
               return (
                 <Grid item xs={4} sm={3} md={2} key={gridKey}>

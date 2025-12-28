@@ -58,18 +58,7 @@ export class PaymentEntity {
     public updatedAt: Date
   ) {  }
 
-  calculateStatus(now: Date = new Date()): PaymentStatus {
-    // Si tiene paymentDate y es <= ahora, está pagado
-    if (this.paymentDate && this.paymentDate <= now) {
-      return PaymentStatus.PAGADO;
-    }
-    // Si dueDate < ahora y no está pagado, está vencido
-    if (this.dueDate < now) {
-      return PaymentStatus.VENCIDO;
-    }
-    // Si dueDate >= ahora y no está pagado, es futuro
-    return PaymentStatus.FUTURO;
-  }
+  // calculateStatus removido - el status solo se cambia manualmente por el usuario
 
   static create(data: {
     tenantId: number | null;
@@ -101,7 +90,7 @@ export class PaymentEntity {
       paymentDate,
       dueDate,
       (data.paymentMethod as PaymentMethod) || PaymentMethod.YAPE,
-      convertFrontendStatusToPrisma(data.status || FrontendPaymentStatus.FUTURO), // convertir a Prisma enum
+      convertFrontendStatusToPrisma(data.status || FrontendPaymentStatus.VENCIDO), // Por defecto VENCIDO (impago) hasta que el usuario lo cambie
       data.pentamontSettled ?? false,
       data.notes || null,
       data.receiptImageUrl || null,
@@ -138,14 +127,13 @@ export class PaymentEntity {
     if (data.paymentDate !== undefined) this.paymentDate = new Date(data.paymentDate);
     if (data.dueDate !== undefined) this.dueDate = new Date(data.dueDate);
     if (data.paymentMethod !== undefined) this.paymentMethod = data.paymentMethod as PaymentMethod;
+    // El status solo se actualiza si se envía explícitamente
+    // No se recalcula automáticamente basado en fechas
     if (data.status !== undefined) {
+      const oldStatus = this.status;
       this.status = convertFrontendStatusToPrisma(data.status);
-    } else {
-      // Recalcular status si cambió paymentDate o dueDate
-      if (data.paymentDate !== undefined || data.dueDate !== undefined) {
-        this.status = this.calculateStatus();
-      }
     }
+    // Si no se envía status, se mantiene el status existente (no se recalcula)
     if (data.pentamontSettled !== undefined) this.pentamontSettled = data.pentamontSettled;
     if (data.notes !== undefined) this.notes = data.notes;
     if (data.receiptImageUrl !== undefined) this.receiptImageUrl = data.receiptImageUrl;
@@ -214,8 +202,9 @@ export class PaymentEntity {
       tenantFullName: this.tenantFullName,
       tenantPhone: this.tenantPhone,
       amount: this.amount,
-      paymentDate: this.paymentDate.toISOString().split('T')[0],
-      dueDate: this.dueDate.toISOString().split('T')[0],
+      // Enviar ISO completo para preservar zona horaria y evitar problemas de conversión
+      paymentDate: this.paymentDate.toISOString(),
+      dueDate: this.dueDate.toISOString(),
       paymentMethod: this.paymentMethod.toString(),
       status: convertPrismaStatusToFrontend(this.status),
       pentamontSettled: this.pentamontSettled,

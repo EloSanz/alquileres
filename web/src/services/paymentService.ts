@@ -51,7 +51,17 @@ export const usePaymentService = () => {
         throw new Error(response.data?.message || 'Failed to fetch payments')
       }
       
-      return (response.data.data || []).map((item: any) => Payment.fromJSON(item));
+      return (response.data.data || []).map((item: any) => {
+        // Si Eden Treaty convirtió las fechas a Date objects, convertirlas de vuelta a strings
+        const normalizedItem = { ...item };
+        if (normalizedItem.paymentDate instanceof Date) {
+          normalizedItem.paymentDate = normalizedItem.paymentDate.toISOString();
+        }
+        if (normalizedItem.dueDate instanceof Date) {
+          normalizedItem.dueDate = normalizedItem.dueDate.toISOString();
+        }
+        return Payment.fromJSON(normalizedItem);
+      });
     },
     
     createPayment: async (paymentData: CreatePaymentData): Promise<Payment> => {
@@ -107,7 +117,15 @@ export const usePaymentService = () => {
         throw new Error(response.data?.message || 'Failed to update payment')
       }
       
-      return Payment.fromJSON(response.data.data)
+      // Si Eden Treaty convirtió las fechas a Date objects, convertirlas de vuelta a strings
+      const updatedPaymentData: any = { ...response.data.data };
+      if (updatedPaymentData.paymentDate instanceof Date) {
+        updatedPaymentData.paymentDate = updatedPaymentData.paymentDate.toISOString();
+      }
+      if (updatedPaymentData.dueDate instanceof Date) {
+        updatedPaymentData.dueDate = updatedPaymentData.dueDate.toISOString();
+      }
+      return Payment.fromJSON(updatedPaymentData)
     },
     
     deletePayment: async (id: number): Promise<void> => {

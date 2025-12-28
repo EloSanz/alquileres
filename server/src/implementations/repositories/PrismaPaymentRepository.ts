@@ -1,7 +1,7 @@
 import { IPaymentRepository } from '../../interfaces/repositories/IPaymentRepository';
 import { PaymentEntity } from '../../entities/Payment.entity';
 import { prisma } from '../../lib/prisma';
-import { logInfo, logDebug, logError } from '../../utils/logger';
+import { logInfo } from '../../utils/logger';
 
 export class PrismaPaymentRepository implements IPaymentRepository {
   async findAll(): Promise<PaymentEntity[]> {
@@ -29,6 +29,7 @@ export class PrismaPaymentRepository implements IPaymentRepository {
       },
       orderBy: { paymentDate: 'desc' }
     });
+    
     return payments.map(payment => PaymentEntity.fromPrisma(payment));
   }
 
@@ -58,6 +59,7 @@ export class PrismaPaymentRepository implements IPaymentRepository {
 
   async update(entity: PaymentEntity): Promise<PaymentEntity> {
     const data = entity.toPrisma();
+
     delete (data as any).id; // Don't update id
     delete (data as any).createdAt; // Don't update createdAt
     // Exclude relation fields - Prisma handles these through relations, not direct field updates

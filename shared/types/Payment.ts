@@ -39,6 +39,15 @@ export class Payment {
   }
 
   static fromJSON(data: any): Payment {
+    // Asegurar que las fechas siempre sean strings, nunca Date objects
+    // Si viene como Date object, convertirlo a ISO string
+    const paymentDate = data.paymentDate instanceof Date 
+      ? data.paymentDate.toISOString() 
+      : String(data.paymentDate || '');
+    const dueDate = data.dueDate instanceof Date 
+      ? data.dueDate.toISOString() 
+      : String(data.dueDate || '');
+    
     return new Payment(
       data.id,
       data.tenantId,
@@ -48,15 +57,15 @@ export class Payment {
       data.tenantFullName,
       data.tenantPhone,
       data.amount,
-      data.paymentDate,
-      data.dueDate,
+      paymentDate,
+      dueDate,
       data.paymentMethod,
       data.status || PaymentStatus.FUTURO,
       data.pentamontSettled,
       data.notes,
       data.receiptImageUrl,
-      data.createdAt,
-      data.updatedAt
+      data.createdAt instanceof Date ? data.createdAt.toISOString() : String(data.createdAt || ''),
+      data.updatedAt instanceof Date ? data.updatedAt.toISOString() : String(data.updatedAt || '')
     );
   }
 

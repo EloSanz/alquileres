@@ -19,8 +19,7 @@ const monthLabel = (date: Date) => {
  * Construye la línea de tiempo de 12 meses de un contrato,
  * usando startDate y pagos existentes (por monthNumber).
  */
-export function buildContractTimeline(startDateInput: string | Date, payments: Payment[], nowInput?: Date): ContractMonthInfo[] {
-  const now = nowInput ?? new Date();
+export function buildContractTimeline(startDateInput: string | Date, payments: Payment[]): ContractMonthInfo[] {
   const startDate = new Date(startDateInput);
 
   const byMonth = new Map<number, Payment>();
@@ -37,8 +36,8 @@ export function buildContractTimeline(startDateInput: string | Date, payments: P
 
     let status: ContractMonthStatus;
     if (p) {
-      // Usar el campo status del pago si está disponible
-      // Comparar tanto con el enum como con el string para mayor robustez
+      // Usar el campo status del pago directamente
+      // El status solo se cambia manualmente por el usuario, no se calcula automáticamente
       const paymentStatus = String(p.status).toUpperCase();
 
       if (paymentStatus === PaymentStatus.PAGADO || paymentStatus === 'PAGADO') {
@@ -48,17 +47,12 @@ export function buildContractTimeline(startDateInput: string | Date, payments: P
       } else if (paymentStatus === PaymentStatus.FUTURO || paymentStatus === 'FUTURO') {
         status = 'FUTURE';
       } else {
-        // Fallback: calcular basándose en fechas si no hay status
-        if (p.paymentDate && new Date(p.paymentDate) <= now) {
-          status = 'PAID';
-        } else if (new Date(p.dueDate) < now) {
-          status = 'DUE';
-        } else {
-          status = 'FUTURE';
-        }
+        // Si el status no es reconocido, usar VENCIDO por defecto (impago)
+        status = 'DUE';
       }
     } else {
-      status = dueDate < now ? 'DUE' : 'FUTURE';
+      // Si no hay pago, está vencido (impago)
+      status = 'DUE';
     }
 
     timeline.push({
