@@ -43,6 +43,8 @@ cd ../web && npm run type-check && npm run build
 [ ] grep -r "interface I.*Repository" src/interfaces/
 [ ] grep -r "toDTO()" src/entities/
 [ ] grep -r "fromPrisma()" src/entities/
+[ ] ⚠️ CRÍTICO: Verificar que schemas de validación incluyan TODOS los campos de los DTOs
+[ ] ⚠️ Si modificaste un DTO, verificar que el schema en routes/*.routes.ts esté actualizado
 [ ] npm run type-check ✅ && npm run build ✅ (verificación final)
 
 # Frontend
@@ -50,6 +52,33 @@ cd ../web && npm run type-check && npm run build
 [ ] import type { App } from '../../../server/src/index'
 [ ] NO carpeta src/types/ (excepto mínimos)
 [ ] npm run type-check ✅ && npm run build ✅ (verificación final)
+```
+
+## ⚠️ LECCIÓN CRÍTICA: Validación de Schemas en Elysia
+
+**PROBLEMA**: Si un campo opcional no llega al controller aunque se envíe desde frontend.
+
+**CAUSA**: Elysia FILTRA campos que no están en el schema de validación, incluso si son opcionales.
+
+**SOLUCIÓN**: 
+- Si agregas un campo a `UpdateXDTO`, **DEBES agregarlo al schema** con `t.Optional()`.
+- **Siempre verificar**: Schema de validación ↔ DTO deben estar sincronizados.
+
+**Ejemplo**:
+```typescript
+// ❌ INCORRECTO - status se filtra aunque se envíe
+const updatePaymentBodySchema = t.Object({
+  amount: t.Optional(t.Number()),
+  paymentDate: t.Optional(t.String())
+  // status falta aquí
+});
+
+// ✅ CORRECTO - incluir TODOS los campos
+const updatePaymentBodySchema = t.Object({
+  amount: t.Optional(t.Number()),
+  paymentDate: t.Optional(t.String()),
+  status: t.Optional(t.String()) // ✅ DEBE estar
+});
 ```
 
 ## 📚 DOCUMENTACIÓN

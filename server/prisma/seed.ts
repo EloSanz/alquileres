@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Client } from 'pg';
 
 const prisma = new PrismaClient();
 
@@ -12,36 +13,26 @@ async function main() {
     const sqlPath = path.join(__dirname, 'seed.sql');
     const sqlContent = fs.readFileSync(sqlPath, 'utf-8');
 
-    // Dividir por líneas y procesar cada statement
-    const lines = sqlContent.split('\n');
-    let currentStatement = '';
+    // Usar cliente PostgreSQL directamente para ejecutar múltiples comandos
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      throw new Error('DATABASE_URL no está definida en las variables de entorno');
+    }
 
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-
-      // Skip comments and empty lines
-      if (trimmedLine.startsWith('--') || trimmedLine.length === 0) {
-        continue;
-      }
-
-      // Add line to current statement
-      currentStatement += line + '\n';
-
-      // If line ends with semicolon, execute the statement
-      if (trimmedLine.endsWith(';')) {
-        const statement = currentStatement.trim();
-        if (statement) {
-          await prisma.$executeRawUnsafe(statement);
-        }
-        currentStatement = '';
-      }
+    const client = new Client({ connectionString });
+    await client.connect();
+    
+    try {
+      await client.query(sqlContent);
+    } finally {
+      await client.end();
     }
 
     console.log('✅ Seed SQL ejecutado exitosamente!');
     console.log('📊 Datos insertados:');
-    console.log('   👥 15 Inquilinos únicos');
+    console.log('   👥 24 Inquilinos (ROGER VASQUEZ tiene locales 9 y 10)');
     console.log('   🏠 25 Propiedades');
-    console.log('   📄 Contratos y pagos registrados históricos');
+    console.log('   📄 Contratos y pagos registrados');
 
   } catch (error) {
     console.error('❌ Error ejecutando seed SQL:', error);

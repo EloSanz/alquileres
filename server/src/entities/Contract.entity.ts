@@ -18,10 +18,14 @@ export class ContractEntity {
     public updatedAt: Date
   ) {}
 
-  static create(data: { tenantId: number; propertyId: number; startDate: string; monthlyRent: number }): ContractEntity {
+  static create(data: { tenantId: number; propertyId: number; startDate: string; monthlyRent: number; endDate?: string }): ContractEntity {
     const startDate = new Date(data.startDate);
-    const endDate = new Date(startDate);
-    endDate.setFullYear(endDate.getFullYear() + 1); // Contrato de 1 año
+    // Si se proporciona endDate, usarlo; si no, calcularlo automáticamente (1 año después)
+    const endDate = data.endDate ? new Date(data.endDate) : (() => {
+      const calculated = new Date(startDate);
+      calculated.setFullYear(calculated.getFullYear() + 1);
+      return calculated;
+    })();
 
     const entity = new ContractEntity(
       null, // id
@@ -94,6 +98,15 @@ export class ContractEntity {
   }
 
   toDTO(): ContractDTO {
+    // Formatear fechas como YYYY-MM-DD para evitar problemas de zona horaria
+    // Usar métodos UTC para obtener los valores correctos independientemente de la zona horaria
+    const formatDateOnly = (date: Date): string => {
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
     return Contract.fromJSON({
       id: this.id!,
       tenantId: this.tenantId,
@@ -101,8 +114,8 @@ export class ContractEntity {
       tenantFullName: this.tenantFullName,
       propertyName: (this as any).propertyName,
       propertyLocalNumber: (this as any).propertyLocalNumber,
-      startDate: this.startDate.toISOString().split('T')[0],
-      endDate: this.endDate.toISOString().split('T')[0],
+      startDate: formatDateOnly(this.startDate), // Enviar solo fecha sin hora
+      endDate: formatDateOnly(this.endDate), // Enviar solo fecha sin hora
       monthlyRent: this.monthlyRent,
       status: this.status.toString(),
       createdAt: this.createdAt.toISOString(),
@@ -124,12 +137,8 @@ export class ContractEntity {
     if (this.startDate >= this.endDate) {
       throw new Error('Start date must be before end date');
     }
-    const oneYearFromStart = new Date(this.startDate);
-    oneYearFromStart.setFullYear(oneYearFromStart.getFullYear() + 1);
-    const daysDifference = Math.abs(this.endDate.getTime() - oneYearFromStart.getTime()) / (1000 * 60 * 60 * 24);
-    if (daysDifference > 1) {
-      throw new Error('Contract must be exactly 1 year long');
-    }
+    // Validar que el contrato tenga al menos 1 día de duración
+    // Ya no requerimos que sea exactamente 1 año, solo que sea válido
   }
 }
 

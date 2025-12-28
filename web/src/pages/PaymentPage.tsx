@@ -13,33 +13,32 @@ import {
   TextField,
   MenuItem,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   IconButton,
   Autocomplete,
-  Switch,
-  FormControlLabel,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon, ViewModule as ViewModuleIcon, TableChart as TableChartIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
 import { usePropertyService } from '../services/propertyService';
 import { Property } from '../../../shared/types/Property';
 import { usePaymentService } from '../services/paymentService';
+import { useTenantService } from '../services/tenantService';
 import { Payment, CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
+import EditPaymentModal from '../components/EditPaymentModal';
+import { Tenant } from '../../../shared/types/Tenant';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { FilterConfig } from '../components/FilterBar';
 import PaymentDetailsModal from '../components/PaymentDetailsModal';
+import PaymentTable from '../components/PaymentTable';
+import PaymentByPropertyView from '../components/PaymentByPropertyView';
 
 const PaymentPage = () => {
   const propertyService = usePropertyService()
   const paymentService = usePaymentService()
+  const tenantService = useTenantService()
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,21 +83,13 @@ const PaymentPage = () => {
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
-  const [editForm, setEditForm] = useState({
-    tenantId: '',
-    propertyId: '',
-    amount: '',
-    paymentDate: '',
-    dueDate: '',
-    paymentMethod: 'YAPE',
-    notes: '',
-  });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [receiptImageFile, setReceiptImageFile] = useState<File | null>(null);
   const [receiptImagePreview, setReceiptImagePreview] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   // Toggle Pentamont persisted in backend
   const handleTogglePentamont = async (payment: Payment) => {
@@ -113,11 +104,21 @@ const PaymentPage = () => {
     }
   };
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (tenantId?: number | null) => {
     try {
       setLoading(true);
       setError(''); // Limpiar error anterior
-      const data = await paymentService.getAllPayments();
+      const targetTenantId = tenantId !== undefined ? tenantId : selectedTenantId;
+      let data: Payment[];
+      
+      if (targetTenantId !== null && targetTenantId !== undefined) {
+        // Cargar solo pagos del inquilino seleccionado
+        data = await paymentService.getPaymentsByTenantId(targetTenantId);
+      } else {
+        // Si no hay inquilino seleccionado, cargar todos (fallback)
+        data = await paymentService.getAllPayments();
+      }
+      
       setPayments(data);
       const filtered = filterPayments(searchQuery, filterValues, data);
       setFilteredPayments(filtered);
@@ -204,6 +205,20 @@ const PaymentPage = () => {
     }
   };
 
+  const fetchTenants = async () => {
+    try {
+      const data = await tenantService.getAllTenants();
+      setTenants(data);
+      // Seleccionar el primer inquilino por defecto
+      if (data.length > 0 && selectedTenantId === null) {
+        setSelectedTenantId(data[0].id);
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch tenants:', err);
+      // No mostrar error en UI ya que es secundario
+    }
+  };
+
   const handleCreatePayment = async () => {
     // Validar monto antes de enviar
     const amountError = validateAmount(createForm.amount);
@@ -253,7 +268,7 @@ const PaymentPage = () => {
         paymentMethod: 'YAPE',
         notes: '',
       });
-      fetchPayments(); // Refresh the list
+      fetchPayments(selectedTenantId); // Refresh the list manteniendo el filtro de inquilino
     } catch (err: any) {
       setError(err.message || 'Failed to create payment');
     }
@@ -262,11 +277,26 @@ const PaymentPage = () => {
   const hasFetchedRef = useRef(false);
   
   useEffect(() => {
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
-    fetchPayments();
-    fetchProperties();
+    const loadInitialData = async () => {
+      if (hasFetchedRef.current) return;
+      hasFetchedRef.current = true;
+      
+      // Cargar inquilinos primero
+      await fetchTenants();
+      // Luego cargar propiedades
+      await fetchProperties();
+      // Los pagos se cargarán cuando se seleccione el primer inquilino
+    };
+    
+    loadInitialData();
   }, []);
+
+  // Cargar pagos cuando cambie el inquilino seleccionado
+  useEffect(() => {
+    if (selectedTenantId !== null && tenants.length > 0) {
+      fetchPayments(selectedTenantId);
+    }
+  }, [selectedTenantId]);
 
   // Aplicar filtros cuando cambien los criterios
   useEffect(() => {
@@ -315,76 +345,19 @@ const PaymentPage = () => {
 
   const handleEdit = (payment: Payment) => {
     setEditingPayment(payment);
-    setEditForm({
-      tenantId: payment.tenantId?.toString() || '',
-      propertyId: payment.propertyId?.toString() || '',
-      amount: payment.amount.toString(),
-      paymentDate: new Date(payment.paymentDate).toISOString().split('T')[0],
-      dueDate: new Date(payment.dueDate).toISOString().split('T')[0],
-      paymentMethod: payment.paymentMethod || 'YAPE',
-      notes: payment.notes || '',
-    });
     setEditDialogOpen(true);
+  };
+
+  const handleEditSuccess = async () => {
+    // Recargar pagos después de editar exitosamente
+    await fetchPayments(selectedTenantId);
+    setEditDialogOpen(false);
+    setEditingPayment(null);
   };
 
   const handleDelete = (payment: Payment) => {
     setPaymentToDelete(payment);
     setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!paymentToDelete) return;
-
-    try {
-      await paymentService.deletePayment(paymentToDelete.id);
-      setDeleteDialogOpen(false);
-      setPaymentToDelete(null);
-      fetchPayments(); // Refresh the list
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete payment');
-    }
-  };
-
-  const handleUpdatePayment = async () => {
-    if (!editingPayment) return;
-
-    try {
-      const paymentData = new UpdatePayment(
-        parseInt(editForm.tenantId),
-        parseInt(editForm.propertyId),
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        parseFloat(editForm.amount),
-        editForm.paymentDate,
-        editForm.dueDate,
-        editForm.paymentMethod,
-        undefined, // status - se recalculará automáticamente
-        undefined, // pentamontSettled
-        editForm.notes || undefined
-      );
-
-      const updatedPayment = await paymentService.updatePayment(editingPayment.id, paymentData);
-
-      // Actualizar estado local manteniendo el orden
-      setPayments(prev => prev.map(p => p.id === updatedPayment.id ? updatedPayment : p));
-      // El useEffect se encargará de re-filtrar filteredPayments
-
-      setEditDialogOpen(false);
-      setEditingPayment(null);
-      setEditForm({
-        tenantId: '',
-        propertyId: '',
-        amount: '',
-        paymentDate: '',
-        dueDate: '',
-        paymentMethod: 'YAPE',
-        notes: '',
-      });
-    } catch (err: any) {
-      setError(err.message || 'Failed to update payment');
-    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -394,40 +367,66 @@ const PaymentPage = () => {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES');
+  const handleDeleteConfirm = async () => {
+    if (!paymentToDelete) return;
+
+    try {
+      await paymentService.deletePayment(paymentToDelete.id);
+      setDeleteDialogOpen(false);
+      setPaymentToDelete(null);
+      fetchPayments(selectedTenantId); // Refresh the list manteniendo el filtro de inquilino
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete payment');
+    }
   };
+
+
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ 
-          display: { xs: 'block', sm: 'flex' }, 
-          justifyContent: 'space-between', 
-          alignItems: { xs: 'flex-start', sm: 'center' }, 
-          mb: 2 
-        }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Pagos
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
-          <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 250 }, maxWidth: { xs: '100%', sm: 400 } }}>
-            <SearchBar
-              searchQuery={searchQuery}
-              onSearchChange={handleSearchChange}
-              onClearSearch={handleClearSearch}
-              placeholder="Buscar por monto, inquilino, medio de pago, notas..."
-              label="Buscar pagos"
+        <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
+          Pagos
+        </Typography>
+        {viewMode === 'table' && (
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap', mb: 2 }}>
+            {tenants.length > 0 && (
+              <TextField
+                select
+                label="Filtrar por Inquilino"
+                value={selectedTenantId || ''}
+                onChange={(e) => setSelectedTenantId(Number(e.target.value))}
+                sx={{ minWidth: { xs: '100%', sm: 250 }, maxWidth: { xs: '100%', sm: 300 } }}
+              >
+                {tenants.map((tenant) => (
+                  <MenuItem key={tenant.id} value={tenant.id}>
+                    {tenant.firstName} {tenant.lastName}
+                    {tenant.localNumbers && tenant.localNumbers.length > 0 && (
+                      <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                        (Locales: {tenant.localNumbers.join(', ')})
+                      </Typography>
+                    )}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+            <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 250 }, maxWidth: { xs: '100%', sm: 400 } }}>
+              <SearchBar
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+                onClearSearch={handleClearSearch}
+                placeholder="Buscar por monto, inquilino, medio de pago, notas..."
+                label="Buscar pagos"
+              />
+            </Box>
+            <FilterBar
+              filters={paymentFilters}
+              filterValues={filterValues}
+              onFilterChange={handleFilterChange}
+              onClearFilters={handleClearFilters}
             />
           </Box>
-          <FilterBar
-            filters={paymentFilters}
-            filterValues={filterValues}
-            onFilterChange={handleFilterChange}
-            onClearFilters={handleClearFilters}
-          />
-        </Box>
+        )}
       </Box>
 
       {/* Navigation Menu - Siempre visible */}
@@ -439,110 +438,52 @@ const PaymentPage = () => {
         </Alert>
       )}
 
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell><strong>Inquilino</strong></TableCell>
-                <TableCell><strong>Monto</strong></TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Pago</strong></TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Vencimiento</strong></TableCell>
-                <TableCell><strong>Medio de Pago</strong></TableCell>
-                <TableCell align="center"><strong>Acciones</strong></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredPayments.map((payment) => (
-                <TableRow 
-                  key={payment.id} 
-                  hover
-                  onClick={() => handleEdit(payment)}
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover': {
-                      backgroundColor: 'rgba(25, 118, 210, 0.12)'
-                    }
-                  }}
-                >
-                  <TableCell>{payment.tenantFullName || `ID: ${payment.tenantId}`}</TableCell>
-                  <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatDate(payment.paymentDate)}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatDate(payment.dueDate)}</TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2">
-                        {payment.paymentMethod === 'YAPE' ? 'Yape' :
-                         payment.paymentMethod === 'DEPOSITO' ? 'Depósito' :
-                         payment.paymentMethod === 'TRANSFERENCIA_VIRTUAL' ? 'Transferencia Virtual' :
-                         payment.paymentMethod}
-                      </Typography>
-                      {payment.paymentMethod === 'YAPE' && (
-                        <FormControlLabel
-                          sx={{ ml: 1 }}
-                          label={`Pentamont: ${payment.pentamontSettled ? 'Sí' : 'No'}`}
-                          control={
-                            <Switch
-                              size="small"
-                              checked={!!payment.pentamontSettled}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                handleTogglePentamont(payment);
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          }
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      )}
-                    </Box>
-                  </TableCell>
-                  <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(payment);
-                      }}
-                      title="Editar"
-                      color="primary"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(payment);
-                      }}
-                      title="Eliminar"
-                      color="error"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {payments.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      No hay pagos registrados
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <Box sx={{ position: 'relative' }}>
+        {viewMode === 'grid' ? (
+          <PaymentByPropertyView />
+        ) : (
+          <>
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <PaymentTable
+                payments={filteredPayments}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onTogglePentamont={handleTogglePentamont}
+                onPaymentClick={(payment) => {
+                  setSelectedPayment(payment);
+                  setDetailsModalOpen(true);
+                }}
+              />
+            )}
+          </>
+        )}
+      </Box>
 
-      {/* Floating Action Button for creating new payment */}
+      {/* Floating Action Button for switching view */}
       <Fab
+        color="secondary"
+        variant="extended"
+        size="large"
+        aria-label="switch view"
+        sx={{
+          position: 'fixed',
+          bottom: 100,
+          right: 16,
+          px: 3,
+          py: 1.5
+        }}
+        onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
+      >
+        {viewMode === 'grid' ? <TableChartIcon sx={{ mr: 1 }} /> : <ViewModuleIcon sx={{ mr: 1 }} />}
+        {viewMode === 'grid' ? 'Ver en Tabla' : 'Ver por Local'}
+      </Fab>
+
+      {/* Floating Action Button for creating new payment - OCULTO */}
+      {/* <Fab
         color="primary"
         variant="extended"
         size="large"
@@ -558,7 +499,7 @@ const PaymentPage = () => {
       >
         <AddIcon sx={{ mr: 1 }} />
         Agregar Pago
-      </Fab>
+      </Fab> */}
 
       {/* Create Payment Dialog */}
       <Dialog 
@@ -741,88 +682,16 @@ const PaymentPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Edit Payment Dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Editar Pago</DialogTitle>
-        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
-          <Box component="form" sx={{ mt: 2 }}>
-            <TextField
-              fullWidth
-              label="ID del Inquilino"
-              type="number"
-              value={editForm.tenantId}
-              onChange={(e) => setEditForm({ ...editForm, tenantId: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="ID del Local"
-              type="number"
-              value={editForm.propertyId}
-              onChange={(e) => setEditForm({ ...editForm, propertyId: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Monto (S/)"
-              type="number"
-              value={editForm.amount}
-              onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Fecha de Pago"
-              type="date"
-              value={editForm.paymentDate}
-              onChange={(e) => setEditForm({ ...editForm, paymentDate: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              fullWidth
-              label="Fecha de Vencimiento"
-              type="date"
-              value={editForm.dueDate}
-              onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              select
-              fullWidth
-              label="Medio de Pago"
-              value={editForm.paymentMethod}
-              onChange={(e) => setEditForm({ ...editForm, paymentMethod: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="YAPE">Yape</MenuItem>
-              <MenuItem value="DEPOSITO">Depósito</MenuItem>
-              <MenuItem value="TRANSFERENCIA_VIRTUAL">Transferencia Virtual</MenuItem>
-            </TextField>
-            <TextField
-              fullWidth
-              label="Notas"
-              value={editForm.notes}
-              onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-              multiline
-              rows={2}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
-          <Button onClick={handleUpdatePayment} variant="contained">
-            Actualizar
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Edit Payment Modal */}
+      <EditPaymentModal
+        open={editDialogOpen}
+        payment={editingPayment}
+        onClose={() => {
+          setEditDialogOpen(false);
+          setEditingPayment(null);
+        }}
+        onSuccess={handleEditSuccess}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
