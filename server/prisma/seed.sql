@@ -24,78 +24,78 @@ ON CONFLICT ("documentId") DO NOTHING;
 -- Insert properties (25 properties from planilla)
 INSERT INTO "properties" ("localNumber", "ubicacion", "monthlyRent", "tenantId", "createdAt", "updatedAt") VALUES
 -- Locales individuales
-(1, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001'), NOW(), NOW()),
-(2, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000002'), NOW(), NOW()),
-(3, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000003'), NOW(), NOW()),
-(4, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000004'), NOW(), NOW()),
-(5, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000005'), NOW(), NOW()),
-(6, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000006'), NOW(), NOW()),
-(7, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000007'), NOW(), NOW()),
-(8, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000008'), NOW(), NOW()),
+(1, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001' LIMIT 1), NOW(), NOW()),
+(2, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000002' LIMIT 1), NOW(), NOW()),
+(3, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000003' LIMIT 1), NOW(), NOW()),
+(4, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000004' LIMIT 1), NOW(), NOW()),
+(5, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000005' LIMIT 1), NOW(), NOW()),
+(6, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000006' LIMIT 1), NOW(), NOW()),
+(7, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000007' LIMIT 1), NOW(), NOW()),
+(8, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000008' LIMIT 1), NOW(), NOW()),
 -- ROGER VASQUEZ: locales 9 y 10
-(9, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000009'), NOW(), NOW()),
-(10, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000009'), NOW(), NOW()),
-(11, 'BOULEVAR', 900.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000011'), NOW(), NOW()),
-(12, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000012'), NOW(), NOW()),
-(13, 'BOULEVAR', 1100.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000013'), NOW(), NOW()),
+(9, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000009' LIMIT 1), NOW(), NOW()),
+(10, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000009' LIMIT 1), NOW(), NOW()),
+(11, 'BOULEVAR', 900.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000011' LIMIT 1), NOW(), NOW()),
+(12, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000012' LIMIT 1), NOW(), NOW()),
+(13, 'BOULEVAR', 1100.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000013' LIMIT 1), NOW(), NOW()),
 -- ROGER VASQUEZ: locales 14, 15 y 16
-(14, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000009'), NOW(), NOW()),
-(15, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000009'), NOW(), NOW()),
-(16, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000009'), NOW(), NOW()),
+(14, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000009' LIMIT 1), NOW(), NOW()),
+(15, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000009' LIMIT 1), NOW(), NOW()),
+(16, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000009' LIMIT 1), NOW(), NOW()),
 -- MICHELL REVILLA: locales 17 y 18
-(17, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000017'), NOW(), NOW()),
-(18, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000017'), NOW(), NOW()),
+(17, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000017' LIMIT 1), NOW(), NOW()),
+(18, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000017' LIMIT 1), NOW(), NOW()),
 -- SEGUNDO ALARCON: locales 19 y 20
-(19, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001'), NOW(), NOW()),
-(20, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001'), NOW(), NOW()),
-(21, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000021'), NOW(), NOW()),
+(19, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001' LIMIT 1), NOW(), NOW()),
+(20, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001' LIMIT 1), NOW(), NOW()),
+(21, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000021' LIMIT 1), NOW(), NOW()),
 -- JUAN PARIONA: locales 22 y 23
-(22, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000022'), NOW(), NOW()),
-(23, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000022'), NOW(), NOW()),
+(22, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000022' LIMIT 1), NOW(), NOW()),
+(23, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000022' LIMIT 1), NOW(), NOW()),
 -- SEGUNDO ALARCON: locales 24 y 25
-(24, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001'), NOW(), NOW()),
-(25, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001'), NOW(), NOW());
+(24, 'SAN_MARTIN', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001' LIMIT 1), NOW(), NOW()),
+(25, 'BOULEVAR', 800.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000001' LIMIT 1), NOW(), NOW());
 
 -- Insert contracts based on payment months from planilla
 INSERT INTO "contracts" ("tenantId", "propertyId", "tenantFullName", "startDate", "endDate", "monthlyRent", "status", "createdAt", "updatedAt") VALUES
 -- Single properties paying SETIEMBRE (locales 1-6, 11-13, 21)
-((SELECT id FROM "tenants" WHERE "documentId" = '10000001'), (SELECT id FROM "properties" WHERE "localNumber" = 1), 'SEGUNDO ALARCON', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000002'), (SELECT id FROM "properties" WHERE "localNumber" = 2), 'JIM GAMARRA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000003'), (SELECT id FROM "properties" WHERE "localNumber" = 3), 'MARY VARGAS', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000004'), (SELECT id FROM "properties" WHERE "localNumber" = 4), 'ERICKA ROJAS', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000005'), (SELECT id FROM "properties" WHERE "localNumber" = 5), 'MEDALIT HUAYTA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000006'), (SELECT id FROM "properties" WHERE "localNumber" = 6), 'DIANA ROJAS', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000011'), (SELECT id FROM "properties" WHERE "localNumber" = 11), 'DENIS REBATA', '2023-09-01', '2024-08-31', 900.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000012'), (SELECT id FROM "properties" WHERE "localNumber" = 12), 'BETSY SOTO', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000013'), (SELECT id FROM "properties" WHERE "localNumber" = 13), 'ULISES FLORES', '2023-09-01', '2024-08-31', 1100.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000021'), (SELECT id FROM "properties" WHERE "localNumber" = 21), 'K MODA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000001' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 1 LIMIT 1), 'SEGUNDO ALARCON', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000002' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 2 LIMIT 1), 'JIM GAMARRA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000003' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 3 LIMIT 1), 'MARY VARGAS', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000004' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 4 LIMIT 1), 'ERICKA ROJAS', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000005' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 5 LIMIT 1), 'MEDALIT HUAYTA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000006' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 6 LIMIT 1), 'DIANA ROJAS', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000011' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 11 LIMIT 1), 'DENIS REBATA', '2023-09-01', '2024-08-31', 900.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000012' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 12 LIMIT 1), 'BETSY SOTO', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000013' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 13 LIMIT 1), 'ULISES FLORES', '2023-09-01', '2024-08-31', 1100.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000021' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 21 LIMIT 1), 'K MODA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
 
 -- Multi-property tenants paying SETIEMBRE
 -- ROGER VASQUEZ: locales 9 y 10 (pago consolidado 1,600.00)
-((SELECT id FROM "tenants" WHERE "documentId" = '10000009'), (SELECT id FROM "properties" WHERE "localNumber" = 9), 'ROGER VASQUEZ', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000009'), (SELECT id FROM "properties" WHERE "localNumber" = 10), 'ROGER VASQUEZ', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000009' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 9 LIMIT 1), 'ROGER VASQUEZ', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000009' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 10 LIMIT 1), 'ROGER VASQUEZ', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
 -- ROGER VASQUEZ: locales 14, 15 y 16 (pago consolidado 2,400.00)
-((SELECT id FROM "tenants" WHERE "documentId" = '10000009'), (SELECT id FROM "properties" WHERE "localNumber" = 14), 'ROGER VASQUEZ', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000009'), (SELECT id FROM "properties" WHERE "localNumber" = 15), 'ROGER VASQUEZ', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000009'), (SELECT id FROM "properties" WHERE "localNumber" = 16), 'ROGER VASQUEZ', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000009' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 14 LIMIT 1), 'ROGER VASQUEZ', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000009' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 15 LIMIT 1), 'ROGER VASQUEZ', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000009' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 16 LIMIT 1), 'ROGER VASQUEZ', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
 -- MICHELL REVILLA: locales 17 y 18 (pago consolidado 1,600.00)
-((SELECT id FROM "tenants" WHERE "documentId" = '10000017'), (SELECT id FROM "properties" WHERE "localNumber" = 17), 'MICHELL REVILLA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000017'), (SELECT id FROM "properties" WHERE "localNumber" = 18), 'MICHELL REVILLA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000017' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 17 LIMIT 1), 'MICHELL REVILLA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000017' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 18 LIMIT 1), 'MICHELL REVILLA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
 -- SEGUNDO ALARCON: locales 19 y 20 (pago consolidado 1,600.00)
-((SELECT id FROM "tenants" WHERE "documentId" = '10000001'), (SELECT id FROM "properties" WHERE "localNumber" = 19), 'SEGUNDO ALARCON', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000001'), (SELECT id FROM "properties" WHERE "localNumber" = 20), 'SEGUNDO ALARCON', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000001' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 19 LIMIT 1), 'SEGUNDO ALARCON', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000001' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 20 LIMIT 1), 'SEGUNDO ALARCON', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
 -- JUAN PARIONA: locales 22 y 23 (pago consolidado 1,600.00)
-((SELECT id FROM "tenants" WHERE "documentId" = '10000022'), (SELECT id FROM "properties" WHERE "localNumber" = 22), 'JUAN PARIONA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000022'), (SELECT id FROM "properties" WHERE "localNumber" = 23), 'JUAN PARIONA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000022' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 22 LIMIT 1), 'JUAN PARIONA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000022' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 23 LIMIT 1), 'JUAN PARIONA', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
 -- SEGUNDO ALARCON: locales 24 y 25 (pago consolidado 1,600.00)
-((SELECT id FROM "tenants" WHERE "documentId" = '10000001'), (SELECT id FROM "properties" WHERE "localNumber" = 24), 'SEGUNDO ALARCON', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
-((SELECT id FROM "tenants" WHERE "documentId" = '10000001'), (SELECT id FROM "properties" WHERE "localNumber" = 25), 'SEGUNDO ALARCON', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000001' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 24 LIMIT 1), 'SEGUNDO ALARCON', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000001' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 25 LIMIT 1), 'SEGUNDO ALARCON', '2023-09-01', '2024-08-31', 800.00, 'ACTIVE', NOW(), NOW()),
 
 -- Special cases: different payment months
 -- MENDEZ MAYTA: local 8 - ABRIL
-((SELECT id FROM "tenants" WHERE "documentId" = '10000008'), (SELECT id FROM "properties" WHERE "localNumber" = 8), 'MENDEZ MAYTA', '2023-04-01', '2024-03-31', 800.00, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM "tenants" WHERE "documentId" = '10000008' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 8 LIMIT 1), 'MENDEZ MAYTA', '2023-04-01', '2024-03-31', 800.00, 'ACTIVE', NOW(), NOW()),
 -- NELTON NINAHUAMAN: local 7 - AGOSTO y SETIEMBRE
-((SELECT id FROM "tenants" WHERE "documentId" = '10000007'), (SELECT id FROM "properties" WHERE "localNumber" = 7), 'NELTON NINAHUAMAN', '2023-08-01', '2024-07-31', 800.00, 'ACTIVE', NOW(), NOW());
+((SELECT id FROM "tenants" WHERE "documentId" = '10000007' LIMIT 1), (SELECT id FROM "properties" WHERE "localNumber" = 7 LIMIT 1), 'NELTON NINAHUAMAN', '2023-08-01', '2024-07-31', 800.00, 'ACTIVE', NOW(), NOW());
 
 -- Create 12 payments for each contract
 -- Function to calculate payment status based on paymentDate and dueDate

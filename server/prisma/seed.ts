@@ -8,32 +8,60 @@ async function main() {
   console.log('🌱 Ejecutando seed SQL con datos de la planilla...');
 
   try {
-    // Leer el archivo SQL
+    // Leer el archivo SQL completo
     const sqlPath = path.join(__dirname, 'seed.sql');
     const sqlContent = fs.readFileSync(sqlPath, 'utf-8');
 
-    // Dividir por líneas y procesar cada statement
-    const lines = sqlContent.split('\n');
+    // Dividir por punto y coma, pero respetar bloques DO $$
+    const statements: string[] = [];
     let currentStatement = '';
+    let inDollarBlock = false;
+    let dollarTag = '';
 
+    const lines = sqlContent.split('\n');
+    
     for (const line of lines) {
       const trimmedLine = line.trim();
-
-      // Skip comments and empty lines
-      if (trimmedLine.startsWith('--') || trimmedLine.length === 0) {
+      
+      // Skip comments
+      if (trimmedLine.startsWith('--')) {
         continue;
       }
-
-      // Add line to current statement
+      
+      // Detectar inicio de bloque DO $$
+      if (trimmedLine.match(/^DO\s+\$\$/) || trimmedLine.match(/^DO\s+\$[a-zA-Z_]*\$/)) {
+        inDollarBlock = true;
+        dollarTag = trimmedLine.match(/\$[a-zA-Z_]*\$/)![0];
+        currentStatement += line + '\n';
+        continue;
+      }
+      
+      // Detectar fin de bloque DO $$
+      if (inDollarBlock && trimmedLine === dollarTag + ';') {
+        currentStatement += line;
+        statements.push(currentStatement.trim());
+        currentStatement = '';
+        inDollarBlock = false;
+        dollarTag = '';
+        continue;
+      }
+      
       currentStatement += line + '\n';
-
-      // If line ends with semicolon, execute the statement
-      if (trimmedLine.endsWith(';')) {
+      
+      // Si no estamos en un bloque DO $$ y la línea termina con punto y coma, es un statement completo
+      if (!inDollarBlock && trimmedLine.endsWith(';')) {
         const statement = currentStatement.trim();
         if (statement) {
-          await prisma.$executeRawUnsafe(statement);
+          statements.push(statement);
         }
         currentStatement = '';
+      }
+    }
+    
+    // Ejecutar cada statement
+    for (const statement of statements) {
+      if (statement.trim()) {
+        await prisma.$executeRawUnsafe(statement);
       }
     }
 
