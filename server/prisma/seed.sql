@@ -2,7 +2,7 @@
 -- Updated to match the exact planilla data with correct payment months and amounts
 -- All contracts start on 2025-01-01 and end on 2025-12-31
 -- ALL payments (months 1-12) are marked as PAGADO
--- All payments are due on day 5 of each month
+-- All payments are due on day 4 of each month (límite de pago)
 
 -- Insert tenants (24 unique tenants - ROGER VASQUEZ has locals 9 and 10)
 INSERT INTO "tenants" ("firstName", "lastName", "phone", "documentId", "numeroLocal", "rubro", "fechaInicioContrato", "estadoPago", "createdAt", "updatedAt") VALUES
@@ -173,6 +173,14 @@ INSERT INTO "properties" ("localNumber", "ubicacion", "monthlyRent", "tenantId",
 SELECT 25, 'BOULEVAR'::"UbicacionType", 1600.00, (SELECT id FROM "tenants" WHERE "documentId" = '10000025'), NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM "properties" WHERE "localNumber" = 25);
 
+-- Update existing contracts to start on 2025-01-01 and end on 2025-12-31
+UPDATE "contracts" c
+SET 
+  "startDate" = '2025-01-01'::date,
+  "endDate" = '2025-12-31'::date,
+  "updatedAt" = NOW()
+WHERE c."propertyId" IS NOT NULL;
+
 -- Insert contracts - one contract per property
 -- All contracts start on 2025-01-01 and end on 2025-12-31
 INSERT INTO "contracts" ("tenantId", "propertyId", "tenantFullName", "startDate", "endDate", "monthlyRent", "status", "createdAt", "updatedAt") 
@@ -189,25 +197,38 @@ SELECT
 FROM "properties" p
 LEFT JOIN "tenants" t ON p."tenantId" = t.id
 WHERE p."tenantId" IS NOT NULL
-ON CONFLICT DO NOTHING;
+  AND NOT EXISTS (
+    SELECT 1 FROM "contracts" c2 
+    WHERE c2."propertyId" = p.id
+  );
+
+-- Helper function to calculate payment dates for a given month
+-- Returns payment_date (day 2) and due_date (day 4) for the specified month
+CREATE OR REPLACE FUNCTION get_payment_dates(month_number INT, base_year INT DEFAULT 2025)
+RETURNS TABLE(payment_date DATE, due_date DATE) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    (DATE_TRUNC('month', (base_year || '-01-01')::date) + (month_number - 1 || ' months')::interval + INTERVAL '1 day')::date as payment_date,
+    (DATE_TRUNC('month', (base_year || '-01-01')::date) + (month_number - 1 || ' months')::interval + INTERVAL '3 days')::date as due_date;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 -- Create 12 payments for each contract
--- ALL payments are marked as PAGADO (all months are paid)
--- All payments are due on day 5 of each month
+-- Payments correspond to months 1-12 (January to December 2025)
+-- All payments are due on day 4 of each month (límite de pago)
+-- Payment date is set to day 2 of each month (2 days before due date)
 DO $$
 DECLARE
   contract_rec RECORD;
   month_num INT;
-  due_date DATE;
-  payment_date DATE;
-  payment_status TEXT;
+  payment_dates RECORD;
 BEGIN
   FOR contract_rec IN 
     SELECT 
       c.id, 
       c."tenantId", 
       c."propertyId", 
-      c."startDate", 
       c."monthlyRent", 
       c."tenantFullName", 
       t.phone as tenant_phone
@@ -216,14 +237,8 @@ BEGIN
     WHERE c."status" = 'ACTIVE'
   LOOP
     FOR month_num IN 1..12 LOOP
-      -- Calculate due date: startDate + (monthNumber - 1) months, set to day 5
-      due_date := (contract_rec."startDate"::date + (month_num - 1 || ' months')::interval)::date;
-      due_date := (DATE_TRUNC('month', due_date) + INTERVAL '4 days')::date; -- Set to day 5 of the month
-      
-      -- ALL payments are marked as PAGADO
-      -- Payment date is set to 2 days before due date
-      payment_date := due_date - INTERVAL '2 days';
-      payment_status := 'PAGADO';
+      -- Get payment dates using helper function
+      SELECT * INTO payment_dates FROM get_payment_dates(month_num);
       
       -- Insert payment
       INSERT INTO "payments" (
@@ -249,11 +264,11 @@ BEGIN
         contract_rec."tenantFullName",
         contract_rec.tenant_phone,
         contract_rec."monthlyRent",
-        payment_date,
-        due_date,
+        payment_dates.payment_date,
+        payment_dates.due_date,
         'YAPE',
-        payment_status::"PaymentStatus",
-        true, -- All payments are settled
+        'PAGADO'::"PaymentStatus",
+        true,
         NOW(),
         NOW()
       )

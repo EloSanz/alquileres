@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Client } from 'pg';
 
 const prisma = new PrismaClient();
 
@@ -12,44 +13,19 @@ async function main() {
     const sqlPath = path.join(__dirname, 'seed.sql');
     const sqlContent = fs.readFileSync(sqlPath, 'utf-8');
 
-    // Dividir por bloques DO $$ primero (estos deben ejecutarse completos)
-    const doBlockRegex = /DO\s+\$\$[\s\S]*?\$\$;/g;
-    const doBlocks = sqlContent.match(doBlockRegex) || [];
-    
-    // Remover los bloques DO $$ del contenido original para procesar el resto
-    let contentWithoutDoBlocks = sqlContent;
-    doBlocks.forEach(block => {
-      contentWithoutDoBlocks = contentWithoutDoBlocks.replace(block, '');
-    });
-
-    // Procesar statements normales (sin bloques DO $$)
-    const lines = contentWithoutDoBlocks.split('\n');
-    let currentStatement = '';
-
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-
-      // Skip comments and empty lines
-      if (trimmedLine.startsWith('--') || trimmedLine.length === 0) {
-        continue;
-      }
-
-      // Add line to current statement
-      currentStatement += line + '\n';
-
-      // If line ends with semicolon, execute the statement
-      if (trimmedLine.endsWith(';')) {
-        const statement = currentStatement.trim();
-        if (statement) {
-          await prisma.$executeRawUnsafe(statement);
-        }
-        currentStatement = '';
-      }
+    // Usar cliente PostgreSQL directamente para ejecutar múltiples comandos
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      throw new Error('DATABASE_URL no está definida en las variables de entorno');
     }
 
-    // Ejecutar bloques DO $$ completos
-    for (const block of doBlocks) {
-      await prisma.$executeRawUnsafe(block.trim());
+    const client = new Client({ connectionString });
+    await client.connect();
+    
+    try {
+      await client.query(sqlContent);
+    } finally {
+      await client.end();
     }
 
     console.log('✅ Seed SQL ejecutado exitosamente!');

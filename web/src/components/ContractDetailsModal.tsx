@@ -16,6 +16,18 @@ import type { Payment } from '../../../shared/types/Payment';
 import { buildContractTimeline, type ContractMonthInfo } from '../services/contractTimeline';
 import type { Contract } from '../../../shared/types/Contract';
 
+// Función para formatear fecha a DD/MM/YYYY
+const formatDateDisplay = (date: Date | string | null | undefined): string => {
+  if (!date) return '-';
+  const dateObj = date instanceof Date ? date : new Date(date);
+  if (isNaN(dateObj.getTime())) return String(date);
+  return dateObj.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+};
+
 export interface ContractDetailsModalProps {
   open: boolean;
   contract: Contract | null;
@@ -53,7 +65,18 @@ export default function ContractDetailsModal({
 
   const timeline = useMemo<ContractMonthInfo[]>(() => {
     if (!contract) return [];
-    return buildContractTimeline(contract.startDate, payments);
+    // Usar el año del startDate del contrato
+    const contractYear = contract.startDate instanceof Date 
+      ? contract.startDate.getFullYear() 
+      : new Date(contract.startDate).getFullYear();
+    
+    // Filtrar pagos por año del contrato
+    const filteredPayments = payments.filter(p => {
+      const dueDate = new Date(p.dueDate);
+      return dueDate.getFullYear() === contractYear;
+    });
+    
+    return buildContractTimeline(contractYear, filteredPayments);
   }, [payments, contract]);
 
   const getColor = (status?: MonthStatus) => {
@@ -133,11 +156,11 @@ export default function ContractDetailsModal({
           <Typography variant="body2">
             Periodo:{' '}
             <strong>
-              {contract?.startDate ? new Date(contract.startDate).toLocaleDateString() : '-'}
+              {formatDateDisplay(contract?.startDate)}
             </strong>{' '}
             →{' '}
             <strong>
-              {contract?.endDate ? new Date(contract.endDate).toLocaleDateString() : '-'}
+              {formatDateDisplay(contract?.endDate)}
             </strong>
           </Typography>
         </Stack>

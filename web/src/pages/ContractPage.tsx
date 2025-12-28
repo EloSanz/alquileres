@@ -15,16 +15,42 @@ import {
   Chip,
   Fab,
   Tooltip,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
 } from '@mui/material';
-import { Add as AddIcon, PictureAsPdf as PdfIcon } from '@mui/icons-material';
+import { Add as AddIcon, PictureAsPdf as PdfIcon, Edit as EditIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
 import { useContractService } from '../services/contractService';
-import { Contract } from '../../../shared/types/Contract';
+import { Contract, UpdateContract } from '../../../shared/types/Contract';
 import ContractDetailsModal from '../components/ContractDetailsModal';
 import ContractEditorModal from '../components/contract-editor/ContractEditorModal';
 import CreateContractModal from '../components/CreateContractModal';
+// Función para extraer el año de una fecha (Date o string)
+const getYearFromDate = (date: Date | string | null | undefined): number | null => {
+  if (!date) return null;
+  const dateObj = date instanceof Date ? date : new Date(date);
+  if (isNaN(dateObj.getTime())) return null;
+  return dateObj.getFullYear();
+};
+
+// Función para formatear fecha a DD/MM/YYYY
+const formatDateDisplay = (date: Date | string | null | undefined): string => {
+  if (!date) return '-';
+  const dateObj = date instanceof Date ? date : new Date(date);
+  if (isNaN(dateObj.getTime())) return String(date);
+  return dateObj.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+};
 
 const ContractPage = () => {
   const contractService = useContractService()
@@ -36,10 +62,16 @@ const ContractPage = () => {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({
-    status: ''
+    status: '',
+    year: ''
   });
   const [editorOpen, setEditorOpen] = useState(false);
   const [createContractOpen, setCreateContractOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [editForm, setEditForm] = useState({
+    monthlyRent: '',
+  });
 
   // Helper para traducir estados a español
   const getStatusLabel = (status: string): string => {
@@ -52,6 +84,15 @@ const ContractPage = () => {
     return labels[status] || status;
   };
 
+  // Obtener años únicos de los contratos para el filtro
+  const availableYears = Array.from(
+    new Set(
+      contracts
+        .map(c => getYearFromDate(c.startDate))
+        .filter((year): year is number => year !== null)
+    )
+  ).sort((a, b) => b - a); // Ordenar de mayor a menor
+
   const contractFilters: FilterConfig[] = [
     {
       key: 'status',
@@ -62,6 +103,14 @@ const ContractPage = () => {
         { value: 'CANCELLED', label: 'Cancelado' },
         { value: 'TERMINATED', label: 'Terminado' }
       ]
+    },
+    {
+      key: 'year',
+      label: 'Año',
+      options: availableYears.map(year => ({
+        value: year.toString(),
+        label: year.toString()
+      }))
     }
   ];
 
@@ -70,16 +119,14 @@ const ContractPage = () => {
       // Filtro de búsqueda por texto
       if (query.trim()) {
         const lowerQuery = query.toLowerCase();
-        const matchesQuery =
+          const matchesQuery =
           contract.id.toString().includes(lowerQuery) ||
           (contract.tenantId?.toString() || '').includes(lowerQuery) ||
           (contract.propertyId?.toString() || '').includes(lowerQuery) ||
           contract.tenantFullName?.toLowerCase().includes(lowerQuery) ||
           contract.propertyName?.toLowerCase().includes(lowerQuery) ||
           contract.monthlyRent.toString().includes(lowerQuery) ||
-          contract.status.toLowerCase().includes(lowerQuery) ||
-          new Date(contract.startDate).toLocaleDateString('es-ES').toLowerCase().includes(lowerQuery) ||
-          new Date(contract.endDate).toLocaleDateString('es-ES').toLowerCase().includes(lowerQuery);
+          contract.status.toLowerCase().includes(lowerQuery);
 
         if (!matchesQuery) return false;
       }
@@ -87,6 +134,14 @@ const ContractPage = () => {
       // Filtro por estado
       if (filters.status && contract.status !== filters.status) {
         return false;
+      }
+
+      // Filtro por año
+      if (filters.year) {
+        const contractYear = getYearFromDate(contract.startDate);
+        if (contractYear === null || contractYear.toString() !== filters.year) {
+          return false;
+        }
       }
 
       return true;
@@ -131,7 +186,7 @@ const ContractPage = () => {
   };
 
   const handleClearFilters = () => {
-    const newFilters = { status: '' };
+    const newFilters = { status: '', year: '' };
     setFilterValues(newFilters);
     const filtered = filterContracts(searchQuery, newFilters, contracts);
     setFilteredContracts(filtered);
@@ -153,6 +208,45 @@ const ContractPage = () => {
   const handleCreateContractSuccess = () => {
     setCreateContractOpen(false);
     fetchContracts();
+  };
+
+  const handleEdit = (contract: Contract, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation();
+    }
+    setEditingContract(contract);
+    setEditForm({
+      monthlyRent: contract.monthlyRent?.toString() || '',
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateContract = async () => {
+    if (!editingContract) return;
+
+    try {
+      const monthlyRent = parseFloat(editForm.monthlyRent);
+      if (isNaN(monthlyRent) || monthlyRent <= 0) {
+        setError('El alquiler mensual debe ser un número mayor a cero');
+        return;
+      }
+
+      const updateData = new UpdateContract(
+        undefined, // tenantId
+        undefined, // propertyId
+        undefined, // startDate
+        monthlyRent, // monthlyRent
+        undefined  // status
+      );
+
+      await contractService.updateContract(editingContract.id, updateData);
+      setEditDialogOpen(false);
+      setEditingContract(null);
+      setEditForm({ monthlyRent: '' });
+      fetchContracts(); // Refresh the list
+    } catch (err: any) {
+      setError(err.message || 'Failed to update contract');
+    }
   };
 
   return (
@@ -211,12 +305,13 @@ const ContractPage = () => {
                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Inicio</strong></TableCell>
                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Fin</strong></TableCell>
                 <TableCell><strong>Alquiler Mensual</strong></TableCell>
+                <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredContracts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
                       {contracts.length === 0
                         ? 'No hay contratos registrados'
@@ -259,17 +354,23 @@ const ContractPage = () => {
                       />
                     </TableCell>
                     <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                      {contract.startDate
-                        ? new Date(contract.startDate).toLocaleDateString()
-                        : '-'}
+                      {formatDateDisplay(contract.startDate)}
                     </TableCell>
                     <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                      {contract.endDate
-                        ? new Date(contract.endDate).toLocaleDateString()
-                        : '-'}
+                      {formatDateDisplay(contract.endDate)}
                     </TableCell>
                     <TableCell>
                       S/ {contract.monthlyRent?.toFixed(2) || '0.00'}
+                    </TableCell>
+                    <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleEdit(contract, e)}
+                        title="Editar Alquiler Mensual"
+                        color="primary"
+                      >
+                        <EditIcon />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))
@@ -296,6 +397,41 @@ const ContractPage = () => {
         onClose={() => setCreateContractOpen(false)}
         onSuccess={handleCreateContractSuccess}
       />
+
+      {/* Edit Contract Dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Editar Alquiler Mensual</DialogTitle>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Box component="form" sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label="Alquiler Mensual (S/)"
+              type="number"
+              value={editForm.monthlyRent}
+              onChange={(e) => setEditForm({ ...editForm, monthlyRent: e.target.value })}
+              required
+              inputProps={{ min: 0, step: 0.01 }}
+              helperText="Ingrese el nuevo monto del alquiler mensual"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setEditDialogOpen(false);
+            setEditingContract(null);
+            setEditForm({ monthlyRent: '' });
+          }}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleUpdateContract} 
+            variant="contained"
+            disabled={!editForm.monthlyRent || parseFloat(editForm.monthlyRent) <= 0}
+          >
+            Actualizar
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* FAB para generar PDF */}
       <Tooltip title="Generar contrato PDF" placement="left">

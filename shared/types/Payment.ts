@@ -131,7 +131,8 @@ export class UpdatePayment {
     public paymentMethod?: string,
     public status?: PaymentStatus,
     public pentamontSettled?: boolean,
-    public notes?: string
+    public notes?: string,
+    public receiptImageUrl?: string | null
   ) {}
 
   validate(): string[] {
@@ -157,6 +158,7 @@ export class UpdatePayment {
     if (this.status !== undefined) result.status = this.status;
     if (this.pentamontSettled !== undefined) result.pentamontSettled = this.pentamontSettled;
     if (this.notes !== undefined) result.notes = this.notes;
+    if (this.receiptImageUrl !== undefined) result.receiptImageUrl = this.receiptImageUrl;
     return result;
   }
 
@@ -174,7 +176,8 @@ export class UpdatePayment {
       data.paymentMethod,
       data.status,
       data.pentamontSettled,
-      data.notes
+      data.notes,
+      data.receiptImageUrl
     );
   }
 

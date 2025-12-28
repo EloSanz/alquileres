@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   Box,
   Grid,
   Typography,
@@ -20,14 +15,10 @@ import { PropertyWithContract } from '../../../shared/types/PropertyWithContract
 import PaymentByPropertyDetailsModal from './PaymentByPropertyDetailsModal';
 
 export interface PaymentByPropertyViewProps {
-  open: boolean;
-  onClose: () => void;
+  // Props opcionales para futura extensión
 }
 
-export default function PaymentByPropertyView({
-  open,
-  onClose
-}: PaymentByPropertyViewProps) {
+export default function PaymentByPropertyView({}: PaymentByPropertyViewProps = {}) {
   const propertyService = usePropertyService();
   const contractService = useContractService();
   const [propertiesWithContracts, setPropertiesWithContracts] = useState<PropertyWithContract[]>([]);
@@ -38,7 +29,6 @@ export default function PaymentByPropertyView({
 
   useEffect(() => {
     const loadData = async () => {
-      if (!open) return;
       try {
         setLoading(true);
         setError('');
@@ -85,7 +75,8 @@ export default function PaymentByPropertyView({
       }
     };
     loadData();
-  }, [open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handlePropertyClick = (item: PropertyWithContract) => {
     if (item.contract) {
@@ -99,83 +90,69 @@ export default function PaymentByPropertyView({
     setSelectedContract(null);
   };
 
-  const handleClose = () => {
-    onClose();
-  };
-
   return (
     <>
-      <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
-        <DialogTitle>
-          Pagos por Local
-        </DialogTitle>
-        <DialogContent dividers sx={{ p: { xs: 2, sm: 3 } }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : propertiesWithContracts.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
-              No hay propiedades con contratos activos disponibles
-            </Typography>
-          ) : (
-            <Grid container spacing={2}>
-              {propertiesWithContracts.map((item) => {
-                const { property, contract } = item;
-                const tenantName = property.tenant 
-                  ? `${property.tenant.firstName} ${property.tenant.lastName}`
-                  : contract?.tenantFullName || `ID: ${property.tenantId}`;
-                
-                return (
-                  <Grid item xs={12} sm={6} md={4} key={property.id}>
-                    <Card
-                      sx={{
-                        cursor: contract ? 'pointer' : 'default',
-                        transition: 'transform 0.2s',
-                        opacity: contract ? 1 : 0.6,
-                        '&:hover': {
-                          transform: contract ? 'translateY(-4px)' : 'none',
-                          boxShadow: contract ? 4 : 1
-                        }
-                      }}
-                      onClick={() => contract && handlePropertyClick(item)}
-                    >
-                      <CardContent>
-                        <Typography variant="h6" component="div" gutterBottom>
-                          Local N° {property.localNumber}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          <strong>Inquilino:</strong> {tenantName}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          <strong>Ubicación:</strong> {
-                            property.ubicacion === 'BOULEVAR' ? 'Boulevar' :
-                            property.ubicacion === 'SAN_MARTIN' ? 'San Martín' :
-                            property.ubicacion === 'PATIO' ? 'Patio' :
-                            property.ubicacion
-                          }
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          <strong>Alquiler:</strong> S/ {property.monthlyRent?.toFixed(2) || '0.00'}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                );
-              })}
-            </Grid>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cerrar</Button>
-        </DialogActions>
-      </Dialog>
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : propertiesWithContracts.length === 0 ? (
+        <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+          No hay propiedades con contratos activos disponibles
+        </Typography>
+      ) : (
+        <Grid container spacing={2}>
+          {propertiesWithContracts.map((item) => {
+            const { property, contract } = item;
+            const tenantName = property.tenant 
+              ? `${property.tenant.firstName} ${property.tenant.lastName}`
+              : contract?.tenantFullName || `ID: ${property.tenantId}`;
+            
+            return (
+              <Grid item xs={12} sm={6} md={4} key={property.id}>
+                <Card
+                  sx={{
+                    cursor: contract ? 'pointer' : 'default',
+                    transition: 'transform 0.2s',
+                    opacity: contract ? 1 : 0.6,
+                    '&:hover': {
+                      transform: contract ? 'translateY(-4px)' : 'none',
+                      boxShadow: contract ? 4 : 1
+                    }
+                  }}
+                  onClick={() => contract && handlePropertyClick(item)}
+                >
+                  <CardContent>
+                    <Typography variant="h6" component="div" gutterBottom>
+                      Local N° {property.localNumber}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Inquilino:</strong> {tenantName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      <strong>Ubicación:</strong> {
+                        property.ubicacion === 'BOULEVAR' ? 'Boulevar' :
+                        property.ubicacion === 'SAN_MARTIN' ? 'San Martín' :
+                        property.ubicacion === 'PATIO' ? 'Patio' :
+                        property.ubicacion
+                      }
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      <strong>Alquiler:</strong> S/ {property.monthlyRent?.toFixed(2) || '0.00'}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
+      )}
 
       <PaymentByPropertyDetailsModal
         open={detailsModalOpen}

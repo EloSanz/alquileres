@@ -11,16 +11,17 @@ import {
   Stack,
   Divider,
   IconButton,
-  Dialog as EditDialog,
-  TextField,
+  FormControl,
+  InputLabel,
+  Select,
   MenuItem,
-  Alert,
 } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
 import { usePaymentService } from '../services/paymentService';
-import { Payment, UpdatePayment, CreatePayment, PaymentStatus } from '../../../shared/types/Payment';
+import { Payment, PaymentStatus } from '../../../shared/types/Payment';
 import { buildContractTimeline, type ContractMonthInfo } from '../services/contractTimeline';
 import type { Contract } from '../../../shared/types/Contract';
+import EditPaymentModal from './EditPaymentModal';
 
 export interface PaymentByPropertyDetailsModalProps {
   open: boolean;
@@ -38,17 +39,10 @@ export default function PaymentByPropertyDetailsModal({
   const paymentService = usePaymentService();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [paymentsVersion, setPaymentsVersion] = useState(0); // Versión para forzar re-render
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear()); // Año actual por defecto
   const [error, setError] = useState('');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
-  const [editForm, setEditForm] = useState({
-    amount: '',
-    paymentDate: '',
-    dueDate: '',
-    paymentMethod: 'YAPE',
-    status: PaymentStatus.FUTURO,
-    notes: '',
-  });
 
   // Función explícita para cargar pagos del contrato
   const loadPayments = useCallback(async () => {
@@ -87,15 +81,28 @@ export default function PaymentByPropertyDetailsModal({
     }
   }, [open, contract?.id, contract?.tenantId, loadPayments]);
 
+  // Filtrar pagos por año seleccionado usando dueDate
+  const filteredPayments = useMemo(() => {
+    return payments.filter(p => {
+      const dueDate = new Date(p.dueDate);
+      return dueDate.getFullYear() === selectedYear;
+    });
+  }, [payments, selectedYear]);
+
   const timeline = useMemo<ContractMonthInfo[]>(() => {
     if (!contract) return [];
-    // Siempre construir el timeline completo, incluso si no hay pagos aún
+    // Siempre construir el timeline completo para el año seleccionado
     // paymentsVersion fuerza la recalculación cuando cambia
-    return buildContractTimeline(contract.startDate, payments);
-  }, [payments, paymentsVersion, contract?.startDate, contract?.id]);
+    return buildContractTimeline(selectedYear, filteredPayments);
+  }, [filteredPayments, paymentsVersion, selectedYear, contract?.id]);
 
   const getPaymentByMonth = (monthNumber: number): Payment | undefined => {
-    return payments.find(p => p.monthNumber === monthNumber);
+    // Buscar en los pagos filtrados por año
+    return filteredPayments.find(p => {
+      const dueDate = new Date(p.dueDate);
+      const month = dueDate.getMonth() + 1; // getMonth() retorna 0-11, necesitamos 1-12
+      return month === monthNumber;
+    });
   };
 
   const getColor = (status?: MonthStatus) => {
@@ -149,138 +156,19 @@ export default function PaymentByPropertyDetailsModal({
   const handleEditClick = (monthInfo: ContractMonthInfo) => {
     const payment = getPaymentByMonth(monthInfo.monthNumber);
     
-    if (payment) {
-      // Editar pago existente
+    if (payment && payment.id !== 0) {
+      // Editar pago existente - solo para pagos con id !== 0
       setEditingPayment(payment);
-      setEditForm({
-        amount: payment.amount.toString(),
-        // paymentDate y dueDate siempre son strings ISO en Payment
-        // Extraer solo la parte de fecha (YYYY-MM-DD) para el input
-        paymentDate: payment.paymentDate.split('T')[0],
-        dueDate: payment.dueDate.split('T')[0],
-        paymentMethod: payment.paymentMethod || 'YAPE',
-        status: payment.status || PaymentStatus.FUTURO,
-        notes: payment.notes || '',
-      });
-    } else {
-      // Crear nuevo pago para este mes
-      if (!contract) return;
-      
-      // Calcular fecha de vencimiento (día 5 del mes)
-      const dueDate = new Date(monthInfo.dueDate);
-      dueDate.setDate(5);
-      
-      // Crear pago temporal para edición
-      const tempPayment = {
-        id: 0,
-        tenantId: contract.tenantId,
-        propertyId: contract.propertyId,
-        contractId: contract.id,
-        monthNumber: monthInfo.monthNumber,
-        tenantFullName: contract.tenantFullName,
-        tenantPhone: null,
-        amount: contract.monthlyRent || 0,
-        paymentDate: new Date(dueDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2 días antes
-        dueDate: dueDate.toISOString().split('T')[0],
-        paymentMethod: 'YAPE',
-        status: PaymentStatus.PAGADO,
-        pentamontSettled: false,
-        notes: null,
-        receiptImageUrl: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
-      setEditingPayment(tempPayment as Payment);
-      setEditForm({
-        amount: tempPayment.amount.toString(),
-        paymentDate: tempPayment.paymentDate,
-        dueDate: tempPayment.dueDate,
-        paymentMethod: tempPayment.paymentMethod,
-        status: tempPayment.status || PaymentStatus.FUTURO,
-        notes: '',
-      });
+      setEditDialogOpen(true);
     }
-    setEditDialogOpen(true);
+    // Nota: La creación de nuevos pagos se maneja en otro lugar si es necesario
   };
 
-  const handleUpdatePayment = async () => {
-    if (!editingPayment || !contract) return;
-
-    try {
-      if (editingPayment.id === 0) {
-        // Crear nuevo pago
-        const createPaymentData = new CreatePayment(
-          editingPayment.tenantId!,
-          editingPayment.propertyId!,
-          parseFloat(editForm.amount),
-          editForm.dueDate,
-          editForm.paymentDate,
-          editForm.paymentMethod,
-          editForm.status, // Usar el estado seleccionado
-          editingPayment.pentamontSettled,
-          editForm.notes || undefined
-        );
-        
-        // Agregar contractId y monthNumber al objeto antes de enviar
-        const paymentPayload = {
-          ...createPaymentData.toJSON(),
-          contractId: contract.id,
-          monthNumber: editingPayment.monthNumber,
-        };
-        
-        await paymentService.createPayment(paymentPayload as any);
-      } else {
-        // Actualizar pago existente
-        const paymentData = new UpdatePayment(
-          undefined, // tenantId - no editable
-          undefined, // propertyId - no editable
-          undefined, // contractId - no editable
-          undefined, // monthNumber - no editable
-          undefined, // tenantFullName - no editable
-          undefined, // tenantPhone - no editable
-          parseFloat(editForm.amount),
-          editForm.paymentDate,
-          editForm.dueDate,
-          editForm.paymentMethod,
-          editForm.status, // status - usar el valor del formulario (editable por el usuario)
-          editingPayment.pentamontSettled,
-          editForm.notes || undefined
-        );
-
-        const updatedPayment = await paymentService.updatePayment(editingPayment.id, paymentData);
-        
-        // Actualizar el pago específico en el estado inmediatamente para reflejo instantáneo en la UI
-        setPayments(prevPayments => 
-          prevPayments.map(p => 
-            p.id === updatedPayment.id ? Payment.fromJSON(updatedPayment.toJSON()) : p
-          )
-        );
-        
-        // Incrementar versión para forzar re-render del timeline
-        setPaymentsVersion(prev => prev + 1);
-      }
-      
-      // Recargar pagos para asegurar sincronización completa con el backend
-      await loadPayments();
-
-      // Cerrar el diálogo después de asegurar que el estado se actualizó
-      setEditDialogOpen(false);
-      setEditingPayment(null);
-      setEditForm({
-        amount: '',
-        paymentDate: '',
-        dueDate: '',
-        paymentMethod: 'YAPE',
-        status: PaymentStatus.FUTURO,
-        notes: '',
-      });
-      // Limpiar cualquier error previo después de éxito
-      setError('');
-    } catch (err: any) {
-      setError(err.message || 'Failed to save payment');
-      // No cerrar el diálogo si hay error para que el usuario pueda corregir
-    }
+  const handleEditSuccess = async () => {
+    // Recargar pagos después de editar exitosamente
+    await loadPayments();
+    setEditDialogOpen(false);
+    setEditingPayment(null);
   };
 
   const formatCurrency = (amount: number) => {
@@ -315,14 +203,7 @@ export default function PaymentByPropertyDetailsModal({
               )}
             </Typography>
             <Typography variant="body2">
-              Periodo:{' '}
-              <strong>
-                {contract?.startDate ? new Date(contract.startDate).toLocaleDateString() : '-'}
-              </strong>{' '}
-              →{' '}
-              <strong>
-                {contract?.endDate ? new Date(contract.endDate).toLocaleDateString() : '-'}
-              </strong>
+              Periodo: <strong>desde enero</strong>
             </Typography>
             <Typography variant="body2">
               Alquiler Mensual: <strong>{formatCurrency(contract?.monthlyRent || 0)}</strong>
@@ -331,9 +212,22 @@ export default function PaymentByPropertyDetailsModal({
 
           <Divider sx={{ my: 2 }} />
 
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Estado de cuotas (12 meses)
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="subtitle2">
+              Estado de cuotas (12 meses)
+            </Typography>
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <InputLabel>Año</InputLabel>
+              <Select
+                value={selectedYear}
+                label="Año"
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+              >
+                <MenuItem value={2025}>2025</MenuItem>
+                <MenuItem value={2026}>2026</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
           <Grid container spacing={1.2}>
             {timeline.map((mi) => {
               const status = mi.status as MonthStatus;
@@ -452,89 +346,18 @@ export default function PaymentByPropertyDetailsModal({
         </DialogActions>
       </Dialog>
 
-      {/* Edit Payment Dialog */}
-      <EditDialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>{editingPayment?.id === 0 ? 'Crear Pago' : 'Editar Pago'}</DialogTitle>
-        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <Box component="form" sx={{ mt: 2 }}>
-            <TextField
-              fullWidth
-              label="Monto (S/)"
-              type="number"
-              value={editForm.amount}
-              onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-              inputProps={{ min: 0, step: 0.01 }}
-            />
-            <TextField
-              fullWidth
-              label="Fecha de Pago"
-              type="date"
-              value={editForm.paymentDate}
-              onChange={(e) => setEditForm({ ...editForm, paymentDate: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              fullWidth
-              label="Fecha de Vencimiento"
-              type="date"
-              value={editForm.dueDate}
-              onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              select
-              fullWidth
-              label="Medio de Pago"
-              value={editForm.paymentMethod}
-              onChange={(e) => setEditForm({ ...editForm, paymentMethod: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="YAPE">Yape</MenuItem>
-              <MenuItem value="DEPOSITO">Depósito</MenuItem>
-              <MenuItem value="TRANSFERENCIA_VIRTUAL">Transferencia Virtual</MenuItem>
-            </TextField>
-            <TextField
-              select
-              fullWidth
-              label="Estado del Pago"
-              value={editForm.status}
-              onChange={(e) => setEditForm({ ...editForm, status: e.target.value as PaymentStatus })}
-              required
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value={PaymentStatus.PAGADO}>Pagado</MenuItem>
-              <MenuItem value={PaymentStatus.VENCIDO}>Vencido</MenuItem>
-              <MenuItem value={PaymentStatus.FUTURO}>Futuro</MenuItem>
-            </TextField>
-            <TextField
-              fullWidth
-              label="Notas"
-              value={editForm.notes}
-              onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-              multiline
-              rows={2}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
-          <Button onClick={handleUpdatePayment} variant="contained">
-            {editingPayment?.id === 0 ? 'Crear' : 'Actualizar'}
-          </Button>
-        </DialogActions>
-      </EditDialog>
+      {/* Edit Payment Modal - solo para pagos existentes (id !== 0) */}
+      {editingPayment && editingPayment.id !== 0 && (
+        <EditPaymentModal
+          open={editDialogOpen}
+          payment={editingPayment}
+          onClose={() => {
+            setEditDialogOpen(false);
+            setEditingPayment(null);
+          }}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </>
   );
 }

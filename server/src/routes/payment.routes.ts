@@ -41,7 +41,8 @@ const updatePaymentBodySchema = t.Object({
   paymentMethod: t.Optional(t.String()),
   status: t.Optional(t.String()),
   pentamontSettled: t.Optional(t.Boolean()),
-  notes: t.Optional(t.String())
+  notes: t.Optional(t.String()),
+  receiptImageUrl: t.Optional(t.Union([t.String(), t.Null()]))
 });
 
 export const paymentRoutes = new Elysia({ prefix: '/payments' })

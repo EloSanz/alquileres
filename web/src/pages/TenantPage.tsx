@@ -32,12 +32,16 @@ import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
 import TenantDeletionModal from '../components/TenantDeletionModal';
 import { useTenantService } from '../services/tenantService';
+import { usePropertyService } from '../services/propertyService';
 import { Tenant, CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
+import { Property } from '../../../shared/types/Property';
 
 const TenantPage = () => {
   const tenantService = useTenantService()
+  const propertyService = usePropertyService()
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [filteredTenants, setFilteredTenants] = useState<Tenant[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,6 +83,7 @@ const TenantPage = () => {
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+  const [editFormError, setEditFormError] = useState('');
   const [editForm, setEditForm] = useState<{
     firstName: string;
     lastName: string;
@@ -266,6 +271,18 @@ const TenantPage = () => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
     fetchTenants();
+    
+    // Cargar todas las propiedades para obtener números de local disponibles
+    // No importa el estado del local, solo necesitamos los números disponibles
+    const fetchProperties = async () => {
+      try {
+        const data = await propertyService.getAllProperties();
+        setProperties(data);
+      } catch (err: any) {
+        console.error('Error loading properties:', err);
+      }
+    };
+    fetchProperties();
   }, []);
 
   // Aplicar filtros y ordenamiento cuando cambien los criterios
@@ -276,6 +293,7 @@ const TenantPage = () => {
 
   const handleEdit = (tenant: Tenant) => {
     setEditingTenant(tenant);
+    setEditFormError(''); // Clear any previous errors
     setEditForm({
       firstName: tenant.firstName,
       lastName: tenant.lastName,
@@ -314,7 +332,8 @@ const TenantPage = () => {
     }
 
     try {
-      setError(''); // Clear previous errors
+      setEditFormError(''); // Clear previous errors
+      setError(''); // Clear global error too
       console.log('Updating tenant:', editingTenant.id, editForm);
       
       // Convert empty strings to undefined for fechaInicioContrato
@@ -342,6 +361,7 @@ const TenantPage = () => {
 
       setEditDialogOpen(false);
       setEditingTenant(null);
+      setEditFormError('');
       setEditForm({
         firstName: '',
         lastName: '',
@@ -353,7 +373,9 @@ const TenantPage = () => {
       });
     } catch (err: any) {
       console.error('Error updating tenant:', err);
-      setError(err.message || 'Failed to update tenant');
+      const errorMessage = err.message || 'Error al actualizar el inquilino';
+      setEditFormError(errorMessage);
+      setError(errorMessage); // También mantener el error global por si acaso
     }
   };
 
@@ -587,9 +609,17 @@ const TenantPage = () => {
       </Dialog>
 
       {/* Edit Tenant Dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog open={editDialogOpen} onClose={() => {
+        setEditDialogOpen(false);
+        setEditFormError('');
+      }} maxWidth="md" fullWidth>
         <DialogTitle>Editar Inquilino</DialogTitle>
         <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+          {editFormError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {editFormError}
+            </Alert>
+          )}
           <Box 
             component="form" 
             sx={{ mt: 2 }}
@@ -629,13 +659,32 @@ const TenantPage = () => {
               required
               sx={{ mb: 2 }}
             />
-            <TextField
-              fullWidth
-              label="Número de Local"
-              value={editForm.numeroLocal}
-              onChange={(e) => setEditForm({ ...editForm, numeroLocal: e.target.value })}
-              sx={{ mb: 2 }}
-            />
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Número de Local</InputLabel>
+              <Select
+                value={editForm.numeroLocal}
+                label="Número de Local"
+                onChange={(e) => setEditForm({ ...editForm, numeroLocal: e.target.value })}
+              >
+                <MenuItem value="">
+                  <em>Ninguno</em>
+                </MenuItem>
+                {Array.from(new Set(properties.map(p => p.localNumber)))
+                  .sort((a, b) => a - b)
+                  .map(localNumber => (
+                    <MenuItem key={localNumber} value={localNumber.toString()}>
+                      {localNumber}
+                    </MenuItem>
+                  ))}
+                {/* Incluir el número de local actual si no está en la lista */}
+                {editingTenant?.numeroLocal && 
+                 !properties.some(p => p.localNumber.toString() === editingTenant.numeroLocal) && (
+                  <MenuItem value={editingTenant.numeroLocal}>
+                    {editingTenant.numeroLocal} (no disponible)
+                  </MenuItem>
+                )}
+              </Select>
+            </FormControl>
             <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel>Rubro</InputLabel>
               <Select

@@ -66,12 +66,23 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     delete (data as any).tenantId;
     delete (data as any).propertyId;
     delete (data as any).contractId;
-    // Exclude receiptImageUrl - not in Prisma schema yet (will be added in future migration)
-    delete (data as any).receiptImageUrl;
+    delete (data as any).monthNumber; // Don't update monthNumber
+    delete (data as any).tenantFullName; // Don't update tenantFullName
+    delete (data as any).tenantPhone; // Don't update tenantPhone
+    delete (data as any).receiptImageUrl; // receiptImageUrl not in Prisma schema yet
+    
+    // Remove undefined values to avoid Prisma errors
+    // Allow null values for nullable fields (like notes)
+    const cleanData: any = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined) {
+        cleanData[key] = value;
+      }
+    }
     
     const payment = await prisma.payment.update({
       where: { id: entity.id! },
-      data: data as any // Allow null values
+      data: cleanData
     });
     
     return PaymentEntity.fromPrisma(payment);

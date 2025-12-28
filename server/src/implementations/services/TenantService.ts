@@ -5,7 +5,7 @@ import { IPropertyRepository } from '../../interfaces/repositories/IPropertyRepo
 import { TenantDTO, CreateTenantDTO, UpdateTenantDTO } from '../../dtos/tenant.dto';
 import { TenantEntity } from '../../entities/Tenant.entity';
 import { EstadoPago, Rubro } from '@prisma/client';
-import { NotFoundError, ConflictError } from '../../exceptions';
+import { NotFoundError, ConflictError, BadRequestError } from '../../exceptions';
 
 // Helper function to convert string to Rubro enum
 function stringToRubro(value: string | null): Rubro | null {
@@ -172,6 +172,14 @@ export class TenantService implements ITenantService {
     const entity = await this.tenantRepository.findById(id);
     if (!entity) {
       throw new NotFoundError('Tenant', id);
+    }
+
+    // Validate documentId uniqueness if it's being changed
+    if (data.documentId !== undefined && data.documentId !== entity.documentId) {
+      const existingTenant = await this.tenantRepository.findByDocumentId(data.documentId);
+      if (existingTenant && existingTenant.id !== id) {
+        throw new BadRequestError(`El DNI ${data.documentId} ya está en uso por otro inquilino`);
+      }
     }
 
     // Update fields

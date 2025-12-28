@@ -31,7 +31,8 @@ const createContractBodySchema = t.Object({
   tenantId: t.Number({ minimum: 1 }),
   propertyId: t.Number({ minimum: 1 }),
   startDate: t.String(),
-  monthlyRent: t.Number({ minimum: 0 })
+  monthlyRent: t.Number({ minimum: 0 }),
+  endDate: t.Optional(t.String())
 });
 
 const updateContractBodySchema = t.Object({
