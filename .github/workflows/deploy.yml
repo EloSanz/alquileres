@@ -38,9 +38,32 @@ jobs:
 
           echo "📥 Obteniendo cambios desde Git..."
           git fetch origin develop
-          echo "🔄 Reset a origin/develop..."
-          git reset --hard origin/develop
-          git clean -fd
+          
+          # Verificar si hay cambios locales
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "⚠️  ADVERTENCIA: Hay cambios locales sin commitear"
+            git status
+            echo "🔄 Guardando cambios locales en stash..."
+            git stash push -m "Stash antes de deploy $(date +%Y-%m-%d_%H:%M:%S)"
+          fi
+          
+          # Verificar si la rama local está detrás de origin/develop
+          LOCAL=$(git rev-parse @)
+          REMOTE=$(git rev-parse origin/develop)
+          
+          if [ "$LOCAL" != "$REMOTE" ]; then
+            echo "🔄 Actualizando código desde origin/develop..."
+            # Intentar hacer pull primero (más seguro)
+            if git pull origin develop --no-edit; then
+              echo "✅ Pull exitoso"
+            else
+              echo "⚠️  Pull falló, haciendo reset --hard..."
+              git reset --hard origin/develop
+              git clean -fd
+            fi
+          else
+            echo "✅ El código local ya está actualizado con origin/develop"
+          fi
 
           echo "📋 Estado actual del repositorio:"
           git log --oneline -5
