@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -28,6 +28,7 @@ import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
 import { useContractService } from '../services/contractService';
+import { useDataGateway } from '../gateways/useDataGateway';
 import { Contract, UpdateContract } from '../../../shared/types/Contract';
 import ContractDetailsModal from '../components/ContractDetailsModal';
 import ContractEditorModal from '../components/contract-editor/ContractEditorModal';
@@ -54,6 +55,7 @@ const formatDateDisplay = (date: Date | string | null | undefined): string => {
 
 const ContractPage = () => {
   const contractService = useContractService()
+  const dataGateway = useDataGateway()
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,20 +150,18 @@ const ContractPage = () => {
     });
   };
 
-  const fetchContracts = async () => {
+  const fetchContracts = () => {
     try {
-      setLoading(true);
       setError('');
-      const data = await contractService.getAllContracts();
+      // Usar DataGateway para obtener datos desde cache
+      const data = dataGateway.getContracts();
       setContracts(data);
       const filtered = filterContracts(searchQuery, filterValues, data);
       setFilteredContracts(filtered);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch contracts');
+      setError(err.message || 'Error al cargar contratos');
       setContracts([]);
       setFilteredContracts([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -192,21 +192,47 @@ const ContractPage = () => {
     setFilteredContracts(filtered);
   };
 
-  const hasFetchedRef = useRef(false);
-  
   useEffect(() => {
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
-    fetchContracts();
-  }, []);
+    // Esperar a que el DataGateway cargue los datos
+    const loadData = async () => {
+      if (!dataGateway.isLoaded() && !dataGateway.isLoading()) {
+        setLoading(true);
+        try {
+          await dataGateway.loadAll();
+        } catch (err: any) {
+          setError(err.message || 'Error al cargar datos');
+        } finally {
+          setLoading(false);
+        }
+      }
+      
+      // Una vez cargado, obtener datos del gateway
+      if (dataGateway.isLoaded()) {
+        fetchContracts();
+      }
+    };
+    
+    loadData();
+  }, [dataGateway]);
+  
+  // Actualizar cuando el gateway termine de cargar
+  useEffect(() => {
+    if (dataGateway.isLoaded()) {
+      fetchContracts();
+      setLoading(false);
+    }
+  }, [dataGateway.isLoaded()]);
 
   const handleRowClick = (contract: Contract) => {
     setSelectedContract(contract);
     setDetailsOpen(true);
   };
 
-  const handleCreateContractSuccess = () => {
+  const handleCreateContractSuccess = async () => {
     setCreateContractOpen(false);
+    // Invalidar cache y recargar desde el servicio
+    dataGateway.invalidate();
+    await dataGateway.loadAll();
     fetchContracts();
   };
 
@@ -243,7 +269,10 @@ const ContractPage = () => {
       setEditDialogOpen(false);
       setEditingContract(null);
       setEditForm({ monthlyRent: '' });
-      fetchContracts(); // Refresh the list
+      // Invalidar cache y recargar desde el servicio
+      dataGateway.invalidate();
+      await dataGateway.loadAll();
+      fetchContracts();
     } catch (err: any) {
       setError(err.message || 'Failed to update contract');
     }

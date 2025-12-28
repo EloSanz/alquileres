@@ -9,9 +9,11 @@ import { serviceRoutes } from './service.routes';
 import { taxRoutes } from './tax.routes';
 import { guaranteeRoutes } from './guarantee.routes';
 import { maintenanceRoutes } from './maintenance.routes';
+import { dataRoutes } from './data.routes';
 
 // Grupo de rutas protegidas que aplican autenticación automáticamente
 export const protectedRoutes = new Elysia()
+  .use(dataRoutes)
   .use(tenantRoutes)
   .use(propertyRoutes)
   .use(paymentRoutes)

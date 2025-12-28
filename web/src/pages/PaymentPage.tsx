@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -18,13 +18,11 @@ import {
 } from '@mui/material';
 import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon, ViewModule as ViewModuleIcon, TableChart as TableChartIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
-import { usePropertyService } from '../services/propertyService';
 import { Property } from '../../../shared/types/Property';
 import { usePaymentService } from '../services/paymentService';
-import { useTenantService } from '../services/tenantService';
+import { useDataGateway } from '../gateways/useDataGateway';
 import { Payment, CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
 import EditPaymentModal from '../components/EditPaymentModal';
-import { Tenant } from '../../../shared/types/Tenant';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { FilterConfig } from '../components/FilterBar';
 import PaymentDetailsModal from '../components/PaymentDetailsModal';
@@ -32,12 +30,10 @@ import PaymentTable from '../components/PaymentTable';
 import PaymentByPropertyView from '../components/PaymentByPropertyView';
 
 const PaymentPage = () => {
-  const propertyService = usePropertyService()
   const paymentService = usePaymentService()
-  const tenantService = useTenantService()
+  const dataGateway = useDataGateway()
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -67,8 +63,6 @@ const PaymentPage = () => {
       ]
     }
   ];
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [propertiesLoading, setPropertiesLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [amountError, setAmountError] = useState('');
@@ -104,34 +98,26 @@ const PaymentPage = () => {
     }
   };
 
-  const fetchPayments = async (tenantId?: number | null) => {
+  const fetchPayments = (tenantId?: number | null) => {
     try {
-      setLoading(true);
-      setError(''); // Limpiar error anterior
+      setError('');
       const targetTenantId = tenantId !== undefined ? tenantId : selectedTenantId;
       let data: Payment[];
       
+      // Usar DataGateway para obtener datos desde cache
       if (targetTenantId !== null && targetTenantId !== undefined) {
-        // Cargar solo pagos del inquilino seleccionado
-        data = await paymentService.getPaymentsByTenantId(targetTenantId);
+        data = dataGateway.getPaymentsByTenantId(targetTenantId);
       } else {
-        // Si no hay inquilino seleccionado, cargar todos (fallback)
-        data = await paymentService.getAllPayments();
+        data = dataGateway.getPayments();
       }
       
       setPayments(data);
       const filtered = filterPayments(searchQuery, filterValues, data);
       setFilteredPayments(filtered);
     } catch (err: any) {
-      // Solo mostrar error si es un error real de red/API, no si es array vacío
-      if (err.message && !err.message.includes('fetch')) {
-        setError(err.message);
-      }
-      // Si es array vacío, no es error - simplemente no hay datos
+      setError(err.message || 'Error al cargar pagos');
       setPayments([]);
       setFilteredPayments([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -192,32 +178,8 @@ const PaymentPage = () => {
     setFilteredPayments(filtered);
   };
 
-  const fetchProperties = async () => {
-    try {
-      setPropertiesLoading(true);
-      const data = await propertyService.getAllProperties();
-      setProperties(data);
-    } catch (err: any) {
-      console.error('Failed to fetch properties:', err);
-      // No mostrar error en UI ya que es secundario
-    } finally {
-      setPropertiesLoading(false);
-    }
-  };
-
-  const fetchTenants = async () => {
-    try {
-      const data = await tenantService.getAllTenants();
-      setTenants(data);
-      // Seleccionar el primer inquilino por defecto
-      if (data.length > 0 && selectedTenantId === null) {
-        setSelectedTenantId(data[0].id);
-      }
-    } catch (err: any) {
-      console.error('Failed to fetch tenants:', err);
-      // No mostrar error en UI ya que es secundario
-    }
-  };
+  // Los tenants y properties ahora vienen del DataGateway
+  const tenants = dataGateway.getTenants();
 
   const handleCreatePayment = async () => {
     // Validar monto antes de enviar
@@ -268,32 +230,56 @@ const PaymentPage = () => {
         paymentMethod: 'YAPE',
         notes: '',
       });
-      fetchPayments(selectedTenantId); // Refresh the list manteniendo el filtro de inquilino
+      // Invalidar cache y recargar desde el servicio
+      dataGateway.invalidate();
+      await dataGateway.loadAll();
+      fetchPayments(selectedTenantId);
     } catch (err: any) {
       setError(err.message || 'Failed to create payment');
     }
   };
 
-  const hasFetchedRef = useRef(false);
-  
   useEffect(() => {
-    const loadInitialData = async () => {
-      if (hasFetchedRef.current) return;
-      hasFetchedRef.current = true;
+    // Esperar a que el DataGateway cargue los datos
+    const loadData = async () => {
+      if (!dataGateway.isLoaded() && !dataGateway.isLoading()) {
+        setLoading(true);
+        try {
+          await dataGateway.loadAll();
+        } catch (err: any) {
+          setError(err.message || 'Error al cargar datos');
+        } finally {
+          setLoading(false);
+        }
+      }
       
-      // Cargar inquilinos primero
-      await fetchTenants();
-      // Luego cargar propiedades
-      await fetchProperties();
-      // Los pagos se cargarán cuando se seleccione el primer inquilino
+      // Una vez cargado, obtener datos del gateway
+      if (dataGateway.isLoaded()) {
+        // Seleccionar el primer inquilino por defecto si hay tenants disponibles
+        if (tenants.length > 0 && selectedTenantId === null) {
+          setSelectedTenantId(tenants[0].id);
+        }
+        fetchPayments(selectedTenantId);
+      }
     };
     
-    loadInitialData();
-  }, []);
+    loadData();
+  }, [dataGateway]);
+  
+  // Actualizar cuando el gateway termine de cargar
+  useEffect(() => {
+    if (dataGateway.isLoaded()) {
+      if (tenants.length > 0 && selectedTenantId === null) {
+        setSelectedTenantId(tenants[0].id);
+      }
+      fetchPayments(selectedTenantId);
+      setLoading(false);
+    }
+  }, [dataGateway.isLoaded()]);
 
   // Cargar pagos cuando cambie el inquilino seleccionado
   useEffect(() => {
-    if (selectedTenantId !== null && tenants.length > 0) {
+    if (selectedTenantId !== null && dataGateway.isLoaded()) {
       fetchPayments(selectedTenantId);
     }
   }, [selectedTenantId]);
@@ -349,6 +335,10 @@ const PaymentPage = () => {
   };
 
   const handleEditSuccess = async () => {
+    // Invalidar cache y recargar desde el servicio
+    dataGateway.invalidate();
+    await dataGateway.loadAll();
+    fetchPayments(selectedTenantId);
     // Recargar pagos después de editar exitosamente
     await fetchPayments(selectedTenantId);
     setEditDialogOpen(false);
@@ -374,7 +364,10 @@ const PaymentPage = () => {
       await paymentService.deletePayment(paymentToDelete.id);
       setDeleteDialogOpen(false);
       setPaymentToDelete(null);
-      fetchPayments(selectedTenantId); // Refresh the list manteniendo el filtro de inquilino
+      // Invalidar cache y recargar desde el servicio
+      dataGateway.invalidate();
+      await dataGateway.loadAll();
+      fetchPayments(selectedTenantId);
     } catch (err: any) {
       setError(err.message || 'Failed to delete payment');
     }
@@ -517,7 +510,7 @@ const PaymentPage = () => {
           <Box component="form" sx={{ mt: 2 }}>
             <Autocomplete
               fullWidth
-              options={properties}
+              options={dataGateway.getProperties()}
               getOptionLabel={(property) =>
                 `Local N° ${property.localNumber} - ${property.ubicacion === 'BOULEVAR' ? 'Boulevard' : property.ubicacion === 'SAN_MARTIN' ? 'San Martin' : property.ubicacion}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
               }
@@ -538,7 +531,7 @@ const PaymentPage = () => {
                   });
                 }
               }}
-              loading={propertiesLoading}
+              loading={false}
               renderInput={(params) => (
                 <TextField
                   {...params}

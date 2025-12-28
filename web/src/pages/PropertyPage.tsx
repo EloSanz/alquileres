@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -28,18 +28,16 @@ import {
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { usePropertyService } from '../services/propertyService';
 import { Property, CreateProperty, UpdateProperty } from '../../../shared/types/Property';
-import { useTenantService } from '../services/tenantService';
-import { Tenant } from '../../../shared/types/Tenant';
+import { useDataGateway } from '../gateways/useDataGateway';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import PropertyDetailsModal from '../components/PropertyDetailsModal';
 
 const PropertyPage = () => {
   const propertyService = usePropertyService()
-  const tenantService = useTenantService()
+  const dataGateway = useDataGateway()
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,24 +61,18 @@ const PropertyPage = () => {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
-  const fetchProperties = async () => {
+  const fetchProperties = () => {
     try {
-      setLoading(true);
-      setError(''); // Limpiar error anterior
-      const data = await propertyService.getAllProperties();
+      setError('');
+      // Usar DataGateway para obtener datos desde cache
+      const data = dataGateway.getProperties();
       setProperties(data);
       const filtered = filterProperties(searchQuery, data);
       setFilteredProperties(filtered);
     } catch (err: any) {
-      // Solo mostrar error si es un error real de red/API, no si es array vacío
-      if (err.message && !err.message.includes('fetch')) {
-        setError(err.message);
-      }
-      // Si es array vacío, no es error - simplemente no hay datos
+      setError(err.message || 'Error al cargar propiedades');
       setProperties([]);
       setFilteredProperties([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -149,29 +141,45 @@ const PropertyPage = () => {
       });
       setError('');
       setLocalNumberError('');
-      fetchProperties(); // Refresh the list
+      // Invalidar cache y recargar desde el servicio
+      dataGateway.invalidate();
+      await dataGateway.loadAll();
+      fetchProperties();
     } catch (err: any) {
       setError(err.message || 'Failed to create property');
     }
   };
 
-  const hasFetchedRef = useRef(false);
-  
   useEffect(() => {
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
-    fetchProperties();
-    fetchTenants();
-  }, []);
-
-  const fetchTenants = async () => {
-    try {
-      const data = await tenantService.getAllTenants();
-      setTenants(data);
-    } catch (err: any) {
-      console.error('Error fetching tenants:', err);
+    // Esperar a que el DataGateway cargue los datos
+    const loadData = async () => {
+      if (!dataGateway.isLoaded() && !dataGateway.isLoading()) {
+        setLoading(true);
+        try {
+          await dataGateway.loadAll();
+        } catch (err: any) {
+          setError(err.message || 'Error al cargar datos');
+        } finally {
+          setLoading(false);
+        }
+      }
+      
+      // Una vez cargado, obtener datos del gateway
+      if (dataGateway.isLoaded()) {
+        fetchProperties();
+      }
+    };
+    
+    loadData();
+  }, [dataGateway]);
+  
+  // Actualizar cuando el gateway termine de cargar
+  useEffect(() => {
+    if (dataGateway.isLoaded()) {
+      fetchProperties();
+      setLoading(false);
     }
-  };
+  }, [dataGateway.isLoaded()]);
 
   // Aplicar filtros cuando cambien los criterios
   useEffect(() => {
@@ -242,7 +250,10 @@ const PropertyPage = () => {
       await propertyService.deleteProperty(propertyToDelete.id);
       setDeleteDialogOpen(false);
       setPropertyToDelete(null);
-      fetchProperties(); // Refresh the list
+      // Invalidar cache y recargar desde el servicio
+      dataGateway.invalidate();
+      await dataGateway.loadAll();
+      fetchProperties();
     } catch (err: any) {
       setError(err.message || 'Failed to delete property');
     }
@@ -259,8 +270,10 @@ const PropertyPage = () => {
       );
 
       await propertyService.updateProperty(editingProperty.id, propertyData);
-      // Volver a cargar desde API para obtener el tenant embebido y evitar parpadeos de "Disponible"
-      await fetchProperties();
+      // Invalidar cache y recargar desde el servicio
+      dataGateway.invalidate();
+      await dataGateway.loadAll();
+      fetchProperties();
 
       setEditDialogOpen(false);
       setEditingProperty(null);
@@ -455,9 +468,9 @@ const PropertyPage = () => {
             </Grid>
             <Grid item xs={12}>
               <Autocomplete
-                options={tenants}
+                options={dataGateway.getTenants()}
                 getOptionLabel={(option) => `${option.firstName} ${option.lastName}${option.documentId ? ` - DNI: ${option.documentId}` : ''}`}
-                value={tenants.find(t => t.id === createForm.tenantId) || null}
+                value={dataGateway.getTenants().find(t => t.id === createForm.tenantId) || null}
                 onChange={(_, newValue) => {
                   setCreateForm({ ...createForm, tenantId: newValue?.id || null });
                 }}
