@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline, Box } from '@mui/material';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ApiProvider } from './contexts/ApiContext';
+import { useDataGateway } from './gateways/useDataGateway';
 import Navigation from './components/Navigation';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -40,6 +41,18 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppContent = () => {
+  const { isAuthenticated } = useAuth();
+  const dataGateway = useDataGateway();
+
+  // Cargar todos los datos cuando el usuario está autenticado
+  useEffect(() => {
+    if (isAuthenticated && !dataGateway.isLoaded() && !dataGateway.isLoading()) {
+      dataGateway.loadAll().catch((error) => {
+        console.error('Error loading data:', error);
+      });
+    }
+  }, [isAuthenticated, dataGateway]);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <CssBaseline />

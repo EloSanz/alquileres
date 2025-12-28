@@ -7,7 +7,7 @@ export class PrismaTenantRepository implements ITenantRepository {
     const tenants = await prisma.tenant.findMany({
       orderBy: { id: 'asc' }
     });
-    return tenants.map(tenant => TenantEntity.fromPrisma(tenant));
+    return tenants.map((tenant: any) => TenantEntity.fromPrisma(tenant));
   }
 
   async findById(id: number): Promise<TenantEntity | null> {

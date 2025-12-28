@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -32,13 +32,13 @@ import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
 import TenantDeletionModal from '../components/TenantDeletionModal';
 import { useTenantService } from '../services/tenantService';
-import { usePropertyService } from '../services/propertyService';
+import { useDataGateway } from '../gateways/useDataGateway';
 import { Tenant, CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
 import { Property } from '../../../shared/types/Property';
 
 const TenantPage = () => {
   const tenantService = useTenantService()
-  const propertyService = usePropertyService()
+  const dataGateway = useDataGateway()
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [filteredTenants, setFilteredTenants] = useState<Tenant[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -107,24 +107,18 @@ const TenantPage = () => {
   // Modal para mostrar propiedades y pagos asociados
   const [tenantDeletionModalOpen, setTenantDeletionModalOpen] = useState(false);
 
-  const fetchTenants = async () => {
+  const fetchTenants = () => {
     try {
-      setLoading(true);
-      setError(''); // Limpiar error anterior
-      const data = await tenantService.getAllTenants();
+      setError('');
+      // Usar DataGateway para obtener datos desde cache
+      const data = dataGateway.getTenants();
       setTenants(data);
       const filtered = filterAndSortTenants(searchQuery, filterValues, data);
       setFilteredTenants(filtered);
     } catch (err: any) {
-      // Solo mostrar error si es un error real de red/API, no si es array vacío
-      if (err.message && !err.message.includes('fetch')) {
-        setError(err.message);
-      }
-      // Si es array vacío, no es error - simplemente no hay datos
+      setError(err.message || 'Error al cargar inquilinos');
       setTenants([]);
       setFilteredTenants([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -259,31 +253,50 @@ const TenantPage = () => {
         rubro: '',
         fechaInicioContrato: '',
       });
-      fetchTenants(); // Refresh the list
+      // Invalidar cache y recargar desde el servicio para obtener datos actualizados
+      dataGateway.invalidate();
+      await dataGateway.loadAll();
+      fetchTenants();
     } catch (err: any) {
       setError(err.message || 'Failed to create tenant');
     }
   };
 
-  const hasFetchedRef = useRef(false);
-  
   useEffect(() => {
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
-    fetchTenants();
-    
-    // Cargar todas las propiedades para obtener números de local disponibles
-    // No importa el estado del local, solo necesitamos los números disponibles
-    const fetchProperties = async () => {
-      try {
-        const data = await propertyService.getAllProperties();
-        setProperties(data);
-      } catch (err: any) {
-        console.error('Error loading properties:', err);
+    // Esperar a que el DataGateway cargue los datos
+    const loadData = async () => {
+      if (!dataGateway.isLoaded() && !dataGateway.isLoading()) {
+        setLoading(true);
+        try {
+          await dataGateway.loadAll();
+        } catch (err: any) {
+          setError(err.message || 'Error al cargar datos');
+        } finally {
+          setLoading(false);
+        }
+      }
+      
+      // Una vez cargado, obtener datos del gateway
+      if (dataGateway.isLoaded()) {
+        fetchTenants();
+        // Obtener propiedades desde el gateway
+        const props = dataGateway.getProperties();
+        setProperties(props);
       }
     };
-    fetchProperties();
-  }, []);
+    
+    loadData();
+  }, [dataGateway]);
+  
+  // Actualizar cuando el gateway termine de cargar
+  useEffect(() => {
+    if (dataGateway.isLoaded()) {
+      fetchTenants();
+      const props = dataGateway.getProperties();
+      setProperties(props);
+      setLoading(false);
+    }
+  }, [dataGateway.isLoaded()]);
 
   // Aplicar filtros y ordenamiento cuando cambien los criterios
   useEffect(() => {
@@ -318,7 +331,10 @@ const TenantPage = () => {
       await tenantService.deleteTenant(tenantToDelete.id);
       setDeleteDialogOpen(false);
       setTenantToDelete(null);
-      fetchTenants(); // Refresh the list
+      // Invalidar cache y recargar desde el servicio
+      dataGateway.invalidate();
+      await dataGateway.loadAll();
+      fetchTenants();
     } catch (err: any) {
       setError(err.message || err.response?.data?.message || 'Failed to delete tenant');
     }
@@ -355,9 +371,10 @@ const TenantPage = () => {
       
       console.log('Tenant updated successfully:', updatedTenant);
 
-      // Actualizar estado local manteniendo el orden
-      setTenants(prev => prev.map(t => t.id === updatedTenant.id ? updatedTenant : t));
-      // El useEffect se encargará de re-filtrar y re-ordenar filteredTenants
+      // Invalidar cache y recargar desde el servicio para obtener datos actualizados
+      dataGateway.invalidate();
+      await dataGateway.loadAll();
+      fetchTenants();
 
       setEditDialogOpen(false);
       setEditingTenant(null);
@@ -746,6 +763,9 @@ const TenantPage = () => {
           await tenantService.deleteTenant(tenantToDelete!.id);
           setTenantDeletionModalOpen(false);
           setTenantToDelete(null);
+          // Invalidar cache y recargar desde el servicio
+          dataGateway.invalidate();
+          await dataGateway.loadAll();
           fetchTenants();
         }}
         onClose={() => setTenantDeletionModalOpen(false)}

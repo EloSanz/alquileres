@@ -4,7 +4,7 @@ import { IPaymentRepository } from '../../interfaces/repositories/IPaymentReposi
 import { IPropertyRepository } from '../../interfaces/repositories/IPropertyRepository';
 import { TenantDTO, CreateTenantDTO, UpdateTenantDTO } from '../../dtos/tenant.dto';
 import { TenantEntity } from '../../entities/Tenant.entity';
-import { EstadoPago, Rubro } from '@prisma/client';
+import { EstadoPago, Rubro, PaymentStatus } from '@prisma/client';
 import { NotFoundError, ConflictError, BadRequestError } from '../../exceptions';
 
 // Helper function to convert string to Rubro enum
@@ -35,8 +35,9 @@ export class TenantService implements ITenantService {
   ) {}
 
   /**
-   * Calcula el estado de pago de un inquilino basado en su contrato y pagos realizados
-   * Los contratos son por 1 año y se pagan mensualmente
+   * Calcula el estado de pago de un inquilino basado en los pagos del año actual
+   * Si hay algún pago del año actual que no está PAGADO, el inquilino tiene CON_DEUDA
+   * Si todos los pagos del año actual están PAGADO, el inquilino está AL_DIA
    */
   private async calculatePaymentStatus(tenantId: number, fechaInicioContrato: Date | null): Promise<EstadoPago> {
     if (!fechaInicioContrato) {
@@ -51,42 +52,31 @@ export class TenantService implements ITenantService {
       return EstadoPago.AL_DIA;
     }
 
-    // Calcular meses transcurridos desde el inicio del contrato
-    const monthsElapsed = Math.floor(
-      (now.getTime() - contractStart.getTime()) / (1000 * 60 * 60 * 24 * 30.44) // Promedio de días por mes
-    );
-
-    // Si han pasado menos de 1 mes, está al día
-    if (monthsElapsed < 1) {
-      return EstadoPago.AL_DIA;
-    }
+    // Obtener el año actual
+    const currentYear = new Date().getFullYear();
 
     // Obtener todos los pagos del inquilino
     const payments = await this.paymentRepository.findByTenantId(tenantId);
 
-    // Contar pagos completados por mes (si tiene paymentDate, está pagado)
-    const completedPaymentsByMonth = new Set<number>();
+    // Filtrar pagos del año actual usando dueDate
+    const currentYearPayments = payments.filter(payment => {
+      const dueDate = new Date(payment.dueDate);
+      return dueDate.getFullYear() === currentYear;
+    });
 
-    for (const payment of payments) {
-      // Si tiene paymentDate, significa que fue pagado
-      if (payment.paymentDate) {
-        const paymentDate = new Date(payment.paymentDate);
-        const monthsSinceContract = Math.floor(
-          (paymentDate.getTime() - contractStart.getTime()) / (1000 * 60 * 60 * 24 * 30.44)
-        );
-        if (monthsSinceContract >= 0 && monthsSinceContract <= 12) { // Solo considerar pagos dentro del año de contrato
-          completedPaymentsByMonth.add(monthsSinceContract);
-        }
-      }
+    // Si no hay pagos del año actual, está al día
+    if (currentYearPayments.length === 0) {
+      return EstadoPago.AL_DIA;
     }
 
-    // Verificar si hay meses sin pago
-    for (let month = 0; month < Math.min(monthsElapsed, 12); month++) {
-      if (!completedPaymentsByMonth.has(month)) {
+    // Verificar si hay algún pago del año actual que no esté PAGADO
+    for (const payment of currentYearPayments) {
+      if (payment.status !== PaymentStatus.PAGADO) {
         return EstadoPago.CON_DEUDA;
       }
     }
 
+    // Si todos los pagos del año actual están PAGADO, está al día
     return EstadoPago.AL_DIA;
   }
 
@@ -108,7 +98,8 @@ export class TenantService implements ITenantService {
 
         // Obtener las propiedades asociadas al tenant
         const properties = await this.propertyRepository.findByTenantId(entity.id!);
-        const localNumbers = properties.map(p => p.localNumber).sort((a, b) => a - b);
+        // Obtener números de local únicos y ordenados
+        const localNumbers = Array.from(new Set(properties.map(p => p.localNumber))).sort((a, b) => a - b);
 
         // Agregar los números de local al DTO
         const dto = entity.toDTO();
