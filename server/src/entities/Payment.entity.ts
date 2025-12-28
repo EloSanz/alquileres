@@ -130,7 +130,6 @@ export class PaymentEntity {
     // El status solo se actualiza si se envía explícitamente
     // No se recalcula automáticamente basado en fechas
     if (data.status !== undefined) {
-      const oldStatus = this.status;
       this.status = convertFrontendStatusToPrisma(data.status);
     }
     // Si no se envía status, se mantiene el status existente (no se recalcula)

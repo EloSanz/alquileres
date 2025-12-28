@@ -1,6 +1,5 @@
 import { IPaymentService } from '../interfaces/services/IPaymentService';
 import { CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
-import { logInfo } from '../utils/logger';
 
 export class PaymentController {
   constructor(private paymentService: IPaymentService) {}

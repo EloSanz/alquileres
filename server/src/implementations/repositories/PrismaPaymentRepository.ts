@@ -1,7 +1,6 @@
 import { IPaymentRepository } from '../../interfaces/repositories/IPaymentRepository';
 import { PaymentEntity } from '../../entities/Payment.entity';
 import { prisma } from '../../lib/prisma';
-import { logInfo } from '../../utils/logger';
 
 export class PrismaPaymentRepository implements IPaymentRepository {
   async findAll(): Promise<PaymentEntity[]> {

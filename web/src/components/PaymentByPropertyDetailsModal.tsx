@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
 import { usePaymentService } from '../services/paymentService';
-import { Payment, PaymentStatus } from '../../../shared/types/Payment';
+import { Payment } from '../../../shared/types/Payment';
 import { buildContractTimeline, type ContractMonthInfo } from '../services/contractTimeline';
 import type { Contract } from '../../../shared/types/Contract';
 import EditPaymentModal from './EditPaymentModal';

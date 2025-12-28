@@ -69,7 +69,27 @@ jobs:
           git log --oneline -5
           git status
 
+          echo "📦 Instalando dependencias del backend..."
+          cd /root/alquileres-app/server
+          npm install --production
+
+          echo "📦 Instalando dependencias del frontend..."
+          cd /root/alquileres-app/web
+          npm install
+
+          echo "🏗️  Construyendo frontend (producción)..."
+          npm run build
+          
+          if [ ! -d "dist" ]; then
+            echo "❌ ERROR: La carpeta dist no se generó después del build"
+            exit 1
+          fi
+          
+          echo "✅ Build del frontend completado"
+          ls -lah dist/ | head -10
+
           echo "➡️ Reiniciando servicios..."
+          cd /root/alquileres-app
 
           # Función para verificar si un servicio está corriendo
           check_service() {
@@ -88,8 +108,30 @@ jobs:
             echo "🔧 PM2 detectado, usando configuración de PM2..."
             if [ -f ecosystem.config.js ]; then
               echo "📄 Encontrado ecosystem.config.js"
-              pm2 describe alquileres-backend > /dev/null 2>&1 && pm2 restart alquileres-backend || pm2 start ecosystem.config.js
-              pm2 describe alquileres-frontend > /dev/null 2>&1 && pm2 restart alquileres-frontend || pm2 start ecosystem.config.js
+              
+              # Detener procesos antiguos si existen con nombres diferentes
+              pm2 delete frontend-4002 2>/dev/null || true
+              pm2 delete alquileres-frontend 2>/dev/null || true
+              
+              # Reiniciar backend
+              if pm2 describe alquileres-backend > /dev/null 2>&1; then
+                echo "🔄 Reiniciando backend..."
+                pm2 restart alquileres-backend
+              else
+                echo "▶️  Iniciando backend..."
+                pm2 start ecosystem.config.js --only alquileres-backend
+              fi
+              
+              # Reiniciar frontend (siempre reiniciar para asegurar nueva versión)
+              if pm2 describe alquileres-frontend > /dev/null 2>&1; then
+                echo "🔄 Reiniciando frontend..."
+                pm2 restart alquileres-frontend
+              else
+                echo "▶️  Iniciando frontend..."
+                pm2 start ecosystem.config.js --only alquileres-frontend
+              fi
+              
+              pm2 save
 
               echo "📊 Estado de procesos PM2:"
               pm2 list
