@@ -304,6 +304,16 @@ const userRepository = new PrismaUserRepository();
 const userService = new UserService(userRepository);
 const userController = new UserController(userService);
 
+// ⚠️ CRÍTICO: Los schemas de validación DEBEN incluir TODOS los campos del DTO
+// Elysia FILTRA campos que no están en el schema, incluso si son opcionales
+// Si agregas un campo al UpdateUserDTO, DEBES agregarlo aquí también
+const updateUserBodySchema = t.Object({
+  username: t.Optional(t.String({ minLength: 3, maxLength: 50 })),
+  email: t.Optional(t.String({ format: 'email' })),
+  // Si UpdateUserDTO tiene 'status', DEBES agregarlo aquí:
+  // status: t.Optional(t.String())
+});
+
 export const userRoutes = new Elysia({ prefix: '/api/users' })
   .use(authPlugin)
   .get('/', userController.getAll, {
@@ -323,10 +333,7 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
   })
   .put('/:id', userController.update, {
     params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
-    body: t.Object({
-      username: t.Optional(t.String({ minLength: 3, maxLength: 50 })),
-      email: t.Optional(t.String({ format: 'email' }))
-    }),
+    body: updateUserBodySchema, // Usar el schema definido arriba
     detail: { tags: ['Users'], summary: 'Update user' }
   })
   .delete('/:id', userController.delete, {
@@ -658,6 +665,77 @@ npm install
 echo "✅ Frontend setup complete"
 ```
 
+## ⚠️ LECCIONES APRENDIDAS - CRÍTICO
+
+### 1. Validación de Schemas en Elysia (MUY IMPORTANTE)
+
+**PROBLEMA COMÚN**: Campos opcionales no llegan al controller aunque se envíen desde el frontend.
+
+**CAUSA**: Elysia valida el body contra el schema de TypeBox y **FILTRA campos que no están definidos**, incluso si son opcionales.
+
+**SOLUCIÓN OBLIGATORIA**:
+```typescript
+// ❌ INCORRECTO - Si UpdatePaymentDTO tiene 'status', pero no está en el schema:
+const updatePaymentBodySchema = t.Object({
+  amount: t.Optional(t.Number()),
+  paymentDate: t.Optional(t.String())
+  // status NO está aquí → Elysia lo FILTRA aunque se envíe desde frontend
+});
+
+// ✅ CORRECTO - Incluir TODOS los campos del DTO, incluso opcionales:
+const updatePaymentBodySchema = t.Object({
+  amount: t.Optional(t.Number()),
+  paymentDate: t.Optional(t.String()),
+  status: t.Optional(t.String()) // ✅ DEBE estar aquí
+});
+```
+
+**REGLA DE ORO**: 
+- Si agregas un campo a `UpdateXDTO`, **DEBES agregarlo al schema de validación**.
+- Si el campo es opcional en el DTO, usa `t.Optional()` en el schema.
+- **Siempre verifica que el schema incluya TODOS los campos del DTO**.
+
+### 2. Sincronización Schema ↔ DTO
+
+**CHECKLIST OBLIGATORIO**:
+```bash
+# Después de modificar un DTO, verificar sincronización:
+# 1. Revisar UpdateXDTO en shared/types/X.ts
+# 2. Verificar que updateXBodySchema en server/src/routes/X.routes.ts incluya TODOS los campos
+# 3. Si falta un campo, agregarlo con t.Optional() si es opcional
+```
+
+### 3. Debugging y Logs
+
+**CUANDO DEBUGGEAR**:
+- Si un campo no se actualiza aunque se envíe desde frontend
+- Si el backend recibe `undefined` para un campo que debería tener valor
+- Si hay discrepancias entre frontend y backend
+
+**PUNTOS DE LOG OBLIGATORIOS**:
+```typescript
+// Frontend - Service
+console.log('[Service] Payload enviado:', { payload, keys: Object.keys(payload) });
+
+// Backend - Controller
+logInfo('[Controller] Body recibido:', { body, bodyKeys: Object.keys(body || {}) });
+
+// Backend - Entity
+logInfo('[Entity] Update data:', { data, statusInData: data?.status });
+```
+
+### 4. Flujo Completo de Actualización
+
+**VERIFICAR EN ORDEN**:
+1. ✅ Frontend: `UpdatePayment.toJSON()` incluye el campo
+2. ✅ Frontend Service: Payload enviado incluye el campo
+3. ✅ Backend Route: Schema de validación incluye el campo
+4. ✅ Backend Controller: Body recibido incluye el campo
+5. ✅ Backend Service: DTO recibido incluye el campo
+6. ✅ Backend Entity: `update()` procesa el campo
+7. ✅ Database: Campo se guarda correctamente
+8. ✅ Response: Campo se devuelve al frontend
+
 ## ✅ Checklist de Validación
 
 ### Backend
@@ -666,6 +744,8 @@ echo "✅ Frontend setup complete"
 - [ ] Todas las Repositories tienen interface (`I*Repository.ts`)
 - [ ] Todas las Entities tienen `toDTO()`, `fromPrisma()`, `toPrisma()`, `validate()`
 - [ ] Todas las rutas usan TypeBox para validación
+- [ ] **Schemas de validación incluyen TODOS los campos de los DTOs (incluso opcionales)**
+- [ ] **Si modificas un DTO, actualizas el schema correspondiente**
 - [ ] `npm run dev:full` funciona (dev + type-check simultáneo)
 - [ ] NO usa Express, Axios, o librerías prohibidas
 

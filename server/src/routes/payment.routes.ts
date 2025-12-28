@@ -17,6 +17,10 @@ const idParamsSchema = t.Object({
   id: t.Numeric({ minimum: 1 })
 });
 
+const tenantIdParamsSchema = t.Object({
+  tenantId: t.Numeric({ minimum: 1 })
+});
+
 const createPaymentBodySchema = t.Object({
   tenantId: t.Number({ minimum: 1 }),
   propertyId: t.Union([t.Number({ minimum: 1 }), t.Null()]),
@@ -35,8 +39,10 @@ const updatePaymentBodySchema = t.Object({
   paymentDate: t.Optional(t.String()),
   dueDate: t.Optional(t.String()),
   paymentMethod: t.Optional(t.String()),
+  status: t.Optional(t.String()),
   pentamontSettled: t.Optional(t.Boolean()),
-  notes: t.Optional(t.String())
+  notes: t.Optional(t.String()),
+  receiptImageUrl: t.Optional(t.Union([t.String(), t.Null()]))
 });
 
 export const paymentRoutes = new Elysia({ prefix: '/payments' })
@@ -63,6 +69,13 @@ export const paymentRoutes = new Elysia({ prefix: '/payments' })
     detail: {
       tags: ['Payments'],
       summary: 'Get all payments'
+    }
+  })
+  .get('/tenant/:tenantId', paymentController.getByTenantId, {
+    params: tenantIdParamsSchema,
+    detail: {
+      tags: ['Payments'],
+      summary: 'Get payments by tenant ID'
     }
   })
   .get('/:id', paymentController.getById, {

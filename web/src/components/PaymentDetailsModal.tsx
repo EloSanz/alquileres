@@ -30,8 +30,21 @@ export default function PaymentDetailsModal({
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
+  const formatDateLong = (dateInput: string | Date | null | undefined): string => {
+    if (!dateInput) return '-';
+    const date = dateInput instanceof Date ? dateInput : (() => {
+      const str = String(dateInput);
+      const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (match) {
+        const [, year, month, day] = match;
+        return new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
+      }
+      return new Date(str);
+    })();
+    
+    if (isNaN(date.getTime())) return String(dateInput);
+    
+    return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -83,7 +96,7 @@ export default function PaymentDetailsModal({
                     Fecha de Pago:
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {formatDate(payment.paymentDate)}
+                    {formatDateLong(payment.paymentDate)}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -91,7 +104,7 @@ export default function PaymentDetailsModal({
                     Fecha de Vencimiento:
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {formatDate(payment.dueDate)}
+                    {formatDateLong(payment.dueDate)}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>

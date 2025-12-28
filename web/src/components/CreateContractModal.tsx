@@ -46,6 +46,7 @@ export default function CreateContractModal({
     tenantId: '',
     propertyId: '',
     startDate: new Date().toISOString().split('T')[0],
+    endDate: '',
     monthlyRent: '',
   });
 
@@ -54,10 +55,14 @@ export default function CreateContractModal({
     if (open) {
       loadData();
       // Reset form
+      const today = new Date();
+      const defaultEndDate = new Date(today);
+      defaultEndDate.setFullYear(defaultEndDate.getFullYear() + 1);
       setFormData({
         tenantId: '',
         propertyId: '',
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: today.toISOString().split('T')[0],
+        endDate: defaultEndDate.toISOString().split('T')[0],
         monthlyRent: '',
       });
       setError('');
@@ -88,17 +93,35 @@ export default function CreateContractModal({
     setError('');
   };
 
-  const calculateEndDate = (startDate: string): string => {
+  const calculateDefaultEndDate = (startDate: string): string => {
     const start = new Date(startDate);
     const end = new Date(start);
-    end.setMonth(end.getMonth() + 12);
+    end.setFullYear(end.getFullYear() + 1);
     return end.toISOString().split('T')[0];
+  };
+
+  const handleStartDateChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      startDate: value,
+      // Si endDate está vacío o es la fecha calculada anterior, actualizarla automáticamente
+      endDate: prev.endDate || calculateDefaultEndDate(value),
+    }));
+    setError('');
   };
 
   const handleSubmit = async () => {
     // Validación
-    if (!formData.tenantId || !formData.propertyId || !formData.startDate || !formData.monthlyRent) {
+    if (!formData.tenantId || !formData.propertyId || !formData.startDate || !formData.endDate || !formData.monthlyRent) {
       setError('Por favor complete todos los campos requeridos');
+      return;
+    }
+
+    // Validar que endDate sea posterior a startDate
+    const startDate = new Date(formData.startDate);
+    const endDate = new Date(formData.endDate);
+    if (endDate <= startDate) {
+      setError('La fecha de fin debe ser posterior a la fecha de inicio');
       return;
     }
 
@@ -123,7 +146,8 @@ export default function CreateContractModal({
         parseInt(formData.tenantId),
         parseInt(formData.propertyId),
         formData.startDate,
-        monthlyRentNum
+        monthlyRentNum,
+        formData.endDate
       );
 
       await contractService.createContract(createContract);
@@ -197,11 +221,28 @@ export default function CreateContractModal({
               label="Fecha de Inicio"
               type="date"
               value={formData.startDate}
-              onChange={(e) => handleChange('startDate', e.target.value)}
+              onChange={(e) => handleStartDateChange(e.target.value)}
               InputLabelProps={{
                 shrink: true,
               }}
               required
+            />
+
+            <TextField
+              fullWidth
+              label="Fecha de Fin"
+              type="date"
+              value={formData.endDate}
+              onChange={(e) => handleChange('endDate', e.target.value)}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              required
+              helperText={
+                formData.startDate && formData.endDate
+                  ? `Duración: ${Math.ceil((new Date(formData.endDate).getTime() - new Date(formData.startDate).getTime()) / (1000 * 60 * 60 * 24))} días`
+                  : ''
+              }
             />
 
             <TextField
@@ -212,11 +253,6 @@ export default function CreateContractModal({
               onChange={(e) => handleChange('monthlyRent', e.target.value)}
               inputProps={{ min: 0, step: 0.01 }}
               required
-              helperText={
-                formData.startDate
-                  ? `El contrato finalizará el ${new Date(calculateEndDate(formData.startDate)).toLocaleDateString('es-ES')} (12 meses después)`
-                  : ''
-              }
             />
           </Box>
         )}

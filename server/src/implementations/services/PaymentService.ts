@@ -3,6 +3,7 @@ import { IPaymentRepository } from '../../interfaces/repositories/IPaymentReposi
 import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '../../dtos/payment.dto';
 import { PaymentEntity } from '../../entities/Payment.entity';
 import { NotFoundError } from '../../exceptions';
+import { logInfo } from '../../utils/logger';
 
 export class PaymentService implements IPaymentService {
   constructor(private paymentRepository: IPaymentRepository) {}
@@ -20,6 +21,11 @@ export class PaymentService implements IPaymentService {
     return entity.toDTO();
   }
 
+  async getPaymentsByTenantId(tenantId: number, _userId: number): Promise<PaymentDTO[]> {
+    const entities = await this.paymentRepository.findByTenantId(tenantId);
+    return entities.map(entity => entity.toDTO());
+  }
+
   async createPayment(data: CreatePaymentDTO, _userId: number): Promise<PaymentDTO> {
     const entity = PaymentEntity.create(data);
     const savedEntity = await this.paymentRepository.create(entity);
@@ -33,8 +39,26 @@ export class PaymentService implements IPaymentService {
     }
 
     const updatedEntity = existingEntity.update(data);
+
     const savedEntity = await this.paymentRepository.update(updatedEntity);
-    return savedEntity.toDTO();
+    
+    logInfo('[PaymentService] Entity saved to database', {
+      paymentId: id,
+      savedEntityDTO: JSON.stringify(savedEntity.toDTO(), null, 2),
+      savedPaymentDate: savedEntity.paymentDate,
+      savedDueDate: savedEntity.dueDate,
+      savedUpdatedAt: savedEntity.updatedAt
+    });
+
+    const resultDTO = savedEntity.toDTO();
+    logInfo('[PaymentService] Returning DTO', {
+      paymentId: id,
+      resultDTO: JSON.stringify(resultDTO, null, 2),
+      resultPaymentDate: resultDTO.paymentDate,
+      resultDueDate: resultDTO.dueDate
+    });
+
+    return resultDTO;
   }
 
   async deletePayment(id: number, _userId: number): Promise<boolean> {
