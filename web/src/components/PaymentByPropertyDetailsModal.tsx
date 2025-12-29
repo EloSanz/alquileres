@@ -240,6 +240,7 @@ export default function PaymentByPropertyDetailsModal({
                 <Grid item xs={4} sm={3} md={2} key={gridKey}>
                   <Box
                     key={`box-${gridKey}`}
+                    onClick={() => handleEditClick(mi)}
                     sx={{
                       borderRadius: 1,
                       border: '1px solid',

@@ -10,10 +10,14 @@ import {
   Box,
   Typography,
   Alert,
+  Paper,
+  Divider,
 } from '@mui/material';
-import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import { CloudUpload as CloudUploadIcon, Receipt as ReceiptIcon } from '@mui/icons-material';
 import { usePaymentService } from '../services/paymentService';
 import { Payment, UpdatePayment, PaymentStatus } from '../../../shared/types/Payment';
+import { generateReceiptPDFDataUrl } from '../utils/receiptGenerator';
+import PentaMontReceiptModal from './PentaMontReceiptModal';
 
 export interface EditPaymentModalProps {
   open: boolean;
@@ -41,6 +45,10 @@ export default function EditPaymentModal({
   const [editReceiptImagePreview, setEditReceiptImagePreview] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [generatingReceipt, setGeneratingReceipt] = useState(false);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [receiptPdfUrl, setReceiptPdfUrl] = useState<string | null>(null);
+
 
   // Cargar datos del pago cuando se abre el modal
   useEffect(() => {
@@ -138,7 +146,7 @@ export default function EditPaymentModal({
         onSuccess();
       }
 
-      // Cerrar modal
+      // Cerrar modal de edición normalmente después de actualizar
       onClose();
     } catch (err: any) {
       setError(err.message || 'Error al actualizar el pago');
@@ -155,16 +163,39 @@ export default function EditPaymentModal({
     }
   };
 
+  const handleGenerateReceipt = async () => {
+    if (!payment) return;
+
+    setGeneratingReceipt(true);
+    setError('');
+
+    try {
+      const receiptPdf = await generateReceiptPDFDataUrl(payment);
+      setReceiptPdfUrl(receiptPdf);
+      setReceiptModalOpen(true);
+    } catch (receiptError) {
+      setError('Error al generar el recibo. Por favor, intente nuevamente.');
+    } finally {
+      setGeneratingReceipt(false);
+    }
+  };
+
+  const handleReceiptModalClose = () => {
+    setReceiptModalOpen(false);
+    setReceiptPdfUrl(null);
+  };
+
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Editar Pago</DialogTitle>
-      <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        <Box component="form" sx={{ mt: 2 }}>
+    <>
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+        <DialogTitle>Editar Pago</DialogTitle>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          <Box component="form" sx={{ mt: 2 }}>
           <TextField
             fullWidth
             label="Monto (S/)"
@@ -274,17 +305,74 @@ export default function EditPaymentModal({
               </Box>
             )}
           </Box>
+
+          {/* Mostrar comprobante existente al final - solo si el estado es Pagado */}
+          {payment && payment.status === PaymentStatus.PAGADO && (
+            <Box sx={{ mt: 3 }}>
+              <Divider sx={{ mb: 2 }} />
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                Comprobante de Pago
+              </Typography>
+              <Paper
+                elevation={2}
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  bgcolor: 'grey.50',
+                  borderRadius: 2,
+                }}
+              >
+                <Box
+                  component="img"
+                  src={payment.receiptImageUrl && payment.receiptImageUrl !== '/comprobante.png' 
+                    ? payment.receiptImageUrl 
+                    : '/comprobante.png'}
+                  alt="Comprobante de pago"
+                  sx={{
+                    maxWidth: '100%',
+                    maxHeight: '500px',
+                    objectFit: 'contain',
+                    borderRadius: 1,
+                  }}
+                  onError={(e) => {
+                    // Fallback si la imagen no se carga
+                    (e.target as HTMLImageElement).src = '/comprobante.png';
+                  }}
+                />
+              </Paper>
+            </Box>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>
+        <Button onClick={handleClose} disabled={loading || generatingReceipt}>
           Cancelar
         </Button>
-        <Button onClick={handleUpdatePayment} variant="contained" disabled={loading}>
+        {/* Botón para generar recibo - solo visible cuando el pago está en estado Pagado */}
+        {payment && payment.status === PaymentStatus.PAGADO && (
+          <Button
+            onClick={handleGenerateReceipt}
+            variant="outlined"
+            startIcon={<ReceiptIcon />}
+            disabled={loading || generatingReceipt}
+            sx={{ mr: 1 }}
+          >
+            {generatingReceipt ? 'Generando...' : 'Generar Recibo Penta Mont'}
+          </Button>
+        )}
+        <Button onClick={handleUpdatePayment} variant="contained" disabled={loading || generatingReceipt}>
           {loading ? 'Actualizando...' : 'Actualizar'}
         </Button>
       </DialogActions>
     </Dialog>
+    <PentaMontReceiptModal
+      open={receiptModalOpen}
+      receiptPdfUrl={receiptPdfUrl}
+      onClose={handleReceiptModalClose}
+    />
+    </>
   );
 }
 
