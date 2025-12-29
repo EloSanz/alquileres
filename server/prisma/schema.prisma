@@ -6,7 +6,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   // Hardcoded connection string as requested (remove .env dependency)
-  url      = "postgresql://postgres:postgres@localhost:5432/alquileres?schema=public"
+  url      = "postgresql://postgres:postgres@localhost:5432/alquileres_db?schema=public"
 }
 
 // User model for system administrators
