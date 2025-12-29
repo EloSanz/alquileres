@@ -192,6 +192,15 @@ export class PaymentEntity {
   }
 
   toDTO(): PaymentDTO {
+    // Formatear fechas como YYYY-MM-DD para evitar problemas de zona horaria
+    // Usar métodos UTC para obtener los valores correctos independientemente de la zona horaria
+    const formatDateOnly = (date: Date): string => {
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
     return Payment.fromJSON({
       id: this.id!,
       tenantId: this.tenantId,
@@ -201,9 +210,9 @@ export class PaymentEntity {
       tenantFullName: this.tenantFullName,
       tenantPhone: this.tenantPhone,
       amount: this.amount,
-      // Enviar ISO completo para preservar zona horaria y evitar problemas de conversión
-      paymentDate: this.paymentDate.toISOString(),
-      dueDate: this.dueDate.toISOString(),
+      // Enviar solo fecha sin hora para evitar problemas de zona horaria
+      paymentDate: formatDateOnly(this.paymentDate),
+      dueDate: formatDateOnly(this.dueDate),
       paymentMethod: this.paymentMethod.toString(),
       status: convertPrismaStatusToFrontend(this.status),
       pentamontSettled: this.pentamontSettled,
