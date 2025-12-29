@@ -12,8 +12,26 @@ export class DataGateway {
   private loaded = false;
   private loading = false;
   private loadPromise: Promise<void> | null = null;
+  private listeners = new Set<() => void>();
 
   constructor(private api: ReturnType<typeof useApi>) {}
+
+  onChange(cb: () => void): () => void {
+    this.listeners.add(cb);
+    return () => {
+      this.listeners.delete(cb);
+    };
+  }
+
+  private notify(): void {
+    for (const cb of this.listeners) {
+      try {
+        cb();
+      } catch {
+        // Evitar que un error de un listener afecte a otros
+      }
+    }
+  }
 
   async loadAll(): Promise<void> {
     // Si ya está cargado, no hacer nada
@@ -33,6 +51,8 @@ export class DataGateway {
     } finally {
       this.loading = false;
       this.loadPromise = null;
+      // Notificar cambio de estado/carga
+      this.notify();
     }
   }
 
@@ -142,6 +162,7 @@ export class DataGateway {
     this.properties = [];
     this.contracts = [];
     this.payments = [];
+    this.notify();
   }
 
   // Actualizar datos específicos después de mutations
@@ -152,6 +173,7 @@ export class DataGateway {
     } else {
       this.tenants.push(tenant);
     }
+    this.notify();
   }
 
   updateProperty(property: Property): void {
@@ -161,6 +183,7 @@ export class DataGateway {
     } else {
       this.properties.push(property);
     }
+    this.notify();
   }
 
   updateContract(contract: Contract): void {
@@ -170,6 +193,7 @@ export class DataGateway {
     } else {
       this.contracts.push(contract);
     }
+    this.notify();
   }
 
   updatePayment(payment: Payment): void {
@@ -179,22 +203,27 @@ export class DataGateway {
     } else {
       this.payments.push(payment);
     }
+    this.notify();
   }
 
   removeTenant(id: number): void {
     this.tenants = this.tenants.filter(t => t.id !== id);
+    this.notify();
   }
 
   removeProperty(id: number): void {
     this.properties = this.properties.filter(p => p.id !== id);
+    this.notify();
   }
 
   removeContract(id: number): void {
     this.contracts = this.contracts.filter(c => c.id !== id);
+    this.notify();
   }
 
   removePayment(id: number): void {
     this.payments = this.payments.filter(p => p.id !== id);
+    this.notify();
   }
 }
 

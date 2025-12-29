@@ -8,8 +8,7 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
-import { usePropertyService } from '../services/propertyService';
-import { useContractService } from '../services/contractService';
+import { useDataGateway } from '../gateways/useDataGateway';
 import { Contract } from '../../../shared/types/Contract';
 import { PropertyWithContract } from '../../../shared/types/PropertyWithContract';
 import PaymentByPropertyDetailsModal from './PaymentByPropertyDetailsModal';
@@ -20,64 +19,98 @@ export interface PaymentByPropertyViewProps {
 }
 
 export default function PaymentByPropertyView({ openPropertyId }: PaymentByPropertyViewProps = {}) {
-  const propertyService = usePropertyService();
-  const contractService = useContractService();
+  const dataGateway = useDataGateway();
   const [propertiesWithContracts, setPropertiesWithContracts] = useState<PropertyWithContract[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        
-        // Cargar todas las propiedades
-        const allProperties = await propertyService.getAllProperties();
-        
-        // Filtrar solo propiedades ocupadas (con tenantId)
-        const occupiedProperties = allProperties.filter(p => p.tenantId != null);
-        
-        // Cargar todos los contratos activos
-        const allContracts = await contractService.getAllContracts();
-        const activeContracts = allContracts.filter(c => c.status === 'ACTIVE');
-        
-        // Crear un mapa de contratos por propertyId para acceso rápido
-        const contractsByPropertyId = new Map<number, Contract>();
-        for (const contract of activeContracts) {
-          if (contract.propertyId != null) {
-            // Si ya existe un contrato para esta propiedad, mantener el primero
-            if (!contractsByPropertyId.has(contract.propertyId)) {
-              contractsByPropertyId.set(contract.propertyId, contract);
-            }
+  const loadData = () => {
+    try {
+      setError('');
+      
+      // Usar DataGateway para obtener datos desde cache
+      const allProperties = dataGateway.getProperties();
+      const allContracts = dataGateway.getContracts();
+      
+      // Filtrar solo propiedades ocupadas (con tenantId)
+      const occupiedProperties = allProperties.filter(p => p.tenantId != null);
+      
+      // Filtrar contratos activos
+      const activeContracts = allContracts.filter(c => c.status === 'ACTIVE');
+      
+      // Crear un mapa de contratos por propertyId para acceso rápido
+      const contractsByPropertyId = new Map<number, Contract>();
+      for (const contract of activeContracts) {
+        if (contract.propertyId != null) {
+          // Si ya existe un contrato para esta propiedad, mantener el primero
+          if (!contractsByPropertyId.has(contract.propertyId)) {
+            contractsByPropertyId.set(contract.propertyId, contract);
           }
         }
-        
-        // Combinar propiedades con sus contratos
-        const propertiesWithContractsData: PropertyWithContract[] = occupiedProperties
-          .map(property => {
-            const contract = contractsByPropertyId.get(property.id) || null;
-            return new PropertyWithContract(property, contract);
-          })
-          .filter(item => item.contract !== null) // Solo mostrar propiedades con contrato activo
-          .sort((a, b) => {
-            // Ordenar por número de local
-            return a.property.localNumber - b.property.localNumber;
-          });
-        
-        setPropertiesWithContracts(propertiesWithContractsData);
-      } catch (e: any) {
-        setError(e?.message || 'Error al cargar propiedades y contratos');
-        setPropertiesWithContracts([]);
-      } finally {
-        setLoading(false);
+      }
+      
+      // Combinar propiedades con sus contratos
+      const propertiesWithContractsData: PropertyWithContract[] = occupiedProperties
+        .map(property => {
+          const contract = contractsByPropertyId.get(property.id) || null;
+          return new PropertyWithContract(property, contract);
+        })
+        .filter(item => item.contract !== null) // Solo mostrar propiedades con contrato activo
+        .sort((a, b) => {
+          // Ordenar por número de local
+          return a.property.localNumber - b.property.localNumber;
+        });
+      
+      setPropertiesWithContracts(propertiesWithContractsData);
+    } catch (e: any) {
+      setError(e?.message || 'Error al cargar propiedades y contratos');
+      setPropertiesWithContracts([]);
+    }
+  };
+
+  // Cargar datos cuando el DataGateway esté listo
+  useEffect(() => {
+    const initializeData = async () => {
+      if (!dataGateway.isLoaded() && !dataGateway.isLoading()) {
+        setLoading(true);
+        try {
+          await dataGateway.loadAll();
+        } catch (err: any) {
+          setError(err.message || 'Error al cargar datos');
+        } finally {
+          setLoading(false);
+        }
+      }
+      
+      // Una vez cargado, obtener datos del gateway
+      if (dataGateway.isLoaded()) {
+        loadData();
       }
     };
-    loadData();
+    
+    initializeData();
+  }, [dataGateway]);
+
+  // Refrescar cuando el DataGateway se actualiza
+  useEffect(() => {
+    if (dataGateway.isLoaded()) {
+      loadData();
+      setLoading(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dataGateway.isLoaded()]);
+
+  // Suscribirse a cambios del DataGateway (reactivo)
+  useEffect(() => {
+    const unsubscribe = dataGateway.onChange(() => {
+      loadData();
+      setLoading(false);
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataGateway]);
 
   // Abrir modal por deep-link cuando se especifica un propertyId
   useEffect(() => {
@@ -155,7 +188,7 @@ export default function PaymentByPropertyView({ openPropertyId }: PaymentByPrope
                       }
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      <strong>Alquiler:</strong> S/ {property.monthlyRent?.toFixed(2) || '0.00'}
+                      <strong>Alquiler:</strong> S/ {(contract?.monthlyRent ?? property.monthlyRent)?.toFixed(2) || '0.00'}
                     </Typography>
                   </CardContent>
                 </Card>

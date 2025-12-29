@@ -27,7 +27,9 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { usePropertyService } from '../services/propertyService';
+import { useContractService } from '../services/contractService';
 import { Property, CreateProperty, UpdateProperty } from '../../../shared/types/Property';
+import { UpdateContract } from '../../../shared/types/Contract';
 import { useDataGateway } from '../gateways/useDataGateway';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
@@ -35,6 +37,7 @@ import PropertyDetailsModal from '../components/PropertyDetailsModal';
 
 const PropertyPage = () => {
   const propertyService = usePropertyService()
+  const contractService = useContractService()
   const dataGateway = useDataGateway()
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
@@ -269,8 +272,36 @@ const PropertyPage = () => {
         parseFloat(editForm.monthlyRent)
       );
 
-      await propertyService.updateProperty(editingProperty.id, propertyData);
-      // Invalidar cache y recargar desde el servicio
+      const updatedProperty = await propertyService.updateProperty(editingProperty.id, propertyData);
+      
+      // Actualizar el cache del DataGateway inmediatamente con la propiedad actualizada
+      if (updatedProperty) {
+        dataGateway.updateProperty(updatedProperty);
+      }
+
+      // Sincronizar el monto del contrato activo (si existe) con la nueva renta de la propiedad
+      try {
+        const relatedContracts = dataGateway.getContractsByPropertyId(updatedProperty.id);
+        const activeContract = relatedContracts.find(c => String(c.status) === 'ACTIVE');
+        if (activeContract) {
+          const newMonthlyRent = parseFloat(editForm.monthlyRent);
+          if (!isNaN(newMonthlyRent) && newMonthlyRent > 0 && activeContract.monthlyRent !== newMonthlyRent) {
+            const contractUpdate = new UpdateContract(
+              undefined, // tenantId
+              undefined, // propertyId
+              undefined, // startDate
+              newMonthlyRent, // monthlyRent
+              undefined  // status
+            );
+            const updatedContract = await contractService.updateContract(activeContract.id, contractUpdate);
+            dataGateway.updateContract(updatedContract);
+          }
+        }
+      } catch {
+        // Ignorar fallos de sincronización del contrato para no bloquear la edición de propiedad
+      }
+      
+      // Invalidar cache y recargar desde el servicio como respaldo
       dataGateway.invalidate();
       await dataGateway.loadAll();
       fetchProperties();

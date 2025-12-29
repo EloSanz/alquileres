@@ -296,6 +296,16 @@ const PaymentPage = () => {
     }
   }, [dataGateway.isLoaded()]);
 
+  // Refrescar en cambios del DataGateway (reactivo)
+  useEffect(() => {
+    const unsubscribe = dataGateway.onChange(() => {
+      fetchPayments(selectedTenantId);
+      setLoading(false);
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataGateway, selectedTenantId]);
+
   // Cargar pagos cuando cambie el inquilino seleccionado
   useEffect(() => {
     if (selectedTenantId !== null && dataGateway.isLoaded()) {

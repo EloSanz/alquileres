@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
 import { usePaymentService } from '../services/paymentService';
+import { useDataGateway } from '../gateways/useDataGateway';
 import { Payment } from '../../../shared/types/Payment';
 import { buildContractTimeline, type ContractMonthInfo } from '../services/contractTimeline';
 import type { Contract } from '../../../shared/types/Contract';
@@ -37,6 +38,7 @@ export default function PaymentByPropertyDetailsModal({
   onClose
 }: PaymentByPropertyDetailsModalProps) {
   const paymentService = usePaymentService();
+  const dataGateway = useDataGateway();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [paymentsVersion, setPaymentsVersion] = useState(0); // Versión para forzar re-render
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear()); // Año actual por defecto
@@ -165,8 +167,15 @@ export default function PaymentByPropertyDetailsModal({
   };
 
   const handleEditSuccess = async () => {
-    // Recargar pagos después de editar exitosamente
+    // Recargar pagos del contrato tras editar exitosamente
     await loadPayments();
+    // Refrescar caches globales para que otras vistas (tenants, grid, etc.) reaccionen
+    try {
+      dataGateway.invalidate();
+      await dataGateway.loadAll();
+    } catch {
+      // Ignorar errores de refresco global: la vista local ya se actualizó
+    }
     setEditDialogOpen(false);
     setEditingPayment(null);
   };
@@ -306,7 +315,7 @@ export default function PaymentByPropertyDetailsModal({
                         fontSize: '1.05rem',
                         letterSpacing: 0.2
                       }}
-                    >
+                      >
                       {getStatusLabel(status)}
                     </Typography>
                     {payment && (
@@ -318,7 +327,7 @@ export default function PaymentByPropertyDetailsModal({
                           color: 'text.secondary'
                         }}
                       >
-                        {formatCurrency(payment.amount)}
+                        {formatCurrency((contract?.monthlyRent ?? payment.amount) || 0)}
                       </Typography>
                     )}
                   </Box>

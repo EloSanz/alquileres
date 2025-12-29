@@ -223,6 +223,16 @@ const ContractPage = () => {
     }
   }, [dataGateway.isLoaded()]);
 
+  // Refrescar en cambios del DataGateway (reactivo)
+  useEffect(() => {
+    const unsubscribe = dataGateway.onChange(() => {
+      fetchContracts();
+      setLoading(false);
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataGateway]);
+
   const handleRowClick = (contract: Contract) => {
     setSelectedContract(contract);
     setDetailsOpen(true);

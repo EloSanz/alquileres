@@ -299,6 +299,18 @@ const TenantPage = () => {
     }
   }, [dataGateway.isLoaded()]);
 
+  // Refrescar en cambios del DataGateway (reactivo)
+  useEffect(() => {
+    const unsubscribe = dataGateway.onChange(() => {
+      fetchTenants();
+      const props = dataGateway.getProperties();
+      setProperties(props);
+      setLoading(false);
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataGateway]);
+
   // Aplicar filtros y ordenamiento cuando cambien los criterios
   useEffect(() => {
     const filtered = filterAndSortTenants(searchQuery, filterValues, tenants);
