@@ -69,15 +69,12 @@ jobs:
           git log --oneline -5
           git status
 
-          echo "📦 Instalando dependencias del backend..."
+          echo "🏗️  Construyendo backend..."
           cd /root/alquileres-app/server
-          npm install --production
-
-          echo "📦 Instalando dependencias del frontend..."
-          cd /root/alquileres-app/web
-          npm install
-
+          npm run build
+          
           echo "🏗️  Construyendo frontend (producción)..."
+          cd /root/alquileres-app/web
           npm run build
           
           if [ ! -d "dist" ]; then
