@@ -409,8 +409,12 @@ const TenantPage = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES');
+  const formatDate = (_dateString: string) => {
+    // HOTFIX: Hardcodear fecha de inicio hasta que se arregle el backend
+    return '01/01/2025';
+
+    // TODO: Implementación real cuando se arregle el backend
+    // return new Date(dateString).toLocaleDateString('es-ES');
   };
 
   const formatDateForInput = (dateString: string) => {
