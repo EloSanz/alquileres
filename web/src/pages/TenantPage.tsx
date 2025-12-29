@@ -35,6 +35,7 @@ import { useTenantService } from '../services/tenantService';
 import { useDataGateway } from '../gateways/useDataGateway';
 import { Tenant, CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
 import { Property } from '../../../shared/types/Property';
+import OpenPaymentsForTenantButton from '../components/OpenPaymentsForTenantButton';
 
 const TenantPage = () => {
   const tenantService = useTenantService()
@@ -630,7 +631,30 @@ const TenantPage = () => {
         setEditDialogOpen(false);
         setEditFormError('');
       }} maxWidth="md" fullWidth>
-        <DialogTitle>Editar Inquilino</DialogTitle>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+            <Typography variant="h6" component="span">Editar Inquilino</Typography>
+            {editingTenant && (
+              <OpenPaymentsForTenantButton
+                tenantId={editingTenant.id}
+                propertyId={
+                  properties
+                    .filter(p => p.tenantId === editingTenant.id)
+                    .sort((a, b) => a.localNumber - b.localNumber)[0]?.id
+                }
+                localNumber={
+                  properties
+                    .filter(p => p.tenantId === editingTenant.id)
+                    .sort((a, b) => a.localNumber - b.localNumber)[0]?.localNumber
+                }
+                variant="contained"
+                color="secondary"
+                size="large"
+                sx={{ fontWeight: 700 }}
+              />
+            )}
+          </Box>
+        </DialogTitle>
         <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           {editFormError && (
             <Alert severity="error" sx={{ mb: 2 }}>

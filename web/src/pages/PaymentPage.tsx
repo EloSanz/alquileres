@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -32,6 +33,7 @@ import PaymentByPropertyView from '../components/PaymentByPropertyView';
 const PaymentPage = () => {
   const paymentService = usePaymentService()
   const dataGateway = useDataGateway()
+  const location = useLocation();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
@@ -84,6 +86,7 @@ const PaymentPage = () => {
   const [receiptImageFile, setReceiptImageFile] = useState<File | null>(null);
   const [receiptImagePreview, setReceiptImagePreview] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [deepLinkPropertyId, setDeepLinkPropertyId] = useState<number | undefined>(undefined);
 
   // Toggle Pentamont persisted in backend
   const handleTogglePentamont = async (payment: Payment) => {
@@ -266,6 +269,22 @@ const PaymentPage = () => {
     loadData();
   }, [dataGateway]);
   
+  // Leer query params de deep-link: /payments?openModal=local&propertyId=...&tenantId=...&local=...
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const openModal = params.get('openModal');
+    const propertyIdParam = params.get('propertyId');
+    if (openModal === 'local' && propertyIdParam) {
+      const pid = Number(propertyIdParam);
+      if (!isNaN(pid)) {
+        setViewMode('grid'); // La vista por local vive en el grid
+        setDeepLinkPropertyId(pid);
+      }
+    } else {
+      setDeepLinkPropertyId(undefined);
+    }
+  }, [location.search]);
+  
   // Actualizar cuando el gateway termine de cargar
   useEffect(() => {
     if (dataGateway.isLoaded()) {
@@ -433,7 +452,7 @@ const PaymentPage = () => {
 
       <Box sx={{ position: 'relative' }}>
         {viewMode === 'grid' ? (
-          <PaymentByPropertyView />
+          <PaymentByPropertyView openPropertyId={deepLinkPropertyId} />
         ) : (
           <>
             {loading ? (

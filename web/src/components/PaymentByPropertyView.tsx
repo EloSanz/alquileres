@@ -15,10 +15,11 @@ import { PropertyWithContract } from '../../../shared/types/PropertyWithContract
 import PaymentByPropertyDetailsModal from './PaymentByPropertyDetailsModal';
 
 export interface PaymentByPropertyViewProps {
-  // Props opcionales para futura extensión
+  // Permite abrir directamente el modal de un local específico (deep-link)
+  openPropertyId?: number;
 }
 
-export default function PaymentByPropertyView({}: PaymentByPropertyViewProps = {}) {
+export default function PaymentByPropertyView({ openPropertyId }: PaymentByPropertyViewProps = {}) {
   const propertyService = usePropertyService();
   const contractService = useContractService();
   const [propertiesWithContracts, setPropertiesWithContracts] = useState<PropertyWithContract[]>([]);
@@ -77,6 +78,16 @@ export default function PaymentByPropertyView({}: PaymentByPropertyViewProps = {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Abrir modal por deep-link cuando se especifica un propertyId
+  useEffect(() => {
+    if (!openPropertyId || propertiesWithContracts.length === 0) return;
+    const match = propertiesWithContracts.find(pwc => pwc.property.id === openPropertyId && pwc.contract);
+    if (match?.contract) {
+      setSelectedContract(match.contract);
+      setDetailsModalOpen(true);
+    }
+  }, [openPropertyId, propertiesWithContracts]);
 
   const handlePropertyClick = (item: PropertyWithContract) => {
     if (item.contract) {
