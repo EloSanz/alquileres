@@ -25,17 +25,21 @@ export const useAuth = () => {
   return context;
 };
 
-// Función para redirigir al login cuando el token es inválido
-const redirectToLogin = () => {
+// Función para redirigir al login cuando el token es inválido solo bajo /pentamont
+const redirectToPentamontLogin = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  window.location.href = '/pentamont/login';
+  const path = window.location.pathname;
+  if (path.startsWith('/pentamont')) {
+    window.location.href = '/pentamont/login';
+  }
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    if (!window.location.pathname.startsWith('/pentamont')) return;
     // Check for existing token and user data on app start
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
@@ -48,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (tokenParts.length !== 3) {
         // Token malformado, limpiar todo y redirigir
         console.warn('Token malformado detectado al iniciar, redirigiendo al login');
-        redirectToLogin();
+        redirectToPentamontLogin();
         return;
       }
 
@@ -67,13 +71,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (!response.ok || response.status === 401) {
               // Token inválido o expirado, redirigir al login
               console.warn('Token inválido o expirado, redirigiendo al login');
-              redirectToLogin();
+              redirectToPentamontLogin();
               return;
             }
             
             const data = await response.json();
             if (!data.success) {
-              redirectToLogin();
+              redirectToPentamontLogin();
             }
           } catch (error) {
             // Error de red, pero no redirigir (podría ser temporal)
@@ -85,7 +89,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (error) {
         // Invalid user data, clear everything
         console.warn('Datos de usuario inválidos, redirigiendo al login');
-        redirectToLogin();
+        redirectToPentamontLogin();
       }
     }
   }, []);
@@ -100,7 +104,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    window.location.href = '/pentamont/login';
+    redirectToPentamontLogin();
   };
 
   const value = {

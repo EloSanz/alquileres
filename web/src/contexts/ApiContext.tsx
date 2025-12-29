@@ -14,10 +14,12 @@ export const useApi = () => {
 
 // Función para manejar token inválido y redirigir al login
 export const handleInvalidToken = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
-  // Redirigir al login usando window.location para asegurar recarga completa
-  window.location.href = '/pentamont/login'
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  const path = window.location.pathname;
+  if (path.startsWith('/pentamont')) {
+    window.location.href = '/pentamont/login';
+  }
 }
 
 // Función helper para verificar errores de autenticación en respuestas
