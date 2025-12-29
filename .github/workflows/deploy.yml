@@ -69,21 +69,62 @@ jobs:
           git log --oneline -5
           git status
 
-          echo "🏗️  Construyendo backend..."
+          # 🔧 INSTALACIÓN INTELIGENTE DE DEPENDENCIAS
+          echo "🔧 Verificando dependencias..."
+
+          # Backend: instalar solo si cambió package-lock.json
           cd /root/alquileres-app/server
-          npm run build
-          
-          echo "🏗️  Construyendo frontend (producción)..."
-          cd /root/alquileres-app/web
-          npm run build
-          
-          if [ ! -d "dist" ]; then
-            echo "❌ ERROR: La carpeta dist no se generó después del build"
+          if ! git diff HEAD~1 --name-only | grep -q "server/package-lock.json"; then
+            echo "✅ Backend: dependencias actualizadas, saltando npm install"
+          else
+            echo "📦 Backend: instalando dependencias..."
+            rm -rf node_modules package-lock.json
+            if ! npm install --production=false; then
+              echo "❌ ERROR: Falló la instalación de dependencias del backend"
+              exit 1
+            fi
+          fi
+
+          echo "🏗️ Construyendo backend..."
+          if npm run build; then
+            echo "✅ Backend build exitoso"
+            if [ -f "dist/index.js" ]; then
+              echo "✅ Archivo principal del backend encontrado: dist/index.js"
+            else
+              echo "❌ ERROR: dist/index.js no encontrado después del build del backend"
+              exit 1
+            fi
+          else
+            echo "❌ ERROR: Build del backend falló"
             exit 1
           fi
-          
-          echo "✅ Build del frontend completado"
-          ls -lah dist/ | head -10
+
+          # Frontend: instalar solo si cambió package-lock.json
+          cd /root/alquileres-app/web
+          if ! git diff HEAD~1 --name-only | grep -q "web/package-lock.json"; then
+            echo "✅ Frontend: dependencias actualizadas, saltando npm install"
+          else
+            echo "📦 Frontend: instalando dependencias..."
+            rm -rf node_modules package-lock.json
+            if ! npm install --production=false; then
+              echo "❌ ERROR: Falló la instalación de dependencias del frontend"
+              exit 1
+            fi
+          fi
+
+          echo "🏗️ Construyendo frontend (producción)..."
+          if npm run build; then
+            echo "✅ Frontend build exitoso"
+            if [ ! -d "dist" ]; then
+              echo "❌ ERROR: La carpeta dist no se generó después del build del frontend"
+              exit 1
+            fi
+            echo "✅ Build del frontend completado"
+            ls -lah dist/ | head -10
+          else
+            echo "❌ ERROR: Build del frontend falló"
+            exit 1
+          fi
 
           echo "➡️ Reiniciando servicios..."
           cd /root/alquileres-app
