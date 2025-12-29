@@ -64,7 +64,7 @@ const Navigation = () => {
     <AppBar position="static" elevation={2}>
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Penta Mont test
+          Penta Mont
         </Typography>
 
           {isMobile ? (
