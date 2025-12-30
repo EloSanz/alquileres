@@ -149,7 +149,7 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <Router basename="/pentamont">
+    <Router>
       <ThemeProvider>
         <AuthProvider>
           <ApiProvider>
