@@ -1,6 +1,4 @@
 import { ITenantService } from '../interfaces/services/ITenantService';
-import { CreateTenantSchema, UpdateTenantSchema } from '../../../shared/types/Tenant';
-import { ValidationError } from '../exceptions';
 
 export class TenantController {
   constructor(private tenantService: ITenantService) { }
@@ -52,12 +50,8 @@ export class TenantController {
     body: any;
     userId: number;
   }) => {
-    const result = CreateTenantSchema.safeParse(body);
-    if (!result.success) {
-      const errors = result.error.issues.map((e: any) => e.message);
-      throw new ValidationError('Validation failed', errors);
-    }
-    const tenant = await this.tenantService.createTenant(result.data, userId);
+    // Validation is handled by Elysia schema
+    const tenant = await this.tenantService.createTenant(body, userId);
     return {
       success: true,
       message: 'Tenant created successfully',
@@ -74,12 +68,8 @@ export class TenantController {
     body: any;
     userId: number;
   }) => {
-    const result = UpdateTenantSchema.safeParse(body);
-    if (!result.success) {
-      const errors = result.error.issues.map((e: any) => e.message);
-      throw new ValidationError('Validation failed', errors);
-    }
-    const tenant = await this.tenantService.updateTenant(id, result.data, userId);
+    // Validation is handled by Elysia schema
+    const tenant = await this.tenantService.updateTenant(id, body, userId);
     return {
       success: true,
       message: 'Tenant updated successfully',
