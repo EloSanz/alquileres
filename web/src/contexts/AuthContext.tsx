@@ -29,7 +29,7 @@ export const useAuth = () => {
 const redirectToLogin = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  window.location.href = '/login';
+  window.location.href = '/pentamont/login';
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
