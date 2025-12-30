@@ -46,14 +46,12 @@ const app = new Elysia()
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
   }))
-  .group('/pentamont', app => app
-    .use(authRoutes)  // Auth routes don't need auth plugin (register/login are public)
-    .use(userRoutes)
-    .group('/api', app => app
-      .use(protectedRoutes)  // All protected routes under /api with auth
-    )
-    .get('/', () => ({ message: 'Rental Management API is running', timestamp: new Date().toISOString() }))
+  .use(authRoutes)  // Auth routes don't need auth plugin (register/login are public)
+  .use(userRoutes)
+  .group('/api', app => app
+    .use(protectedRoutes)  // All protected routes under /api with auth
   )
+  .get('/', () => ({ message: 'Rental Management API is running', timestamp: new Date().toISOString() }))
 
 // Helper function to extract IP address from request
 function getClientIP(req: any): string {
@@ -71,7 +69,7 @@ const server = createServer(async (req, res) => {
   const method = req.method || 'GET'
   const url = req.url || '/'
   const authHeader = req.headers.authorization
-  
+
   // Generate unique request ID for correlation
   const requestId = randomUUID()
   const clientIP = getClientIP(req)
@@ -135,7 +133,7 @@ const server = createServer(async (req, res) => {
     // - Skip successful GET requests (200 OK)
     const isUpdateOrDeleteOrPost = method === 'PUT' || method === 'PATCH' || method === 'DELETE' || method === 'POST'
     const shouldLogResponse = response.status >= 400 || isUpdateOrDeleteOrPost || duration > 1000
-    
+
     if (shouldLogResponse) {
       const username = await usernamePromise
       logResponse(method, url, response.status, duration, undefined, username || undefined, requestId, clientIP)

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Container,
   Typography,
@@ -27,12 +27,12 @@ import { Add as AddIcon, PictureAsPdf as PdfIcon, Edit as EditIcon } from '@mui/
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { type FilterConfig } from '../components/FilterBar';
-import { useContractService } from '../services/contractService';
-import { useDataGateway } from '../gateways/useDataGateway';
+import { useContracts } from '../hooks/useContracts';
 import { Contract, UpdateContract } from '../../../shared/types/Contract';
 import ContractDetailsModal from '../components/ContractDetailsModal';
 import ContractEditorModal from '../components/contract-editor/ContractEditorModal';
 import CreateContractModal from '../components/CreateContractModal';
+
 // Función para extraer el año de una fecha (Date o string)
 const getYearFromDate = (date: Date | string | null | undefined): number | null => {
   if (!date) return null;
@@ -54,12 +54,14 @@ const formatDateDisplay = (date: Date | string | null | undefined): string => {
 };
 
 const ContractPage = () => {
-  const contractService = useContractService()
-  const dataGateway = useDataGateway()
-  const [contracts, setContracts] = useState<Contract[]>([]);
-  const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const {
+    contracts,
+    isLoading: loading,
+    error: queryError,
+    updateContract
+  } = useContracts();
+
+
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,6 +76,7 @@ const ContractPage = () => {
   const [editForm, setEditForm] = useState({
     monthlyRent: '',
   });
+  const [actionError, setActionError] = useState('');
 
   // Helper para traducir estados a español
   const getStatusLabel = (status: string): string => {
@@ -116,12 +119,13 @@ const ContractPage = () => {
     }
   ];
 
-  const filterContracts = (query: string, filters: Record<string, string | string[]>, contractsList: Contract[]) => {
-    return contractsList.filter(contract => {
+  // Filtering Logic
+  const getFilteredContracts = () => {
+    return contracts.filter(contract => {
       // Filtro de búsqueda por texto
-      if (query.trim()) {
-        const lowerQuery = query.toLowerCase();
-          const matchesQuery =
+      if (searchQuery.trim()) {
+        const lowerQuery = searchQuery.toLowerCase();
+        const matchesQuery =
           contract.id.toString().includes(lowerQuery) ||
           (contract.tenantId?.toString() || '').includes(lowerQuery) ||
           (contract.propertyId?.toString() || '').includes(lowerQuery) ||
@@ -134,14 +138,14 @@ const ContractPage = () => {
       }
 
       // Filtro por estado
-      if (filters.status && contract.status !== filters.status) {
+      if (filterValues.status && contract.status !== filterValues.status) {
         return false;
       }
 
       // Filtro por año
-      if (filters.year) {
+      if (filterValues.year) {
         const contractYear = getYearFromDate(contract.startDate);
-        if (contractYear === null || contractYear.toString() !== filters.year) {
+        if (contractYear === null || contractYear.toString() !== filterValues.year) {
           return false;
         }
       }
@@ -150,88 +154,23 @@ const ContractPage = () => {
     });
   };
 
-  const fetchContracts = () => {
-    try {
-      setError('');
-      // Usar DataGateway para obtener datos desde cache
-      const data = dataGateway.getContracts();
-      setContracts(data);
-      const filtered = filterContracts(searchQuery, filterValues, data);
-      setFilteredContracts(filtered);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar contratos');
-      setContracts([]);
-      setFilteredContracts([]);
-    }
-  };
+  const currentFilteredContracts = getFilteredContracts();
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const query = event.target.value;
-    setSearchQuery(query);
-    const filtered = filterContracts(query, filterValues, contracts);
-    setFilteredContracts(filtered);
+    setSearchQuery(event.target.value);
   };
 
   const handleClearSearch = () => {
     setSearchQuery('');
-    const filtered = filterContracts('', filterValues, contracts);
-    setFilteredContracts(filtered);
   };
 
   const handleFilterChange = (key: string, value: string | string[]) => {
-    const newFilters = { ...filterValues, [key]: value };
-    setFilterValues(newFilters);
-    const filtered = filterContracts(searchQuery, newFilters, contracts);
-    setFilteredContracts(filtered);
+    setFilterValues(prev => ({ ...prev, [key]: value }));
   };
 
   const handleClearFilters = () => {
-    const newFilters = { status: '', year: '' };
-    setFilterValues(newFilters);
-    const filtered = filterContracts(searchQuery, newFilters, contracts);
-    setFilteredContracts(filtered);
+    setFilterValues({ status: '', year: '' });
   };
-
-  useEffect(() => {
-    // Esperar a que el DataGateway cargue los datos
-    const loadData = async () => {
-      if (!dataGateway.isLoaded() && !dataGateway.isLoading()) {
-        setLoading(true);
-        try {
-          await dataGateway.loadAll();
-        } catch (err: any) {
-          setError(err.message || 'Error al cargar datos');
-        } finally {
-          setLoading(false);
-        }
-      }
-      
-      // Una vez cargado, obtener datos del gateway
-      if (dataGateway.isLoaded()) {
-        fetchContracts();
-      }
-    };
-    
-    loadData();
-  }, [dataGateway]);
-  
-  // Actualizar cuando el gateway termine de cargar
-  useEffect(() => {
-    if (dataGateway.isLoaded()) {
-      fetchContracts();
-      setLoading(false);
-    }
-  }, [dataGateway.isLoaded()]);
-
-  // Refrescar en cambios del DataGateway (reactivo)
-  useEffect(() => {
-    const unsubscribe = dataGateway.onChange(() => {
-      fetchContracts();
-      setLoading(false);
-    });
-    return unsubscribe;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataGateway]);
 
   const handleRowClick = (contract: Contract) => {
     setSelectedContract(contract);
@@ -240,10 +179,8 @@ const ContractPage = () => {
 
   const handleCreateContractSuccess = async () => {
     setCreateContractOpen(false);
-    // Invalidar cache y recargar desde el servicio
-    dataGateway.invalidate();
-    await dataGateway.loadAll();
-    fetchContracts();
+    // React Query handles invalidation in the create component or hook, 
+    // but here we just close the modal.
   };
 
   const handleEdit = (contract: Contract, event?: React.MouseEvent) => {
@@ -261,41 +198,45 @@ const ContractPage = () => {
     if (!editingContract) return;
 
     try {
+      setActionError('');
       const monthlyRent = parseFloat(editForm.monthlyRent);
       if (isNaN(monthlyRent) || monthlyRent <= 0) {
-        setError('El alquiler mensual debe ser un número mayor a cero');
+        setActionError('El alquiler mensual debe ser un número mayor a cero');
         return;
       }
 
-      const updateData = new UpdateContract(
-        undefined, // tenantId
-        undefined, // propertyId
-        undefined, // startDate
-        monthlyRent, // monthlyRent
-        undefined  // status
-      );
+      const updateData: UpdateContract = {
+        monthlyRent: monthlyRent
+      };
 
-      await contractService.updateContract(editingContract.id, updateData);
+      await updateContract({ id: editingContract.id, data: updateData });
+
       setEditDialogOpen(false);
       setEditingContract(null);
       setEditForm({ monthlyRent: '' });
-      // Invalidar cache y recargar desde el servicio
-      dataGateway.invalidate();
-      await dataGateway.loadAll();
-      fetchContracts();
     } catch (err: any) {
-      setError(err.message || 'Failed to update contract');
+      setActionError(err.message || 'Failed to update contract');
     }
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const displayError = queryError ? (queryError as Error).message : actionError;
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ 
-          display: { xs: 'block', sm: 'flex' }, 
-          justifyContent: 'space-between', 
-          alignItems: { xs: 'flex-start', sm: 'center' }, 
-          mb: 2 
+        <Box sx={{
+          display: { xs: 'block', sm: 'flex' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          mb: 2
         }}>
           <Typography variant="h4" component="h1" gutterBottom>
             Contratos
@@ -323,101 +264,96 @@ const ContractPage = () => {
       {/* Navigation Menu - Siempre visible */}
       <NavigationTabs />
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
+      {displayError && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setActionError('')}>
+          {displayError}
         </Alert>
       )}
 
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-          <Table>
-            <TableHead>
+      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell><strong>Inquilino</strong></TableCell>
+              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Local / N°</strong></TableCell>
+              <TableCell><strong>Estado</strong></TableCell>
+              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Inicio</strong></TableCell>
+              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Fin</strong></TableCell>
+              <TableCell><strong>Alquiler Mensual</strong></TableCell>
+              <TableCell align="center"><strong>Acciones</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {currentFilteredContracts.length === 0 ? (
               <TableRow>
-                <TableCell><strong>Inquilino</strong></TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Local / N°</strong></TableCell>
-                <TableCell><strong>Estado</strong></TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Inicio</strong></TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><strong>Fecha Fin</strong></TableCell>
-                <TableCell><strong>Alquiler Mensual</strong></TableCell>
-                <TableCell align="center"><strong>Acciones</strong></TableCell>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {contracts.length === 0
+                      ? 'No hay contratos registrados'
+                      : 'No se encontraron contratos con los filtros aplicados'}
+                  </Typography>
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredContracts.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {contracts.length === 0
-                        ? 'No hay contratos registrados'
-                        : 'No se encontraron contratos con los filtros aplicados'}
-                    </Typography>
+            ) : (
+              currentFilteredContracts.map((contract) => (
+                <TableRow
+                  key={contract.id}
+                  hover
+                  onClick={() => handleRowClick(contract)}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.12)'
+                    }
+                  }}
+                >
+                  <TableCell>
+                    {contract.tenantFullName || `ID: ${contract.tenantId}`}
                   </TableCell>
-                </TableRow>
-              ) : (
-                filteredContracts.map((contract) => (
-                  <TableRow
-                    key={contract.id}
-                    hover
-                    onClick={() => handleRowClick(contract)}
-                    sx={{
-                      cursor: 'pointer',
-                      '&:hover': {
-                        backgroundColor: 'rgba(25, 118, 210, 0.12)'
-                      }
-                    }}
-                  >
-                    <TableCell>
-                      {contract.tenantFullName || `ID: ${contract.tenantId}`}
-                    </TableCell>
-                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                      N° {contract.propertyLocalNumber || 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={getStatusLabel(contract.status)}
-                        color={
-                          contract.status === 'ACTIVE'
-                            ? 'success'
-                            : contract.status === 'COMPLETED'
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    N° {contract.propertyLocalNumber || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={getStatusLabel(contract.status)}
+                      color={
+                        contract.status === 'ACTIVE'
+                          ? 'success'
+                          : contract.status === 'COMPLETED'
                             ? 'default'
                             : contract.status === 'CANCELLED'
-                            ? 'error'
-                            : 'warning'
-                        }
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                      {formatDateDisplay(contract.startDate)}
-                    </TableCell>
-                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                      {formatDateDisplay(contract.endDate)}
-                    </TableCell>
-                    <TableCell>
-                      S/ {contract.monthlyRent?.toFixed(2) || '0.00'}
-                    </TableCell>
-                    <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => handleEdit(contract, e)}
-                        title="Editar Alquiler Mensual"
-                        color="primary"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+                              ? 'error'
+                              : 'warning'
+                      }
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    {formatDateDisplay(contract.startDate)}
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    {formatDateDisplay(contract.endDate)}
+                  </TableCell>
+                  <TableCell>
+                    S/ {contract.monthlyRent?.toFixed(2) || '0.00'}
+                  </TableCell>
+                  <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleEdit(contract, e)}
+                      title="Editar Alquiler Mensual"
+                      color="primary"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
       <ContractDetailsModal
         open={detailsOpen}
         contract={selectedContract}
@@ -462,8 +398,8 @@ const ContractPage = () => {
           }}>
             Cancelar
           </Button>
-          <Button 
-            onClick={handleUpdateContract} 
+          <Button
+            onClick={handleUpdateContract}
             variant="contained"
             disabled={!editForm.monthlyRent || parseFloat(editForm.monthlyRent) <= 0}
           >
@@ -518,4 +454,3 @@ const ContractPage = () => {
 };
 
 export default ContractPage;
-

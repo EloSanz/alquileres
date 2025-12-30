@@ -14,8 +14,8 @@ import {
   Divider,
 } from '@mui/material';
 import { CloudUpload as CloudUploadIcon, Receipt as ReceiptIcon } from '@mui/icons-material';
-import { usePaymentService } from '../services/paymentService';
-import { Payment, UpdatePayment, PaymentStatus } from '../../../shared/types/Payment';
+import { usePayments } from '../hooks/usePayments';
+import { Payment, type UpdatePayment, PaymentStatus, UpdatePaymentSchema } from '../../../shared/types/Payment';
 import { generateReceiptPDFDataUrl } from '../utils/receiptGenerator';
 import PentaMontReceiptModal from './PentaMontReceiptModal';
 
@@ -23,7 +23,7 @@ export interface EditPaymentModalProps {
   open: boolean;
   payment: Payment | null;
   onClose: () => void;
-  onSuccess?: () => void; // Callback opcional para refrescar datos después de actualizar
+  onSuccess?: () => void;
 }
 
 export default function EditPaymentModal({
@@ -32,7 +32,7 @@ export default function EditPaymentModal({
   onClose,
   onSuccess,
 }: EditPaymentModalProps) {
-  const paymentService = usePaymentService();
+  const { updatePayment, isUpdating } = usePayments();
   const [editForm, setEditForm] = useState({
     amount: '',
     paymentDate: '',
@@ -44,7 +44,7 @@ export default function EditPaymentModal({
   const [editReceiptImageFile, setEditReceiptImageFile] = useState<File | null>(null);
   const [editReceiptImagePreview, setEditReceiptImagePreview] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+
   const [generatingReceipt, setGeneratingReceipt] = useState(false);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [receiptPdfUrl, setReceiptPdfUrl] = useState<string | null>(null);
@@ -100,7 +100,6 @@ export default function EditPaymentModal({
   const handleUpdatePayment = async () => {
     if (!payment) return;
 
-    setLoading(true);
     setError('');
 
     try {
@@ -122,24 +121,20 @@ export default function EditPaymentModal({
         receiptImageUrl = editReceiptImagePreview;
       }
 
-      const paymentData = new UpdatePayment(
-        undefined, // tenantId - no editable
-        undefined, // propertyId - no editable
-        undefined, // contractId - no editable
-        undefined, // monthNumber - no editable
-        undefined, // tenantFullName - no editable
-        undefined, // tenantPhone - no editable
-        parseFloat(editForm.amount),
-        editForm.paymentDate,
-        editForm.dueDate,
-        editForm.paymentMethod,
-        editForm.status,
-        undefined, // pentamontSettled - no editable aquí
-        editForm.notes || undefined,
+      const paymentData: UpdatePayment = {
+        amount: parseFloat(editForm.amount),
+        paymentDate: editForm.paymentDate,
+        dueDate: editForm.dueDate,
+        paymentMethod: editForm.paymentMethod,
+        status: editForm.status,
+        notes: editForm.notes || undefined,
         receiptImageUrl
-      );
+      };
 
-      await paymentService.updatePayment(payment.id, paymentData);
+      // Validar con Zod
+      UpdatePaymentSchema.parse(paymentData);
+
+      await updatePayment({ id: payment.id, data: paymentData });
 
       // Llamar callback de éxito si existe
       if (onSuccess) {
@@ -149,14 +144,16 @@ export default function EditPaymentModal({
       // Cerrar modal de edición normalmente después de actualizar
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Error al actualizar el pago');
-    } finally {
-      setLoading(false);
+      if (err.issues) {
+        setError(err.issues[0].message);
+      } else {
+        setError(err.message || 'Error al actualizar el pago');
+      }
     }
   };
 
   const handleClose = () => {
-    if (!loading) {
+    if (!isUpdating) {
       setEditReceiptImageFile(null);
       setEditReceiptImagePreview(null);
       onClose();
@@ -196,183 +193,182 @@ export default function EditPaymentModal({
             </Alert>
           )}
           <Box component="form" sx={{ mt: 2 }}>
-          <TextField
-            fullWidth
-            label="Monto (S/)"
-            type="number"
-            value={editForm.amount}
-            onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
-            required
-            sx={{ mb: 2 }}
-            inputProps={{ min: 0, step: 0.01 }}
-          />
-          <TextField
-            fullWidth
-            label="Fecha de Pago"
-            type="date"
-            value={editForm.paymentDate}
-            onChange={(e) => setEditForm({ ...editForm, paymentDate: e.target.value })}
-            required
-            sx={{ mb: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            fullWidth
-            label="Fecha de Vencimiento"
-            type="date"
-            value={editForm.dueDate}
-            onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
-            required
-            sx={{ mb: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            select
-            fullWidth
-            label="Medio de Pago"
-            value={editForm.paymentMethod}
-            onChange={(e) => setEditForm({ ...editForm, paymentMethod: e.target.value })}
-            required
-            sx={{ mb: 2 }}
-          >
-            <MenuItem value="YAPE">Yape</MenuItem>
-            <MenuItem value="DEPOSITO">Depósito</MenuItem>
-            <MenuItem value="TRANSFERENCIA_VIRTUAL">Transferencia Virtual</MenuItem>
-          </TextField>
-          <TextField
-            select
-            fullWidth
-            label="Estado"
-            value={editForm.status}
-            onChange={(e) => setEditForm({ ...editForm, status: e.target.value as PaymentStatus })}
-            required
-            sx={{ mb: 2 }}
-          >
-            <MenuItem value={PaymentStatus.PAGADO}>Pagado</MenuItem>
-            <MenuItem value={PaymentStatus.VENCIDO}>Vencido</MenuItem>
-            <MenuItem value={PaymentStatus.FUTURO}>Futuro</MenuItem>
-          </TextField>
-          <TextField
-            fullWidth
-            label="Notas"
-            value={editForm.notes}
-            onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-            multiline
-            rows={2}
-            sx={{ mb: 2 }}
-          />
-          
-          {/* Upload de Comprobante */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-              Comprobante de Pago
-            </Typography>
-            <input
-              accept="image/*"
-              style={{ display: 'none' }}
-              id="edit-receipt-image-upload"
-              type="file"
-              onChange={handleEditImageChange}
-              key={editReceiptImageFile ? editReceiptImageFile.name : 'edit-file-input'}
+            <TextField
+              fullWidth
+              label="Monto (S/)"
+              type="number"
+              value={editForm.amount}
+              onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+              required
+              sx={{ mb: 2 }}
+              inputProps={{ min: 0, step: 0.01 }}
             />
-            <label htmlFor="edit-receipt-image-upload">
-              <Button
-                variant="outlined"
-                component="span"
-                startIcon={<CloudUploadIcon />}
-                fullWidth
-                sx={{ mb: 2 }}
-                disabled={loading}
-              >
-                {editReceiptImageFile ? editReceiptImageFile.name : editReceiptImagePreview ? 'Cambiar Imagen del Comprobante' : 'Seleccionar Imagen del Comprobante'}
-              </Button>
-            </label>
-            {editReceiptImagePreview && (
-              <Box sx={{ mt: 2 }}>
-                <Box
-                  component="img"
-                  src={editReceiptImagePreview}
-                  alt="Preview del comprobante"
+            <TextField
+              fullWidth
+              label="Fecha de Pago"
+              type="date"
+              value={editForm.paymentDate}
+              onChange={(e) => setEditForm({ ...editForm, paymentDate: e.target.value })}
+              required
+              sx={{ mb: 2 }}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              fullWidth
+              label="Fecha de Vencimiento"
+              type="date"
+              value={editForm.dueDate}
+              onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
+              required
+              sx={{ mb: 2 }}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              select
+              fullWidth
+              label="Medio de Pago"
+              value={editForm.paymentMethod}
+              onChange={(e) => setEditForm({ ...editForm, paymentMethod: e.target.value })}
+              required
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value="YAPE">Yape</MenuItem>
+              <MenuItem value="DEPOSITO">Depósito</MenuItem>
+              <MenuItem value="TRANSFERENCIA_VIRTUAL">Transferencia Virtual</MenuItem>
+            </TextField>
+            <TextField
+              select
+              fullWidth
+              label="Estado"
+              value={editForm.status}
+              onChange={(e) => setEditForm({ ...editForm, status: e.target.value as PaymentStatus })}
+              required
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value={PaymentStatus.PAGADO}>Pagado</MenuItem>
+              <MenuItem value={PaymentStatus.VENCIDO}>Vencido</MenuItem>
+              <MenuItem value={PaymentStatus.FUTURO}>Futuro</MenuItem>
+            </TextField>
+            <TextField
+              fullWidth
+              label="Notas"
+              value={editForm.notes}
+              onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+              multiline
+              rows={2}
+              sx={{ mb: 2 }}
+            />
+
+            {/* Upload de Comprobante */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                Comprobante de Pago
+              </Typography>
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="edit-receipt-image-upload"
+                type="file"
+                onChange={handleEditImageChange}
+                key={editReceiptImageFile ? editReceiptImageFile.name : 'edit-file-input'}
+              />
+              <label htmlFor="edit-receipt-image-upload">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<CloudUploadIcon />}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                  disabled={isUpdating}
+                >
+                  {editReceiptImageFile ? editReceiptImageFile.name : editReceiptImagePreview ? 'Cambiar Imagen del Comprobante' : 'Seleccionar Imagen del Comprobante'}
+                </Button>
+              </label>
+              {editReceiptImagePreview && (
+                <Box sx={{ mt: 2 }}>
+                  <Box
+                    component="img"
+                    src={editReceiptImagePreview}
+                    alt="Preview del comprobante"
+                    sx={{
+                      maxWidth: '100%',
+                      maxHeight: '300px',
+                      objectFit: 'contain',
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'divider'
+                    }}
+                  />
+                </Box>
+              )}
+            </Box>
+
+            {/* Mostrar comprobante existente al final - solo si el estado es Pagado */}
+            {payment && payment.status === PaymentStatus.PAGADO && (
+              <Box sx={{ mt: 3 }}>
+                <Divider sx={{ mb: 2 }} />
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                  Comprobante de Pago
+                </Typography>
+                <Paper
+                  elevation={2}
                   sx={{
-                    maxWidth: '100%',
-                    maxHeight: '300px',
-                    objectFit: 'contain',
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'divider'
+                    p: 2,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    bgcolor: 'grey.50',
+                    borderRadius: 2,
                   }}
-                />
+                >
+                  <Box
+                    component="img"
+                    src={payment.receiptImageUrl && payment.receiptImageUrl !== '/comprobante.png'
+                      ? payment.receiptImageUrl
+                      : '/comprobante.png'}
+                    alt="Comprobante de pago"
+                    sx={{
+                      maxWidth: '100%',
+                      maxHeight: '500px',
+                      objectFit: 'contain',
+                      borderRadius: 1,
+                    }}
+                    onError={(e) => {
+                      // Fallback si la imagen no se carga
+                      (e.target as HTMLImageElement).src = '/comprobante.png';
+                    }}
+                  />
+                </Paper>
               </Box>
             )}
           </Box>
-
-          {/* Mostrar comprobante existente al final - solo si el estado es Pagado */}
-          {payment && payment.status === PaymentStatus.PAGADO && (
-            <Box sx={{ mt: 3 }}>
-              <Divider sx={{ mb: 2 }} />
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Comprobante de Pago
-              </Typography>
-              <Paper
-                elevation={2}
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  bgcolor: 'grey.50',
-                  borderRadius: 2,
-                }}
-              >
-                <Box
-                  component="img"
-                  src={payment.receiptImageUrl && payment.receiptImageUrl !== '/comprobante.png' 
-                    ? payment.receiptImageUrl 
-                    : '/comprobante.png'}
-                  alt="Comprobante de pago"
-                  sx={{
-                    maxWidth: '100%',
-                    maxHeight: '500px',
-                    objectFit: 'contain',
-                    borderRadius: 1,
-                  }}
-                  onError={(e) => {
-                    // Fallback si la imagen no se carga
-                    (e.target as HTMLImageElement).src = '/comprobante.png';
-                  }}
-                />
-              </Paper>
-            </Box>
-          )}
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={loading || generatingReceipt}>
-          Cancelar
-        </Button>
-        {/* Botón para generar recibo - solo visible cuando el pago está en estado Pagado */}
-        {payment && payment.status === PaymentStatus.PAGADO && (
-          <Button
-            onClick={handleGenerateReceipt}
-            variant="outlined"
-            startIcon={<ReceiptIcon />}
-            disabled={loading || generatingReceipt}
-            sx={{ mr: 1 }}
-          >
-            {generatingReceipt ? 'Generando...' : 'Generar Recibo Penta Mont'}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} disabled={isUpdating || generatingReceipt}>
+            Cancelar
           </Button>
-        )}
-        <Button onClick={handleUpdatePayment} variant="contained" disabled={loading || generatingReceipt}>
-          {loading ? 'Actualizando...' : 'Actualizar'}
-        </Button>
-      </DialogActions>
-    </Dialog>
-    <PentaMontReceiptModal
-      open={receiptModalOpen}
-      receiptPdfUrl={receiptPdfUrl}
-      onClose={handleReceiptModalClose}
-    />
+          {/* Botón para generar recibo - solo visible cuando el pago está en estado Pagado */}
+          {payment && payment.status === PaymentStatus.PAGADO && (
+            <Button
+              onClick={handleGenerateReceipt}
+              variant="outlined"
+              startIcon={<ReceiptIcon />}
+              disabled={isUpdating || generatingReceipt}
+              sx={{ mr: 1 }}
+            >
+              {generatingReceipt ? 'Generando...' : 'Generar Recibo Penta Mont'}
+            </Button>
+          )}
+          <Button onClick={handleUpdatePayment} variant="contained" disabled={isUpdating || generatingReceipt}>
+            {isUpdating ? 'Actualizando...' : 'Actualizar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <PentaMontReceiptModal
+        open={receiptModalOpen}
+        receiptPdfUrl={receiptPdfUrl}
+        onClose={handleReceiptModalClose}
+      />
     </>
   );
 }
-

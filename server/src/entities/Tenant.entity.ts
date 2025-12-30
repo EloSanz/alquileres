@@ -1,7 +1,6 @@
 // Import the enums
 import { EstadoPago, Rubro } from '@prisma/client';
 import { TenantDTO } from '../dtos/tenant.dto';
-import { Tenant } from '../../../shared/types/Tenant';
 
 // Helper function to convert string to Rubro enum
 function stringToRubro(value: string | null): Rubro | null {
@@ -26,7 +25,7 @@ export class TenantEntity {
     public estadoPago: EstadoPago,
     public createdAt: Date,
     public updatedAt: Date
-  ) {}
+  ) { }
 
   static fromPrisma(prismaData: any): TenantEntity {
     return new TenantEntity(
@@ -61,7 +60,7 @@ export class TenantEntity {
   }
 
   toDTO(): TenantDTO {
-    return Tenant.fromJSON({
+    return {
       id: this.id!,
       firstName: this.firstName,
       lastName: this.lastName,
@@ -73,7 +72,7 @@ export class TenantEntity {
       estadoPago: this.estadoPago.toString(),
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    });
+    };
   }
 
   validate(): void {

@@ -14,12 +14,10 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { useTenantService } from '../services/tenantService';
-import { usePropertyService } from '../services/propertyService';
-import { useContractService } from '../services/contractService';
-import { CreateContract } from '../../../shared/types/Contract';
-import { Tenant } from '../../../shared/types/Tenant';
-import { Property } from '../../../shared/types/Property';
+import { useTenants } from '../hooks/useTenants';
+import { useProperties } from '../hooks/useProperties';
+import { useContracts } from '../hooks/useContracts';
+import { CreateContract, CreateContractSchema } from '../../../shared/types/Contract';
 
 interface CreateContractModalProps {
   open: boolean;
@@ -32,14 +30,10 @@ export default function CreateContractModal({
   onClose,
   onSuccess,
 }: CreateContractModalProps) {
-  const tenantService = useTenantService();
-  const propertyService = usePropertyService();
-  const contractService = useContractService();
+  const { tenants, isLoading: loadingTenants } = useTenants();
+  const { properties, isLoading: loadingProperties } = useProperties();
+  const { createContract, isCreating } = useContracts();
 
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
@@ -50,11 +44,9 @@ export default function CreateContractModal({
     monthlyRent: '',
   });
 
-  // Cargar tenants y properties cuando se abre el modal
+  // Reset form when modal opens
   useEffect(() => {
     if (open) {
-      loadData();
-      // Reset form
       const today = new Date();
       const defaultEndDate = new Date(today);
       defaultEndDate.setFullYear(defaultEndDate.getFullYear() + 1);
@@ -68,22 +60,6 @@ export default function CreateContractModal({
       setError('');
     }
   }, [open]);
-
-  const loadData = async () => {
-    try {
-      setLoadingData(true);
-      const [tenantsData, propertiesData] = await Promise.all([
-        tenantService.getAllTenants(),
-        propertyService.getAllProperties(),
-      ]);
-      setTenants(tenantsData);
-      setProperties(propertiesData);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar datos');
-    } finally {
-      setLoadingData(false);
-    }
-  };
 
   const handleChange = (field: string, value: string | number) => {
     setFormData((prev) => ({
@@ -139,32 +115,38 @@ export default function CreateContractModal({
     }
 
     try {
-      setLoading(true);
-      setError('');
+      const newContract: CreateContract = {
+        tenantId: parseInt(formData.tenantId),
+        propertyId: parseInt(formData.propertyId),
+        startDate: formData.startDate,
+        monthlyRent: monthlyRentNum,
+        endDate: formData.endDate
+      };
 
-      const createContract = new CreateContract(
-        parseInt(formData.tenantId),
-        parseInt(formData.propertyId),
-        formData.startDate,
-        monthlyRentNum,
-        formData.endDate
-      );
+      // Validar con Zod antes de enviar
+      CreateContractSchema.parse(newContract);
 
-      await contractService.createContract(createContract);
+      await createContract(newContract);
       onSuccess();
+      onClose();
     } catch (err: any) {
-      setError(err.message || 'Error al crear el contrato');
-    } finally {
-      setLoading(false);
+      if (err.issues) {
+        // Error de Zod
+        setError(err.issues[0].message);
+      } else {
+        setError(err.message || 'Error al crear el contrato');
+      }
     }
   };
 
+
+  const loadingData = loadingTenants || loadingProperties;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Agregar Nuevo Contrato</DialogTitle>
       <DialogContent>
-        {loadingData ? (
+        {loadingData && tenants.length === 0 ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress />
           </Box>
@@ -186,11 +168,12 @@ export default function CreateContractModal({
                 {tenants.map((tenant) => (
                   <MenuItem key={tenant.id} value={tenant.id.toString()}>
                     {tenant.firstName} {tenant.lastName}
-                    {tenant.localNumbers && tenant.localNumbers.length > 0 && (
+                    {/* Accessing localNumbers safely if it exists on Tenant type, otherwise omitted */}
+                    {/* {tenant.localNumbers && tenant.localNumbers.length > 0 && (
                       <span style={{ color: '#666', marginLeft: '8px' }}>
                         (Locales: {tenant.localNumbers.join(', ')})
                       </span>
-                    )}
+                    )} */}
                   </MenuItem>
                 ))}
               </Select>
@@ -258,16 +241,16 @@ export default function CreateContractModal({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <Button onClick={onClose} disabled={isCreating}>
           Cancelar
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           color="primary"
-          disabled={loading || loadingData}
+          disabled={isCreating || loadingData}
         >
-          {loading ? 'Guardando...' : 'Guardar'}
+          {isCreating ? 'Guardando...' : 'Guardar'}
         </Button>
       </DialogActions>
     </Dialog>

@@ -20,8 +20,9 @@ import {
 import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon, ViewModule as ViewModuleIcon, TableChart as TableChartIcon } from '@mui/icons-material';
 import NavigationTabs from '../components/NavigationTabs';
 import { Property } from '../../../shared/types/Property';
-import { usePaymentService } from '../services/paymentService';
-import { useDataGateway } from '../gateways/useDataGateway';
+import { usePayments } from '../hooks/usePayments';
+import { useProperties } from '../hooks/useProperties';
+import { useTenants } from '../hooks/useTenants';
 import { Payment, CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
 import EditPaymentModal from '../components/EditPaymentModal';
 import SearchBar from '../components/SearchBar';
@@ -31,14 +32,23 @@ import PaymentTable from '../components/PaymentTable';
 import PaymentByPropertyView from '../components/PaymentByPropertyView';
 
 const PaymentPage = () => {
-  const paymentService = usePaymentService()
-  const dataGateway = useDataGateway()
+  const {
+    payments,
+    isLoading: loading,
+    error: queryError,
+    createPayment,
+    updatePayment,
+    deletePayment
+  } = usePayments();
+
+  const { properties } = useProperties();
+  const { tenants } = useTenants();
+
   const location = useLocation();
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
+
+
   const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({
     paymentMethod: '',
@@ -65,18 +75,18 @@ const PaymentPage = () => {
       ]
     }
   ];
+
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [amountError, setAmountError] = useState('');
   const [createForm, setCreateForm] = useState({
-    tenantId: '',
-    propertyId: '',
     amount: '',
     paymentDate: new Date().toISOString().split('T')[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 días por defecto
     paymentMethod: 'YAPE',
     notes: '',
   });
+
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -87,48 +97,21 @@ const PaymentPage = () => {
   const [receiptImagePreview, setReceiptImagePreview] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [deepLinkPropertyId, setDeepLinkPropertyId] = useState<number | undefined>(undefined);
+  const [actionError, setActionError] = useState('');
 
-  // Toggle Pentamont persisted in backend
-  const handleTogglePentamont = async (payment: Payment) => {
-    try {
-      const next = !payment.pentamontSettled;
-      const updateData = new UpdatePayment(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, next, undefined);
-      await paymentService.updatePayment(payment.id, updateData);
-      setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
-      setFilteredPayments(prev => prev.map(p => p.id === payment.id ? { ...p, pentamontSettled: next } as Payment : p));
-    } catch (e: any) {
-      setError(e?.message || 'No se pudo actualizar Pentamont');
+  // Filtering Logic
+  const getFilteredPayments = () => {
+    let result = payments;
+
+    // Filter by tenant if selected
+    if (selectedTenantId !== null) {
+      result = result.filter(p => p.tenantId === selectedTenantId);
     }
-  };
 
-  const fetchPayments = (tenantId?: number | null) => {
-    try {
-      setError('');
-      const targetTenantId = tenantId !== undefined ? tenantId : selectedTenantId;
-      let data: Payment[];
-      
-      // Usar DataGateway para obtener datos desde cache
-      if (targetTenantId !== null && targetTenantId !== undefined) {
-        data = dataGateway.getPaymentsByTenantId(targetTenantId);
-      } else {
-        data = dataGateway.getPayments();
-      }
-      
-      setPayments(data);
-      const filtered = filterPayments(searchQuery, filterValues, data);
-      setFilteredPayments(filtered);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar pagos');
-      setPayments([]);
-      setFilteredPayments([]);
-    }
-  };
-
-  const filterPayments = (query: string, _filters: Record<string, string | string[]>, paymentsList: Payment[]) => {
-    return paymentsList.filter(payment => {
+    return result.filter(payment => {
       // Filtro de búsqueda por texto
-      if (query.trim()) {
-        const lowerQuery = query.toLowerCase();
+      if (searchQuery.trim()) {
+        const lowerQuery = searchQuery.toLowerCase();
         const matchesQuery =
           payment.amount.toString().includes(lowerQuery) ||
           payment.tenantFullName?.toLowerCase().includes(lowerQuery) ||
@@ -141,12 +124,12 @@ const PaymentPage = () => {
       }
 
       // Filtro por medio de pago
-      if (_filters.paymentMethod && payment.paymentMethod !== _filters.paymentMethod) {
+      if (filterValues.paymentMethod && payment.paymentMethod !== filterValues.paymentMethod) {
         return false;
       }
 
       // Filtro por status
-      if (_filters.status && payment.status !== _filters.status) {
+      if (filterValues.status && payment.status !== filterValues.status) {
         return false;
       }
 
@@ -154,122 +137,16 @@ const PaymentPage = () => {
     });
   };
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const query = event.target.value;
-    setSearchQuery(query);
-    const filtered = filterPayments(query, filterValues, payments);
-    setFilteredPayments(filtered);
-  };
+  const currentFilteredPayments = getFilteredPayments();
 
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    const filtered = filterPayments('', filterValues, payments);
-    setFilteredPayments(filtered);
-  };
+  // Handled by generic hooks logic automatically
+  // useEffect(() => {
+  //   if (!dataGateway.isLoaded() && !dataGateway.isLoading()) {
+  //     dataGateway.loadAll();
+  //   }
+  // }, [dataGateway]);
 
-  const handleFilterChange = (key: string, value: string | string[]) => {
-    const newFilters = { ...filterValues, [key]: value };
-    setFilterValues(newFilters);
-    const filtered = filterPayments(searchQuery, newFilters, payments);
-    setFilteredPayments(filtered);
-  };
-
-  const handleClearFilters = () => {
-    const newFilters = { paymentMethod: '' };
-    setFilterValues(newFilters);
-    const filtered = filterPayments(searchQuery, newFilters, payments);
-    setFilteredPayments(filtered);
-  };
-
-  // Los tenants y properties ahora vienen del DataGateway
-  const tenants = dataGateway.getTenants();
-
-  const handleCreatePayment = async () => {
-    // Validar monto antes de enviar
-    const amountError = validateAmount(createForm.amount);
-    if (amountError) {
-      setAmountError(amountError);
-      return;
-    }
-
-    if (!selectedProperty) {
-      setError('Debe seleccionar una propiedad');
-      return;
-    }
-
-    try {
-      const tenantId = selectedProperty.tenantId;
-      if (!tenantId) {
-        setError('La propiedad seleccionada no tiene un inquilino asignado');
-        return;
-      }
-      
-      const paymentData = new CreatePayment(
-        tenantId,
-        selectedProperty.id,
-        parseFloat(createForm.amount),
-        createForm.dueDate,
-        createForm.paymentDate,
-        createForm.paymentMethod,
-        undefined, // status - se calculará automáticamente
-        undefined, // pentamontSettled
-        createForm.notes || undefined
-      );
-      (paymentData as any).receiptImage = receiptImageFile || null; // Para mantener compatibilidad con CreatePaymentData
-      
-      await paymentService.createPayment(paymentData as any);
-
-      setCreateDialogOpen(false);
-      setSelectedProperty(null);
-      setAmountError('');
-      setReceiptImageFile(null);
-      setReceiptImagePreview(null);
-      setCreateForm({
-        tenantId: '',
-        propertyId: '',
-        amount: '',
-        paymentDate: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 días por defecto
-        paymentMethod: 'YAPE',
-        notes: '',
-      });
-      // Invalidar cache y recargar desde el servicio
-      dataGateway.invalidate();
-      await dataGateway.loadAll();
-      fetchPayments(selectedTenantId);
-    } catch (err: any) {
-      setError(err.message || 'Failed to create payment');
-    }
-  };
-
-  useEffect(() => {
-    // Esperar a que el DataGateway cargue los datos
-    const loadData = async () => {
-      if (!dataGateway.isLoaded() && !dataGateway.isLoading()) {
-        setLoading(true);
-        try {
-          await dataGateway.loadAll();
-        } catch (err: any) {
-          setError(err.message || 'Error al cargar datos');
-        } finally {
-          setLoading(false);
-        }
-      }
-      
-      // Una vez cargado, obtener datos del gateway
-      if (dataGateway.isLoaded()) {
-        // Seleccionar el primer inquilino por defecto si hay tenants disponibles
-        if (tenants.length > 0 && selectedTenantId === null) {
-          setSelectedTenantId(tenants[0].id);
-        }
-        fetchPayments(selectedTenantId);
-      }
-    };
-    
-    loadData();
-  }, [dataGateway]);
-  
-  // Leer query params de deep-link: /payments?openModal=local&propertyId=...&tenantId=...&local=...
+  // Handle deep linking
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const openModal = params.get('openModal');
@@ -284,40 +161,41 @@ const PaymentPage = () => {
       setDeepLinkPropertyId(undefined);
     }
   }, [location.search]);
-  
-  // Actualizar cuando el gateway termine de cargar
+
+  // Set initial selected tenant
   useEffect(() => {
-    if (dataGateway.isLoaded()) {
-      if (tenants.length > 0 && selectedTenantId === null) {
-        setSelectedTenantId(tenants[0].id);
-      }
-      fetchPayments(selectedTenantId);
-      setLoading(false);
+    if (tenants.length > 0 && selectedTenantId === null) {
+      setSelectedTenantId(tenants[0].id);
     }
-  }, [dataGateway.isLoaded()]);
+  }, [tenants, selectedTenantId]);
 
-  // Refrescar en cambios del DataGateway (reactivo)
-  useEffect(() => {
-    const unsubscribe = dataGateway.onChange(() => {
-      fetchPayments(selectedTenantId);
-      setLoading(false);
-    });
-    return unsubscribe;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataGateway, selectedTenantId]);
 
-  // Cargar pagos cuando cambie el inquilino seleccionado
-  useEffect(() => {
-    if (selectedTenantId !== null && dataGateway.isLoaded()) {
-      fetchPayments(selectedTenantId);
+  const handleTogglePentamont = async (payment: Payment) => {
+    try {
+      setActionError('');
+      const next = !payment.pentamontSettled;
+      const updateData: UpdatePayment = { pentamontSettled: next };
+      await updatePayment({ id: payment.id, data: updateData });
+    } catch (e: any) {
+      setActionError(e?.message || 'No se pudo actualizar Pentamont');
     }
-  }, [selectedTenantId]);
+  };
 
-  // Aplicar filtros cuando cambien los criterios
-  useEffect(() => {
-    const filtered = filterPayments(searchQuery, filterValues, payments);
-    setFilteredPayments(filtered);
-  }, [searchQuery, filterValues, payments]);
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
+
+  const handleFilterChange = (key: string, value: string | string[]) => {
+    setFilterValues(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearFilters = () => {
+    setFilterValues({ paymentMethod: '', status: '' });
+  };
 
   const validateAmount = (value: string): string => {
     const num = parseFloat(value);
@@ -343,7 +221,6 @@ const PaymentPage = () => {
     const file = event.target.files?.[0];
     if (file) {
       setReceiptImageFile(file);
-      // Crear preview de la imagen seleccionada
       const reader = new FileReader();
       reader.onloadend = () => {
         setReceiptImagePreview(reader.result as string);
@@ -357,6 +234,56 @@ const PaymentPage = () => {
     setReceiptImagePreview(null);
   };
 
+  const handleCreatePayment = async () => {
+    const amountError = validateAmount(createForm.amount);
+    if (amountError) {
+      setAmountError(amountError);
+      return;
+    }
+
+    if (!selectedProperty) {
+      setActionError('Debe seleccionar una propiedad');
+      return;
+    }
+
+    try {
+      setActionError('');
+      const tenantId = selectedProperty.tenantId;
+      if (!tenantId) {
+        setActionError('La propiedad seleccionada no tiene un inquilino asignado');
+        return;
+      }
+
+      const paymentData: CreatePayment = {
+        tenantId,
+        propertyId: selectedProperty.id,
+        amount: parseFloat(createForm.amount),
+        dueDate: createForm.dueDate,
+        paymentDate: createForm.paymentDate,
+        paymentMethod: createForm.paymentMethod,
+        notes: createForm.notes || undefined
+      };
+      // (paymentData as any).receiptImage = receiptImageFile || null; // Ignored for now as backend doesn't support it in schema yet directly? Or schema doesn't match?
+
+      await createPayment(paymentData);
+
+      setCreateDialogOpen(false);
+      setSelectedProperty(null);
+      setAmountError('');
+      setReceiptImageFile(null);
+      setReceiptImagePreview(null);
+      setCreateForm({
+        amount: '',
+        paymentDate: new Date().toISOString().split('T')[0],
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        paymentMethod: 'YAPE',
+        notes: '',
+      });
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to create payment');
+    }
+  };
+
 
   const handleEdit = (payment: Payment) => {
     setEditingPayment(payment);
@@ -364,12 +291,6 @@ const PaymentPage = () => {
   };
 
   const handleEditSuccess = async () => {
-    // Invalidar cache y recargar desde el servicio
-    dataGateway.invalidate();
-    await dataGateway.loadAll();
-    fetchPayments(selectedTenantId);
-    // Recargar pagos después de editar exitosamente
-    await fetchPayments(selectedTenantId);
     setEditDialogOpen(false);
     setEditingPayment(null);
   };
@@ -390,19 +311,24 @@ const PaymentPage = () => {
     if (!paymentToDelete) return;
 
     try {
-      await paymentService.deletePayment(paymentToDelete.id);
+      setActionError('');
+      await deletePayment(paymentToDelete.id);
       setDeleteDialogOpen(false);
       setPaymentToDelete(null);
-      // Invalidar cache y recargar desde el servicio
-      dataGateway.invalidate();
-      await dataGateway.loadAll();
-      fetchPayments(selectedTenantId);
     } catch (err: any) {
-      setError(err.message || 'Failed to delete payment');
+      setActionError(err.message || 'Failed to delete payment');
     }
   };
 
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
+  const displayError = queryError ? (queryError as Error).message : actionError;
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
@@ -454,9 +380,9 @@ const PaymentPage = () => {
       {/* Navigation Menu - Siempre visible */}
       <NavigationTabs />
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
+      {displayError && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setActionError('')}>
+          {displayError}
         </Alert>
       )}
 
@@ -464,24 +390,16 @@ const PaymentPage = () => {
         {viewMode === 'grid' ? (
           <PaymentByPropertyView openPropertyId={deepLinkPropertyId} />
         ) : (
-          <>
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <PaymentTable
-                payments={filteredPayments}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onTogglePentamont={handleTogglePentamont}
-                onPaymentClick={(payment) => {
-                  setSelectedPayment(payment);
-                  setDetailsModalOpen(true);
-                }}
-              />
-            )}
-          </>
+          <PaymentTable
+            payments={currentFilteredPayments}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onTogglePentamont={handleTogglePentamont}
+            onPaymentClick={(payment) => {
+              setSelectedPayment(payment);
+              setDetailsModalOpen(true);
+            }}
+          />
         )}
       </Box>
 
@@ -504,34 +422,15 @@ const PaymentPage = () => {
         {viewMode === 'grid' ? 'Ver en Tabla' : 'Ver por Local'}
       </Fab>
 
-      {/* Floating Action Button for creating new payment - OCULTO */}
-      {/* <Fab
-        color="primary"
-        variant="extended"
-        size="large"
-        aria-label="add"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-          px: 3,
-          py: 1.5
-        }}
-        onClick={() => setCreateDialogOpen(true)}
-      >
-        <AddIcon sx={{ mr: 1 }} />
-        Agregar Pago
-      </Fab> */}
-
       {/* Create Payment Dialog */}
-      <Dialog 
-        open={createDialogOpen} 
+      <Dialog
+        open={createDialogOpen}
         onClose={() => {
           setCreateDialogOpen(false);
           setReceiptImageFile(null);
           setReceiptImagePreview(null);
-        }} 
-        maxWidth="md" 
+        }}
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>Agregar Pago</DialogTitle>
@@ -539,26 +438,13 @@ const PaymentPage = () => {
           <Box component="form" sx={{ mt: 2 }}>
             <Autocomplete
               fullWidth
-              options={dataGateway.getProperties()}
+              options={properties || []}
               getOptionLabel={(property) =>
                 `Local N° ${property.localNumber} - ${property.ubicacion === 'BOULEVAR' ? 'Boulevard' : property.ubicacion === 'SAN_MARTIN' ? 'San Martin' : property.ubicacion}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
               }
               value={selectedProperty}
               onChange={(_, newValue) => {
                 setSelectedProperty(newValue);
-                if (newValue) {
-                  setCreateForm({
-                    ...createForm,
-                    tenantId: newValue.tenantId?.toString() || '',
-                    propertyId: newValue.id.toString()
-                  });
-                } else {
-                  setCreateForm({
-                    ...createForm,
-                    tenantId: '',
-                    propertyId: ''
-                  });
-                }
               }}
               loading={false}
               renderInput={(params) => (
@@ -627,7 +513,7 @@ const PaymentPage = () => {
               rows={2}
               sx={{ mb: 2 }}
             />
-            
+
             {/* Upload de Comprobante */}
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
@@ -652,7 +538,7 @@ const PaymentPage = () => {
                   {receiptImageFile ? receiptImageFile.name : 'Seleccionar Imagen del Comprobante'}
                 </Button>
               </label>
-              
+
               {/* Preview de la imagen */}
               {receiptImagePreview && (
                 <Box sx={{ mt: 2, position: 'relative' }}>

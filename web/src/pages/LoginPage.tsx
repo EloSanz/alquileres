@@ -46,7 +46,7 @@ const LoginPage = () => {
 
     try {
       // Usar fetch directamente con la ruta correcta /pentamont/api/auth/login
-      const response = await fetch(`${window.location.origin}/pentamont/api/auth/login`, {
+      const response = await fetch(`${window.location.origin}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,12 +69,12 @@ const LoginPage = () => {
         // Asegurar que el token esté limpio (sin espacios ni comillas)
         const token = String(data.data.token || '').trim().replace(/^["']|["']$/g, '');
         const user = data.data.user;
-        
+
         if (!token) {
           setError('Token no recibido del servidor');
           return;
         }
-        
+
         // Validar formato JWT (debe tener 3 partes separadas por puntos)
         const tokenParts = token.split('.');
         if (tokenParts.length !== 3) {
@@ -86,7 +86,7 @@ const LoginPage = () => {
           setError('Token inválido recibido del servidor');
           return;
         }
-        
+
         login(token, user);
         navigate('/');
       } else {

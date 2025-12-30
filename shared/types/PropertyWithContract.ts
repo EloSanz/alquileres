@@ -5,7 +5,7 @@ export class PropertyWithContract {
   constructor(
     public property: Property,
     public contract: Contract | null
-  ) {}
+  ) { }
 
   validate(): string[] {
     const errors: string[] = [];
@@ -18,15 +18,15 @@ export class PropertyWithContract {
 
   toJSON() {
     return {
-      property: this.property.toJSON(),
-      contract: this.contract?.toJSON() || null
+      property: this.property,
+      contract: this.contract || null
     };
   }
 
   static fromJSON(data: any): PropertyWithContract {
     return new PropertyWithContract(
-      Property.fromJSON(data.property),
-      data.contract ? Contract.fromJSON(data.contract) : null
+      data.property,
+      data.contract || null
     );
   }
 

@@ -25,21 +25,17 @@ export const useAuth = () => {
   return context;
 };
 
-// Función para redirigir al login cuando el token es inválido solo bajo /pentamont
-const redirectToPentamontLogin = () => {
+// Función para redirigir al login cuando el token es inválido
+const redirectToLogin = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  const path = window.location.pathname;
-  if (path.startsWith('/pentamont')) {
-    window.location.href = '/pentamont/login';
-  }
+  window.location.href = '/login';
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    if (!window.location.pathname.startsWith('/pentamont')) return;
     // Check for existing token and user data on app start
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
@@ -48,48 +44,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Validar formato JWT (debe tener 3 partes separadas por puntos)
       const cleanToken = String(token).trim().replace(/^["']|["']$/g, '');
       const tokenParts = cleanToken.split('.');
-      
+
       if (tokenParts.length !== 3) {
         // Token malformado, limpiar todo y redirigir
         console.warn('Token malformado detectado al iniciar, redirigiendo al login');
-        redirectToPentamontLogin();
+        console.warn('Token malformado detectado al iniciar, redirigiendo al login');
+        redirectToLogin();
         return;
       }
 
       try {
         setUser(JSON.parse(savedUser));
-        
+
         // Verificar que el token sea válido con el backend
         const verifyToken = async () => {
           try {
-            const response = await fetch(`${window.location.origin}/pentamont/api/auth/me`, {
+            const response = await fetch(`${window.location.origin}/api/auth/me`, {
               headers: {
                 'Authorization': `Bearer ${cleanToken}`
               }
             });
-            
+
             if (!response.ok || response.status === 401) {
               // Token inválido o expirado, redirigir al login
               console.warn('Token inválido o expirado, redirigiendo al login');
-              redirectToPentamontLogin();
+              redirectToLogin();
               return;
             }
-            
+
             const data = await response.json();
             if (!data.success) {
-              redirectToPentamontLogin();
+              redirectToLogin();
             }
           } catch (error) {
             // Error de red, pero no redirigir (podría ser temporal)
             console.warn('Error verificando token:', error);
           }
         };
-        
+
         verifyToken();
       } catch (error) {
         // Invalid user data, clear everything
         console.warn('Datos de usuario inválidos, redirigiendo al login');
-        redirectToPentamontLogin();
+        console.warn('Datos de usuario inválidos, redirigiendo al login');
+        redirectToLogin();
       }
     }
   }, []);
@@ -104,7 +102,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    redirectToPentamontLogin();
+    setUser(null);
+    redirectToLogin();
   };
 
   const value = {

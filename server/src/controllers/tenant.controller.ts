@@ -1,9 +1,7 @@
 import { ITenantService } from '../interfaces/services/ITenantService';
-import { CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
-import { ValidationError } from '../exceptions';
 
 export class TenantController {
-  constructor(private tenantService: ITenantService) {}
+  constructor(private tenantService: ITenantService) { }
 
   getAll = async ({ userId }: { userId: number }) => {
     const tenants = await this.tenantService.getAllTenants(userId);
@@ -52,12 +50,8 @@ export class TenantController {
     body: any;
     userId: number;
   }) => {
-    const createTenant = CreateTenant.fromJSON(body);
-    const errors = createTenant.validate();
-    if (errors.length > 0) {
-      throw new ValidationError('Validation failed', errors);
-    }
-    const tenant = await this.tenantService.createTenant(createTenant.toDTO(), userId);
+    // Validation is handled by Elysia schema
+    const tenant = await this.tenantService.createTenant(body, userId);
     return {
       success: true,
       message: 'Tenant created successfully',
@@ -74,12 +68,8 @@ export class TenantController {
     body: any;
     userId: number;
   }) => {
-    const updateTenant = UpdateTenant.fromJSON(body);
-    const errors = updateTenant.validate();
-    if (errors.length > 0) {
-      throw new ValidationError('Validation failed', errors);
-    }
-    const tenant = await this.tenantService.updateTenant(id, updateTenant.toDTO(), userId);
+    // Validation is handled by Elysia schema
+    const tenant = await this.tenantService.updateTenant(id, body, userId);
     return {
       success: true,
       message: 'Tenant updated successfully',

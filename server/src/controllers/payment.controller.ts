@@ -1,8 +1,8 @@
 import { IPaymentService } from '../interfaces/services/IPaymentService';
-import { CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
+import { CreatePaymentSchema, UpdatePaymentSchema } from '../../../shared/types/Payment';
 
 export class PaymentController {
-  constructor(private paymentService: IPaymentService) {}
+  constructor(private paymentService: IPaymentService) { }
 
   getAll = async ({ userId }: { userId: number }) => {
     const payments = await this.paymentService.getAllPayments(userId);
@@ -50,12 +50,12 @@ export class PaymentController {
     body: any;
     userId: number;
   }) => {
-    const createPayment = CreatePayment.fromJSON(body);
-    const errors = createPayment.validate();
-    if (errors.length > 0) {
+    const result = CreatePaymentSchema.safeParse(body);
+    if (!result.success) {
+      const errors = result.error.issues.map((e: any) => e.message);
       throw new Error(errors.join(', '));
     }
-    const payment = await this.paymentService.createPayment(createPayment.toDTO(), userId);
+    const payment = await this.paymentService.createPayment(result.data, userId);
     return {
       success: true,
       message: 'Payment created successfully',
@@ -72,14 +72,14 @@ export class PaymentController {
     body: any;
     userId: number;
   }) => {
-    const updatePayment = UpdatePayment.fromJSON(body);
-    const errors = updatePayment.validate();
-    if (errors.length > 0) {
+    const result = UpdatePaymentSchema.safeParse(body);
+    if (!result.success) {
+      const errors = result.error.issues.map((e: any) => e.message);
       throw new Error(errors.join(', '));
     }
-    
-    const payment = await this.paymentService.updatePayment(id, updatePayment.toDTO(), userId);
-    
+
+    const payment = await this.paymentService.updatePayment(id, result.data, userId);
+
     return {
       success: true,
       message: 'Payment updated successfully',

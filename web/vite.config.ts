@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  base: '/pentamont/',
+  base: '/',
   plugins: [react()],
   resolve: {
     // Priorizar .ts sobre .js para archivos TypeScript
@@ -22,7 +22,7 @@ export default defineConfig({
       'localhost'
     ],
     proxy: {
-      '/pentamont/api': {
+      '/api': {
         target: 'http://localhost:4000',
         changeOrigin: true
         // No usar rewrite - el backend espera el prefijo completo
