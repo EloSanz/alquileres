@@ -16,7 +16,7 @@ export const usePayments = () => {
     const paymentsQuery = useQuery({
         queryKey: PAYMENT_KEYS.all,
         queryFn: async () => {
-            const response = await api.pentamont.api.payments.get();
+            const response = await api.api.payments.get();
 
             if (response.error) {
                 if (checkAuthError(response.error)) throw new Error('Authentication required');
@@ -32,7 +32,7 @@ export const usePayments = () => {
 
     const createPaymentMutation = useMutation({
         mutationFn: async (newPayment: CreatePayment) => {
-            const response = await api.pentamont.api.payments.post(newPayment as any);
+            const response = await api.api.payments.post(newPayment as any);
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'
@@ -50,7 +50,7 @@ export const usePayments = () => {
 
     const updatePaymentMutation = useMutation({
         mutationFn: async ({ id, data }: { id: number; data: UpdatePayment }) => {
-            const response = await api.pentamont.api.payments({ id }).put(data);
+            const response = await api.api.payments({ id }).put(data);
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'
@@ -69,7 +69,7 @@ export const usePayments = () => {
 
     const deletePaymentMutation = useMutation({
         mutationFn: async (id: number) => {
-            const response = await api.pentamont.api.payments({ id }).delete();
+            const response = await api.api.payments({ id }).delete();
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'

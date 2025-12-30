@@ -15,7 +15,7 @@ export const useProperties = () => {
     const propertiesQuery = useQuery({
         queryKey: PROPERTY_KEYS.all,
         queryFn: async () => {
-            const response = await api.pentamont.api.properties.get();
+            const response = await api.api.properties.get();
 
             if (response.error) {
                 if (checkAuthError(response.error)) throw new Error('Authentication required');
@@ -35,7 +35,7 @@ export const useProperties = () => {
 
     const createPropertyMutation = useMutation({
         mutationFn: async (newProperty: CreateProperty) => {
-            const response = await api.pentamont.api.properties.post(newProperty);
+            const response = await api.api.properties.post(newProperty);
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'
@@ -57,7 +57,7 @@ export const useProperties = () => {
 
     const updatePropertyMutation = useMutation({
         mutationFn: async ({ id, data }: { id: number; data: UpdateProperty }) => {
-            const response = await api.pentamont.api.properties({ id }).put(data);
+            const response = await api.api.properties({ id }).put(data);
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'
@@ -80,7 +80,7 @@ export const useProperties = () => {
 
     const deletePropertyMutation = useMutation({
         mutationFn: async (id: number) => {
-            const response = await api.pentamont.api.properties({ id }).delete();
+            const response = await api.api.properties({ id }).delete();
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'

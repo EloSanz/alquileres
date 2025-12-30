@@ -17,7 +17,7 @@ export const useContracts = () => {
     const contractsQuery = useQuery({
         queryKey: CONTRACT_KEYS.all,
         queryFn: async () => {
-            const response = await api.pentamont.api.contracts.get();
+            const response = await api.api.contracts.get();
 
             if (response.error) {
                 if (checkAuthError(response.error)) throw new Error('Authentication required');
@@ -33,7 +33,7 @@ export const useContracts = () => {
 
     const createContractMutation = useMutation({
         mutationFn: async (newContract: CreateContract) => {
-            const response = await api.pentamont.api.contracts.post(newContract);
+            const response = await api.api.contracts.post(newContract);
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'
@@ -51,7 +51,7 @@ export const useContracts = () => {
 
     const updateContractMutation = useMutation({
         mutationFn: async ({ id, data }: { id: number; data: UpdateContract }) => {
-            const response = await api.pentamont.api.contracts({ id }).put(data as any);
+            const response = await api.api.contracts({ id }).put(data as any);
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'
@@ -70,7 +70,7 @@ export const useContracts = () => {
 
     const deleteContractMutation = useMutation({
         mutationFn: async (id: number) => {
-            const response = await api.pentamont.api.contracts({ id }).delete();
+            const response = await api.api.contracts({ id }).delete();
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'

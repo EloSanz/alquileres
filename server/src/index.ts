@@ -77,14 +77,9 @@ const server = createServer(async (req, res) => {
   // Extract username from token (async, but we'll await it when logging)
   const usernamePromise = getUsernameFromToken(authHeader)
 
-  // Skip logging for OPTIONS (CORS preflight) and GET requests
-  // Only log requests for UPDATE (PUT/PATCH), DELETE, POST
-  if (method === 'OPTIONS' || method === 'GET') {
-    // Skip logging for OPTIONS and GET requests
-  } else if (method === 'PUT' || method === 'PATCH' || method === 'DELETE' || method === 'POST') {
-    const username = await usernamePromise
-    logRequest(method, url, undefined, username || undefined, requestId, clientIP)
-  }
+  // Log ALL requests for debugging
+  const username = await usernamePromise
+  logRequest(method, url, undefined, username || undefined, requestId, clientIP)
 
   try {
     // Read request body

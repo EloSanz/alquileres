@@ -15,7 +15,7 @@ export const useTenants = () => {
     const tenantsQuery = useQuery({
         queryKey: TENANT_KEYS.all,
         queryFn: async () => {
-            const response = await api.pentamont.api.tenants.get();
+            const response = await api.api.tenants.get();
 
             if (response.error) {
                 if (checkAuthError(response.error)) throw new Error('Authentication required');
@@ -31,7 +31,7 @@ export const useTenants = () => {
 
     const createTenantMutation = useMutation({
         mutationFn: async (newTenant: CreateTenant) => {
-            const response = await api.pentamont.api.tenants.post(newTenant);
+            const response = await api.api.tenants.post(newTenant);
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'
@@ -49,7 +49,7 @@ export const useTenants = () => {
 
     const updateTenantMutation = useMutation({
         mutationFn: async ({ id, data }: { id: number; data: UpdateTenant }) => {
-            const response = await api.pentamont.api.tenants({ id }).put(data);
+            const response = await api.api.tenants({ id }).put(data);
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'
@@ -68,7 +68,7 @@ export const useTenants = () => {
 
     const deleteTenantMutation = useMutation({
         mutationFn: async (id: number) => {
-            const response = await api.pentamont.api.tenants({ id }).delete();
+            const response = await api.api.tenants({ id }).delete();
 
             if (response.error) {
                 const errorMsg = typeof response.error.value === 'string'
