@@ -29,7 +29,7 @@ export const useAuth = () => {
 const redirectToLogin = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  window.location.href = '/login';
+  window.location.href = '/pentamont/login';
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Verificar que el token sea válido con el backend
         const verifyToken = async () => {
           try {
-            const response = await fetch(`${window.location.origin}/api/auth/me`, {
+            const response = await fetch(`${window.location.origin}/pentamont/api/auth/me`, {
               headers: {
                 'Authorization': `Bearer ${cleanToken}`
               }
