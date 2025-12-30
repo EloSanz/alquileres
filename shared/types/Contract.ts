@@ -28,7 +28,7 @@ export type Contract = z.infer<typeof ContractSchema>;
 export const CreateContractSchema = z.object({
   tenantId: z.number().int().positive('Tenant ID is required'),
   propertyId: z.number().int().positive('Property ID is required'),
-  startDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Start date is invalid' }),
+  startDate: z.string().refine((val: string) => !isNaN(Date.parse(val)), { message: 'Start date is invalid' }),
   monthlyRent: z.number().positive('Monthly rent must be greater than 0'),
   endDate: z.string().optional()
 });
