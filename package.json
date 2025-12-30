@@ -24,6 +24,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/html2pdf.js": "^0.10.0",
-    "html2pdf.js": "^0.12.1"
+    "html2pdf.js": "^0.12.1",
+    "zod": "^4.2.1"
   }
 }

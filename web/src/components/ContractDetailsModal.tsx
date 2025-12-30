@@ -11,7 +11,7 @@ import {
   Stack,
   Divider
 } from '@mui/material';
-import { usePaymentService } from '../services/paymentService';
+import { usePayments } from '../hooks/usePayments';
 import type { Payment } from '../../../shared/types/Payment';
 import { buildContractTimeline, type ContractMonthInfo } from '../services/contractTimeline';
 import type { Contract } from '../../../shared/types/Contract';
@@ -41,41 +41,31 @@ export default function ContractDetailsModal({
   contract,
   onClose
 }: ContractDetailsModalProps) {
-  const paymentService = usePaymentService();
+  const { payments: allPayments } = usePayments();
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    const load = async () => {
-      if (!contract) return;
-      try {
-        setError('');
-        const all = await paymentService.getAllPayments();
-        const byContract = all.filter(p => p.contractId === contract.id);
-        setPayments(byContract);
-      } catch (e: any) {
-        setError(e?.message || 'Error al cargar pagos del contrato');
-        setPayments([]);
-      } finally {
-        // no-op
-      }
-    };
-    if (open) load();
-  }, [open, contract?.id]);
+    if (!contract || !allPayments) {
+      setPayments([]);
+      return;
+    }
+    const byContract = allPayments.filter(p => p.contractId === contract.id);
+    setPayments(byContract);
+  }, [contract, allPayments]);
 
   const timeline = useMemo<ContractMonthInfo[]>(() => {
     if (!contract) return [];
     // Usar el año del startDate del contrato
-    const contractYear = contract.startDate instanceof Date 
-      ? contract.startDate.getFullYear() 
+    const contractYear = contract.startDate instanceof Date
+      ? contract.startDate.getFullYear()
       : new Date(contract.startDate).getFullYear();
-    
+
     // Filtrar pagos por año del contrato
     const filteredPayments = payments.filter(p => {
       const dueDate = new Date(p.dueDate);
       return dueDate.getFullYear() === contractYear;
     });
-    
+
     return buildContractTimeline(contractYear, filteredPayments);
   }, [payments, contract]);
 
@@ -136,11 +126,7 @@ export default function ContractDetailsModal({
         {/* Helpers */}
         {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
         {null}
-        {error && (
-          <Typography color="error" sx={{ mb: 2 }}>
-            {error}
-          </Typography>
-        )}
+
         <Stack spacing={1.5} sx={{ mb: 2 }}>
           <Typography variant="body2">
             Inquilino: <strong>{contract?.tenantFullName || `ID: ${contract?.tenantId}`}</strong>

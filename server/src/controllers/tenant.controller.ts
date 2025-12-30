@@ -1,9 +1,9 @@
 import { ITenantService } from '../interfaces/services/ITenantService';
-import { CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
+import { CreateTenantSchema, UpdateTenantSchema } from '../../../shared/types/Tenant';
 import { ValidationError } from '../exceptions';
 
 export class TenantController {
-  constructor(private tenantService: ITenantService) {}
+  constructor(private tenantService: ITenantService) { }
 
   getAll = async ({ userId }: { userId: number }) => {
     const tenants = await this.tenantService.getAllTenants(userId);
@@ -52,12 +52,12 @@ export class TenantController {
     body: any;
     userId: number;
   }) => {
-    const createTenant = CreateTenant.fromJSON(body);
-    const errors = createTenant.validate();
-    if (errors.length > 0) {
+    const result = CreateTenantSchema.safeParse(body);
+    if (!result.success) {
+      const errors = result.error.issues.map((e: any) => e.message);
       throw new ValidationError('Validation failed', errors);
     }
-    const tenant = await this.tenantService.createTenant(createTenant.toDTO(), userId);
+    const tenant = await this.tenantService.createTenant(result.data, userId);
     return {
       success: true,
       message: 'Tenant created successfully',
@@ -74,12 +74,12 @@ export class TenantController {
     body: any;
     userId: number;
   }) => {
-    const updateTenant = UpdateTenant.fromJSON(body);
-    const errors = updateTenant.validate();
-    if (errors.length > 0) {
+    const result = UpdateTenantSchema.safeParse(body);
+    if (!result.success) {
+      const errors = result.error.issues.map((e: any) => e.message);
       throw new ValidationError('Validation failed', errors);
     }
-    const tenant = await this.tenantService.updateTenant(id, updateTenant.toDTO(), userId);
+    const tenant = await this.tenantService.updateTenant(id, result.data, userId);
     return {
       success: true,
       message: 'Tenant updated successfully',

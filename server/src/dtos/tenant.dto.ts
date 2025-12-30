@@ -1,1 +1,1 @@
-export { Tenant as TenantDTO, CreateTenant as CreateTenantDTO, UpdateTenant as UpdateTenantDTO } from '../../../shared/types/Tenant';
+export type { Tenant as TenantDTO, CreateTenant as CreateTenantDTO, UpdateTenant as UpdateTenantDTO } from '../../../shared/types/Tenant';

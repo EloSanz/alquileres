@@ -1,8 +1,8 @@
 import { IContractService } from '../interfaces/services/IContractService';
-import { CreateContract, UpdateContract } from '../../../shared/types/Contract';
+import { CreateContractSchema, UpdateContractSchema } from '../../../shared/types/Contract';
 
 export class ContractController {
-  constructor(private contractService: IContractService) {}
+  constructor(private contractService: IContractService) { }
 
   getAll = async ({ userId }: { userId: number }) => {
     const contracts = await this.contractService.getAllContracts(userId);
@@ -80,12 +80,12 @@ export class ContractController {
     body: any;
     userId: number;
   }) => {
-    const createContract = CreateContract.fromJSON(body);
-    const errors = createContract.validate();
-    if (errors.length > 0) {
+    const result = CreateContractSchema.safeParse(body);
+    if (!result.success) {
+      const errors = result.error.issues.map((e: any) => e.message);
       throw new Error(errors.join(', '));
     }
-    const contract = await this.contractService.createContract(createContract.toDTO(), userId);
+    const contract = await this.contractService.createContract(result.data, userId);
     return {
       success: true,
       message: 'Contract created successfully',
@@ -102,12 +102,12 @@ export class ContractController {
     body: any;
     userId: number;
   }) => {
-    const updateContract = UpdateContract.fromJSON(body);
-    const errors = updateContract.validate();
-    if (errors.length > 0) {
+    const result = UpdateContractSchema.safeParse(body);
+    if (!result.success) {
+      const errors = result.error.issues.map((e: any) => e.message);
       throw new Error(errors.join(', '));
     }
-    const contract = await this.contractService.updateContract(id, updateContract.toDTO(), userId);
+    const contract = await this.contractService.updateContract(id, result.data, userId);
     return {
       success: true,
       message: 'Contract updated successfully',

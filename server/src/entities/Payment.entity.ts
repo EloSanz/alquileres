@@ -2,7 +2,6 @@
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PaymentStatus as FrontendPaymentStatus } from '../../../shared/types/Payment';
 import { PaymentDTO } from '../dtos/payment.dto';
-import { Payment } from '../../../shared/types/Payment';
 
 // Helper function to convert frontend PaymentStatus to Prisma PaymentStatus
 function convertFrontendStatusToPrisma(frontendStatus: string | FrontendPaymentStatus): PaymentStatus {
@@ -56,13 +55,13 @@ export class PaymentEntity {
     public receiptImageUrl: string | null,
     public createdAt: Date,
     public updatedAt: Date
-  ) {  }
+  ) { }
 
   // calculateStatus removido - el status solo se cambia manualmente por el usuario
 
   static create(data: {
     tenantId: number | null;
-    propertyId: number | null;
+    propertyId?: number | null;
     contractId?: number | null;
     monthNumber?: number | null;
     tenantFullName?: string | null;
@@ -81,7 +80,7 @@ export class PaymentEntity {
     const entity = new PaymentEntity(
       null, // id
       data.tenantId,
-      data.propertyId,
+      data.propertyId ?? null,
       data.contractId || null,
       data.monthNumber || null,
       data.tenantFullName || null,
@@ -200,8 +199,8 @@ export class PaymentEntity {
       const day = String(date.getUTCDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
-    
-    return Payment.fromJSON({
+
+    return {
       id: this.id!,
       tenantId: this.tenantId,
       propertyId: this.propertyId,
@@ -220,7 +219,7 @@ export class PaymentEntity {
       receiptImageUrl: this.receiptImageUrl || '/comprobante.png',
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
-    });
+    };
   }
 
   validate(): void {

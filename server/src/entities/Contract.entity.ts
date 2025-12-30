@@ -1,5 +1,4 @@
 import { ContractDTO, ContractStatus } from '../dtos/contract.dto';
-import { Contract } from '../../../shared/types/Contract';
 
 export { ContractStatus };
 
@@ -16,7 +15,7 @@ export class ContractEntity {
     public status: ContractStatus,
     public createdAt: Date,
     public updatedAt: Date
-  ) {}
+  ) { }
 
   static create(data: { tenantId: number; propertyId: number; startDate: string; monthlyRent: number; endDate?: string }): ContractEntity {
     const startDate = new Date(data.startDate);
@@ -106,21 +105,21 @@ export class ContractEntity {
       const day = String(date.getUTCDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
-    
-    return Contract.fromJSON({
+
+    return {
       id: this.id!,
       tenantId: this.tenantId,
       propertyId: this.propertyId,
       tenantFullName: this.tenantFullName,
       propertyName: (this as any).propertyName,
       propertyLocalNumber: (this as any).propertyLocalNumber,
-      startDate: formatDateOnly(this.startDate), // Enviar solo fecha sin hora
-      endDate: formatDateOnly(this.endDate), // Enviar solo fecha sin hora
+      startDate: formatDateOnly(this.startDate),
+      endDate: formatDateOnly(this.endDate),
       monthlyRent: this.monthlyRent,
-      status: this.status.toString(),
+      status: this.status, // Zod type expects the enum value, or string if enum? shared type says nativeEnum which is value compatible
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
-    });
+    };
   }
 
   validate(): void {

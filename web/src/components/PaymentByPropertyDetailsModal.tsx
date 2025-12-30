@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -15,10 +15,10 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
 } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
-import { usePaymentService } from '../services/paymentService';
-import { useDataGateway } from '../gateways/useDataGateway';
+import { usePayments } from '../hooks/usePayments';
 import { Payment } from '../../../shared/types/Payment';
 import { buildContractTimeline, type ContractMonthInfo } from '../services/contractTimeline';
 import type { Contract } from '../../../shared/types/Contract';
@@ -37,72 +37,34 @@ export default function PaymentByPropertyDetailsModal({
   contract,
   onClose
 }: PaymentByPropertyDetailsModalProps) {
-  const paymentService = usePaymentService();
-  const dataGateway = useDataGateway();
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [paymentsVersion, setPaymentsVersion] = useState(0); // Versión para forzar re-render
+  const { payments: allPayments, isLoading } = usePayments();
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear()); // Año actual por defecto
-  const [error, setError] = useState('');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
 
-  // Función explícita para cargar pagos del contrato
-  const loadPayments = useCallback(async () => {
-    if (!contract || !contract.tenantId) return;
-    try {
-      setError('');
-      const contractId = contract.id;
-      const tenantId = contract.tenantId;
-      
-      const tenantPayments = await paymentService.getPaymentsByTenantId(tenantId);
-      
-      const byContract = tenantPayments.filter(p => p.contractId === contractId);
-      
-      // Crear un nuevo array con nuevas referencias de objetos para forzar actualización
-      const newPayments = byContract.map(p => Payment.fromJSON(p.toJSON()));
-      
-      setPayments(newPayments);
-      // Incrementar versión para forzar re-render del timeline
-      setPaymentsVersion(prev => prev + 1);
-    } catch (e: any) {
-      console.error('[PaymentByPropertyDetailsModal] Error al cargar pagos:', e);
-      setError(e?.message || 'Error al cargar pagos del contrato');
-      setPayments([]);
-    }
-    // paymentService es estable dentro del hook, no necesita estar en dependencias
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contract?.id, contract?.tenantId]);
-
-  useEffect(() => {
-    if (open && contract?.id && contract?.tenantId) {
-      loadPayments();
-    } else if (!open) {
-      // Limpiar pagos cuando se cierra el modal
-      setPayments([]);
-      setPaymentsVersion(0);
-    }
-  }, [open, contract?.id, contract?.tenantId, loadPayments]);
+  // Filter payments for this contract
+  const contractPayments = useMemo(() => {
+    if (!contract || !allPayments) return [];
+    return allPayments.filter(p => p.contractId === contract.id);
+  }, [allPayments, contract]);
 
   // Filtrar pagos por año seleccionado usando dueDate
   const filteredPayments = useMemo(() => {
-    return payments.filter(p => {
+    return contractPayments.filter(p => {
       const dueDate = new Date(p.dueDate);
       return dueDate.getFullYear() === selectedYear;
     });
-  }, [payments, selectedYear]);
+  }, [contractPayments, selectedYear]);
 
   const timeline = useMemo<ContractMonthInfo[]>(() => {
     if (!contract) return [];
-    // Siempre construir el timeline completo para el año seleccionado
-    // paymentsVersion fuerza la recalculación cuando cambia
     return buildContractTimeline(selectedYear, filteredPayments);
-  }, [filteredPayments, paymentsVersion, selectedYear, contract?.id]);
+  }, [filteredPayments, selectedYear, contract]);
 
   const getPaymentByMonth = (monthNumber: number): Payment | undefined => {
-    // Buscar en los pagos filtrados por año
     return filteredPayments.find(p => {
       const dueDate = new Date(p.dueDate);
-      const month = dueDate.getMonth() + 1; // getMonth() retorna 0-11, necesitamos 1-12
+      const month = dueDate.getMonth() + 1;
       return month === monthNumber;
     });
   };
@@ -157,25 +119,14 @@ export default function PaymentByPropertyDetailsModal({
 
   const handleEditClick = (monthInfo: ContractMonthInfo) => {
     const payment = getPaymentByMonth(monthInfo.monthNumber);
-    
     if (payment && payment.id !== 0) {
-      // Editar pago existente - solo para pagos con id !== 0
       setEditingPayment(payment);
       setEditDialogOpen(true);
     }
-    // Nota: La creación de nuevos pagos se maneja en otro lugar si es necesario
   };
 
   const handleEditSuccess = async () => {
-    // Recargar pagos del contrato tras editar exitosamente
-    await loadPayments();
-    // Refrescar caches globales para que otras vistas (tenants, grid, etc.) reaccionen
-    try {
-      dataGateway.invalidate();
-      await dataGateway.loadAll();
-    } catch {
-      // Ignorar errores de refresco global: la vista local ya se actualizó
-    }
+    // No need to manually reload, usePayments query invalidation handles it
     setEditDialogOpen(false);
     setEditingPayment(null);
   };
@@ -194,11 +145,12 @@ export default function PaymentByPropertyDetailsModal({
           Pagos del Local {contract ? `N° ${contract.propertyLocalNumber || 'N/A'}` : ''}
         </DialogTitle>
         <DialogContent dividers sx={{ p: { xs: 2, sm: 3 } }}>
-          {error && (
-            <Typography color="error" sx={{ mb: 2 }}>
-              {error}
-            </Typography>
+          {isLoading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
           )}
+
           <Stack spacing={1.5} sx={{ mb: 2 }}>
             <Typography variant="body2">
               Inquilino: <strong>{contract?.tenantFullName || `ID: ${contract?.tenantId}`}</strong>
@@ -241,10 +193,9 @@ export default function PaymentByPropertyDetailsModal({
             {timeline.map((mi) => {
               const status = mi.status as MonthStatus;
               const payment = getPaymentByMonth(mi.monthNumber);
-              
-              // Key incluye monthNumber, status, paymentId y updatedAt para forzar re-render cuando cambie cualquier cosa
+
               const gridKey = `${mi.monthNumber}-${status}-${payment?.id || 'none'}-${payment?.updatedAt || 'no-payment'}`;
-              
+
               return (
                 <Grid item xs={4} sm={3} md={2} key={gridKey}>
                   <Box
@@ -266,32 +217,34 @@ export default function PaymentByPropertyDetailsModal({
                       flexDirection: 'column',
                       width: '100%',
                       position: 'relative',
-                      cursor: 'pointer',
+                      cursor: payment ? 'pointer' : 'default', // Only clickable if payment exists
                       '&:hover': {
                         bgcolor: 'action.hover',
                       }
                     }}
                   >
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditClick(mi);
-                      }}
-                      sx={{
-                        position: 'absolute',
-                        bottom: 4,
-                        right: 4,
-                        bgcolor: 'background.paper',
-                        boxShadow: 1,
-                        '&:hover': {
-                          bgcolor: 'primary.light',
-                          color: 'primary.contrastText'
-                        }
-                      }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
+                    {payment && (
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditClick(mi);
+                        }}
+                        sx={{
+                          position: 'absolute',
+                          bottom: 4,
+                          right: 4,
+                          bgcolor: 'background.paper',
+                          boxShadow: 1,
+                          '&:hover': {
+                            bgcolor: 'primary.light',
+                            color: 'primary.contrastText'
+                          }
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    )}
                     <Typography
                       variant="subtitle1"
                       sx={{
@@ -315,7 +268,7 @@ export default function PaymentByPropertyDetailsModal({
                         fontSize: '1.05rem',
                         letterSpacing: 0.2
                       }}
-                      >
+                    >
                       {getStatusLabel(status)}
                     </Typography>
                     {payment && (
@@ -371,4 +324,3 @@ export default function PaymentByPropertyDetailsModal({
     </>
   );
 }
-
