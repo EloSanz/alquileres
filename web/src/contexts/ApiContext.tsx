@@ -16,7 +16,7 @@ export const useApi = () => {
 export const handleInvalidToken = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  window.location.href = '/pentamont/login';
+  window.location.href = '/login';
 }
 
 // Función helper para verificar errores de autenticación en respuestas
@@ -45,9 +45,9 @@ export const checkAuthError = (error: any): boolean => {
 export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
   // Usar solo el origen para que Eden Treaty maneje las rutas correctamente
   // Las rutas se accederán como api.api.tenants.get()
-  // En desarrollo: Vite proxy maneja /pentamont/api -> localhost:4000 (rewrite to /api)
-  // En producción: Nginx maneja /pentamont/api -> localhost:4000 (stripped)
-  const apiUrl = `${window.location.origin}/pentamont`
+  // En desarrollo: Vite proxy maneja /api -> localhost:4000
+  // En producción: Nginx maneja /api -> localhost:4000
+  const apiUrl = window.location.origin
 
   const api = treaty<App>(apiUrl, {
     headers: () => {
