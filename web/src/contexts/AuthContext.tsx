@@ -27,9 +27,11 @@ export const useAuth = () => {
 
 // Función para redirigir al login cuando el token es inválido
 const redirectToLogin = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  window.location.href = '/pentamont/login';
+  localStorage.removeItem('pentamont_token');
+  localStorage.removeItem('pentamont_user');
+  // Use BASE_URL from Vite to avoid hardcoded paths
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  window.location.href = `${baseUrl}login`.replace(/\/+/g, '/');
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -37,8 +39,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Check for existing token and user data on app start
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
+    const token = localStorage.getItem('pentamont_token');
+    const savedUser = localStorage.getItem('pentamont_user');
 
     if (token && savedUser) {
       // Validar formato JWT (debe tener 3 partes separadas por puntos)
@@ -93,14 +95,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = (token: string, userData: User) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('pentamont_token', token);
+    localStorage.setItem('pentamont_user', JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem('pentamont_token');
+    localStorage.removeItem('pentamont_user');
     setUser(null);
     setUser(null);
     redirectToLogin();

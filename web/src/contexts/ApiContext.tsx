@@ -14,9 +14,10 @@ export const useApi = () => {
 
 // Función para manejar token inválido y redirigir al login
 export const handleInvalidToken = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  window.location.href = '/pentamont/login';
+  localStorage.removeItem('pentamont_token');
+  localStorage.removeItem('pentamont_user');
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  window.location.href = `${baseUrl}login`.replace(/\/+/g, '/');
 }
 
 // Función helper para verificar errores de autenticación en respuestas
@@ -47,11 +48,12 @@ export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
   // Las rutas se accederán como api.api.tenants.get()
   // En desarrollo: Vite proxy maneja /pentamont/api -> localhost:4000 (rewrite to /api)
   // En producción: Nginx maneja /pentamont/api -> localhost:4000 (stripped)
-  const apiUrl = `${window.location.origin}/pentamont`
+  const baseUrl = import.meta.env.BASE_URL || '/pentamont/'
+  const apiUrl = `${window.location.origin}${baseUrl}`.replace(/\/$/, '')
 
   const api = treaty<App>(apiUrl, {
     headers: () => {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('pentamont_token')
       if (token) {
         // Limpiar el token antes de enviarlo (quitar espacios y comillas)
         const cleanToken = String(token).trim().replace(/^["']|["']$/g, '')
