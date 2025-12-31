@@ -147,6 +147,9 @@ export default function PaymentByPropertyView({ openPropertyId }: PaymentByPrope
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                         <strong>Alquiler:</strong> S/ {(contract?.monthlyRent ?? property.monthlyRent)?.toFixed(2) || '0.00'}
                       </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        <strong>TO-DO: GARANTIA:</strong> S/ {(contract?.monthlyRent ?? property.monthlyRent)?.toFixed(2) || '0.00'}
+                      </Typography>
                     </CardContent>
                   </CardActionArea>
                 </Card>
