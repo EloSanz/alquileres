@@ -40,7 +40,7 @@ export const useServiceService = () => {
   
   return {
     getAllServices: async (): Promise<Service[]> => {
-      const response = await api.pentamont.api.services.get()
+      const response = await api.api.services.get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -54,7 +54,7 @@ export const useServiceService = () => {
     },
     
     getServiceById: async (id: number): Promise<Service> => {
-      const response = await api.pentamont.api.services({ id }).get()
+      const response = await api.api.services({ id }).get()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -68,7 +68,7 @@ export const useServiceService = () => {
     },
     
     createService: async (serviceData: CreateServiceData): Promise<Service> => {
-      const response = await api.pentamont.api.services.post(serviceData as any)
+      const response = await api.api.services.post(serviceData as any)
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -82,7 +82,7 @@ export const useServiceService = () => {
     },
     
     updateService: async (id: number, serviceData: UpdateServiceData): Promise<Service> => {
-      const response = await api.pentamont.api.services({ id }).put(serviceData)
+      const response = await api.api.services({ id }).put(serviceData)
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 
@@ -96,7 +96,7 @@ export const useServiceService = () => {
     },
     
     deleteService: async (id: number): Promise<void> => {
-      const response = await api.pentamont.api.services({ id }).delete()
+      const response = await api.api.services({ id }).delete()
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string' 
           ? response.error.value 

@@ -7,7 +7,6 @@ import {
   Box,
   Typography,
   Stack,
-  Divider,
   CircularProgress,
 } from '@mui/material';
 import { usePayments } from '../hooks/usePayments';

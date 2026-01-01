@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  Box, 
-  useMediaQuery, 
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  useMediaQuery,
   useTheme,
   Drawer,
   IconButton,
@@ -19,6 +19,7 @@ import {
 import { Home as HomeIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import YearSelector from './YearSelector';
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -61,11 +62,11 @@ const Navigation = () => {
 
   return (
     <>
-    <AppBar position="static" elevation={2}>
-      <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Penta Mont
-        </Typography>
+      <AppBar position="static" elevation={2}>
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Penta Mont
+          </Typography>
 
           {isMobile ? (
             <IconButton
@@ -76,25 +77,26 @@ const Navigation = () => {
               <MenuIcon />
             </IconButton>
           ) : (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Button
-            color="inherit"
-            startIcon={<HomeIcon />}
-            onClick={() => navigate('/')}
-          >
-            Inicio
-          </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <YearSelector />
+              <Button
+                color="inherit"
+                startIcon={<HomeIcon />}
+                onClick={() => navigate('/')}
+              >
+                Inicio
+              </Button>
 
-          <Button
-            color="inherit"
-            onClick={handleLogout}
-          >
-            Cerrar Sesión
-          </Button>
-        </Box>
+              <Button
+                color="inherit"
+                onClick={handleLogout}
+              >
+                Cerrar Sesión
+              </Button>
+            </Box>
           )}
-      </Toolbar>
-    </AppBar>
+        </Toolbar>
+      </AppBar>
 
       <Drawer
         anchor="right"
