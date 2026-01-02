@@ -29,5 +29,15 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/pentamont/, '')
       }
     }
-  }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+          mui: ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+        },
+      },
+    },
+  },
 })
