@@ -44,7 +44,7 @@ export const useGuaranteeService = () => {
 
   return {
     getAllGuarantees: async (): Promise<GuaranteeDTO[]> => {
-      const response = await api.pentamont.api.guarantees.get();
+      const response = await api.api.guarantees.get();
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -58,7 +58,7 @@ export const useGuaranteeService = () => {
     },
 
     getGuaranteeById: async (id: number): Promise<GuaranteeDTO> => {
-      const response = await api.pentamont.api.guarantees({ id }).get();
+      const response = await api.api.guarantees({ id }).get();
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -72,7 +72,7 @@ export const useGuaranteeService = () => {
     },
 
     createGuarantee: async (data: CreateGuaranteeDTO): Promise<GuaranteeDTO> => {
-      const response = await api.pentamont.api.guarantees.post(data);
+      const response = await api.api.guarantees.post(data);
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -86,7 +86,7 @@ export const useGuaranteeService = () => {
     },
 
     updateGuarantee: async (id: number, data: UpdateGuaranteeDTO): Promise<GuaranteeDTO> => {
-      const response = await api.pentamont.api.guarantees({ id }).put(data);
+      const response = await api.api.guarantees({ id }).put(data);
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value
@@ -100,7 +100,7 @@ export const useGuaranteeService = () => {
     },
 
     deleteGuarantee: async (id: number): Promise<void> => {
-      const response = await api.pentamont.api.guarantees({ id }).delete();
+      const response = await api.api.guarantees({ id }).delete();
       if (response.error) {
         const errorMsg = typeof response.error.value === 'string'
           ? response.error.value

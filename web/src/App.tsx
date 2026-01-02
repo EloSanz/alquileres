@@ -4,6 +4,7 @@ import { CssBaseline, Box } from '@mui/material';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ApiProvider } from './contexts/ApiContext';
+import { YearProvider } from './contexts/YearContext';
 
 import Navigation from './components/Navigation';
 import LoginPage from './pages/LoginPage';
@@ -160,9 +161,11 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <ApiProvider>
-            <QueryClientProvider client={queryClient}>
-              <AppContent />
-            </QueryClientProvider>
+            <YearProvider>
+              <QueryClientProvider client={queryClient}>
+                <AppContent />
+              </QueryClientProvider>
+            </YearProvider>
           </ApiProvider>
         </AuthProvider>
       </ThemeProvider>

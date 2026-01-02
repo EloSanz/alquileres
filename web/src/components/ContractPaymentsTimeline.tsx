@@ -4,12 +4,8 @@ import {
     Grid,
     Typography,
     Stack,
-    Divider,
     IconButton,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
+    Divider,
 } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
 import { usePayments } from '../hooks/usePayments';
@@ -17,6 +13,7 @@ import { Payment } from '../../../shared/types/Payment';
 import { buildContractTimeline, type ContractMonthInfo } from '../services/contractTimeline';
 import type { Contract } from '../../../shared/types/Contract';
 import EditPaymentModal from './EditPaymentModal';
+import { useYear } from '../contexts/YearContext';
 
 export interface ContractPaymentsTimelineProps {
     contract: Contract;
@@ -26,7 +23,7 @@ type MonthStatus = 'PAID' | 'DUE' | 'FUTURE';
 
 export default function ContractPaymentsTimeline({ contract }: ContractPaymentsTimelineProps) {
     const { payments: allPayments } = usePayments();
-    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+    const { selectedYear } = useYear();
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
 
@@ -133,18 +130,6 @@ export default function ContractPaymentsTimeline({ contract }: ContractPaymentsT
                 <Typography variant="subtitle2">
                     Estado de cuotas (12 meses)
                 </Typography>
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel>Año</InputLabel>
-                    <Select
-                        value={selectedYear}
-                        label="Año"
-                        onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    >
-                        <MenuItem value={2024}>2024</MenuItem>
-                        <MenuItem value={2025}>2025</MenuItem>
-                        <MenuItem value={2026}>2026</MenuItem>
-                    </Select>
-                </FormControl>
             </Box>
 
             <Grid container spacing={1.2}>
