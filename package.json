@@ -9,9 +9,10 @@
   "scripts": {
     "setup": "./setup.sh",
     "dev": "concurrently -n backend,frontend \"cd server && npm run dev:full\" \"cd web && npm run dev:full\"",
-    "dev:backend": "cd server && npm run dev:full",
-    "dev:frontend": "cd web && npm run dev:full",
-    "build": "cd server && npm run build && cd ../web && npm run build",
+    "dev:backend": "npm run dev --workspace=server",
+    "dev:frontend": "npm run dev --workspace=web",
+    "build": "npm run build --workspaces --if-present",
+    "start": "concurrently -n backend,frontend \"npm run start --workspace=server\" \"npm run start --workspace=web\"",
     "clean": "find . -name node_modules -type d -exec rm -rf {} + 2>/dev/null || true"
   },
   "devDependencies": {

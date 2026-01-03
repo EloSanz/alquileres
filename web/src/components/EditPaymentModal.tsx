@@ -61,8 +61,10 @@ export default function EditPaymentModal({
         status: payment.status || PaymentStatus.FUTURO,
         notes: payment.notes || '',
       });
+      const base = import.meta.env.BASE_URL || '/';
+      const fallbackImage = `${base}comprobante.png`.replace(/\/+/g, '/');
       // Cargar preview de imagen existente si hay
-      if (payment.receiptImageUrl && payment.receiptImageUrl !== '/comprobante.png') {
+      if (payment.receiptImageUrl && payment.receiptImageUrl !== fallbackImage && payment.receiptImageUrl !== '/comprobante.png') {
         setEditReceiptImagePreview(payment.receiptImageUrl);
       } else {
         setEditReceiptImagePreview(null);
@@ -323,9 +325,9 @@ export default function EditPaymentModal({
                 >
                   <Box
                     component="img"
-                    src={payment.receiptImageUrl && payment.receiptImageUrl !== '/comprobante.png'
+                    src={payment.receiptImageUrl && payment.receiptImageUrl !== '/comprobante.png' && payment.receiptImageUrl !== `${import.meta.env.BASE_URL || '/'}comprobante.png`.replace(/\/+/g, '/')
                       ? payment.receiptImageUrl
-                      : '/comprobante.png'}
+                      : `${import.meta.env.BASE_URL || '/'}comprobante.png`.replace(/\/+/g, '/')}
                     alt="Comprobante de pago"
                     sx={{
                       maxWidth: '100%',
@@ -335,7 +337,7 @@ export default function EditPaymentModal({
                     }}
                     onError={(e) => {
                       // Fallback si la imagen no se carga
-                      (e.target as HTMLImageElement).src = '/comprobante.png';
+                      (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL || '/'}comprobante.png`.replace(/\/+/g, '/');
                     }}
                   />
                 </Paper>

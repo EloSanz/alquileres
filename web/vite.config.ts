@@ -30,7 +30,25 @@ export default defineConfig({
       }
     }
   },
+  preview: {
+    port: 4001,
+    host: true,
+    allowedHosts: [
+      'icards.fun',
+      'www.icards.fun',
+      'localhost'
+    ],
+    proxy: {
+      '/pentamont/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/pentamont/, '')
+      }
+    }
+  },
   build: {
+    outDir: 'dist/pentamont',
+    emptyOutDir: true,
     rollupOptions: {
       output: {
         manualChunks: {

@@ -9,9 +9,11 @@
     "dev:full": "concurrently \"npm run dev\" \"npm run type-check\"",
     "build": "vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "vite preview"
   },
   "dependencies": {
+    "serve": "^14.2.4",
     "@elysiajs/eden": "^1.0.0",
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",

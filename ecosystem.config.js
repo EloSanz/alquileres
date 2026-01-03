@@ -17,8 +17,8 @@ module.exports = {
     },
     {
       name: 'alquileres-frontend',
-      script: 'npx',
-      args: 'serve -s dist -l 4001',
+      script: 'npm',
+      args: 'run start',
       cwd: './web',
       env: {
         NODE_ENV: 'production'

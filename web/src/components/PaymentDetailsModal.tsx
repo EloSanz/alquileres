@@ -41,9 +41,9 @@ export default function PaymentDetailsModal({
       }
       return new Date(str);
     })();
-    
+
     if (isNaN(date.getTime())) return String(dateInput);
-    
+
     return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
@@ -66,7 +66,8 @@ export default function PaymentDetailsModal({
 
   // Por ahora, todos los pagos usan la misma imagen
   // En el futuro, se puede usar payment.receiptImageUrl si está disponible
-  const receiptImageUrl = payment?.receiptImageUrl || '/comprobante.png';
+  const base = import.meta.env.BASE_URL || '/';
+  const receiptImageUrl = payment?.receiptImageUrl || `${base}comprobante.png`.replace(/\/+/g, '/');
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
