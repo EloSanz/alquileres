@@ -287,9 +287,7 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
       <p style={paragraphStyle}>
         <strong>SEPTIMA:</strong> <strong>{arrendatarioLabel}</strong> declara que recibe <strong>EL INMUEBLE</strong> y sus accesorios, en
         condiciones operativas, puertas con sus llaves, instalaciones eléctricas, instalaciones sanitarias, por
-        lo que ésta se responsabiliza de cualquier siniestro y de los daños o desperfectos que puedan sufrir
-        <strong>EL INMUEBLE</strong>, sus partes integrantes y/o accesorios, en tanto no se les devuelva tales bienes a
-        <strong>EL ARRENDADOR</strong> y a satisfacciónn de ésta.
+        lo que ésta se responsabiliza de cualquier siniestro y de los daños o desperfectos que puedan sufrir <strong>EL INMUEBLE</strong>, sus partes integrantes y/o accesorios, en tanto no se les devuelva tales bienes a <strong>EL ARRENDADOR</strong> y a satisfacciónn de ésta.
       </p>
 
       <h2 style={sectionTitleStyle}>
@@ -343,12 +341,7 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
         en que fue recibido y que se generen por el uso normal del bien.
       </p>
       <p style={paragraphStyle}>
-        <strong>DECIMO TERCERA:</strong> Las modificaciones y mejoras que autorice realizar <strong>EL ARRENDADOR</strong>
-        quedarán a beneficio de <strong>EL INMUEBLE</strong> sin que <strong>{arrendatarioLabel}</strong> tenga derecho a exigir
-        pago o compensación alguna por dicho concepto; comprometiéndose a no retirarlas de <strong>EL
-          INMUEBLE</strong>, aunque las mismas sean separables y aun cuando el retiro de las mismas no dañe <strong>EL
-            INMUEBLE</strong> o que causándole daño <strong>{arrendatarioLabel}</strong> pueda subsanar o corregir los
-        desperfectos que tal retiro ocasione. En todo caso, <strong>{arrendatarioLabel}</strong> renuncia a cualquier
+        <strong>DECIMO TERCERA:</strong> Las modificaciones y mejoras que autorice realizar <strong>EL ARRENDADOR</strong> quedarán a beneficio de <strong>EL INMUEBLE</strong> sin que <strong>{arrendatarioLabel}</strong> tenga derecho a exigir pago o compensación alguna por dicho concepto; comprometiéndose a no retirarlas de <strong>EL INMUEBLE</strong>, aunque las mismas sean separables y aun cuando el retiro de las mismas no dañe <strong>EL INMUEBLE</strong> o que causándole daño <strong>{arrendatarioLabel}</strong> pueda subsanar o corregir los desperfectos que tal retiro ocasione. En todo caso, <strong>{arrendatarioLabel}</strong> renuncia a cualquier
         acción que tienda a exigir a <strong>EL ARRENDADOR</strong> el reembolso por las modificaciones y mejoras
         que se le pudiera autorizar, así como a los plazos para interponerlas.
       </p>
@@ -356,8 +349,7 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
         <strong>DECIMO CUARTA:</strong> <strong>EL ARRENDADOR</strong> se reserva el derecho de inspeccionar, en cualquier
         momento, personalmente o por un tercero autorizado, <strong>EL INMUEBLE</strong> materia del presente
         arrendamiento con la finalidad de verificar el estado de conservación y constatar el uso que de este
-        hace <strong>{arrendatarioLabel}</strong> y/o los ocupantes. Para este efecto se le solicitará a <strong>{arrendatarioLabel}</strong>
-        fije día y hora, para llevar a cabo la inspección dentro de las cuarenta y ocho (48) horas siguientes de hecha la solicitud.
+        hace <strong>{arrendatarioLabel}</strong> y/o los ocupantes. Para este efecto se le solicitará a <strong>{arrendatarioLabel}</strong> fije día y hora, para llevar a cabo la inspección dentro de las cuarenta y ocho (48) horas siguientes de hecha la solicitud.
       </p>
 
       <hr style={dividerStyle} />

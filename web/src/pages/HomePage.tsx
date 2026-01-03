@@ -53,7 +53,7 @@ const HomePage = () => {
           startIcon={<LogoutIcon />}
           onClick={handleLogout}
           fullWidth={false}
-          sx={{ 
+          sx={{
             width: { xs: '100%', sm: 'auto' },
             mt: { xs: 2, sm: 0 }
           }}
