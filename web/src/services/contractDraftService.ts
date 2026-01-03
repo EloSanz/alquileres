@@ -20,13 +20,18 @@ export interface ContractData {
   arrendatario_distrito: string;
   arrendatario_provincia: string;
   arrendatario_departamento: string;
+  arrendatario_sexo: 'M' | 'F';
 
   // Inmueble
   inmueble_direccion: string;
   inmueble_partida_registral: string;
   inmueble_zona_registral: string;
   stand_numero: string;
+  stand_detalles: string;
   total_stands: string;
+
+  // Objeto
+  actividad_comercial: string;
 
   // Propietario del bien (para comodato)
   propietario_nombre: string;
@@ -98,16 +103,21 @@ export const defaultContractData: ContractData = {
   arrendatario_nombre: '',
   arrendatario_dni: '',
   arrendatario_domicilio: '',
-  arrendatario_distrito: 'Callería',
-  arrendatario_provincia: 'Coronel Portillo',
-  arrendatario_departamento: 'Ucayali',
+  arrendatario_distrito: '',
+  arrendatario_provincia: '',
+  arrendatario_departamento: '',
+  arrendatario_sexo: 'M',
 
   // Inmueble
   inmueble_direccion: 'Jr. Tacna Mz. 32, Lt. 8-9D',
   inmueble_partida_registral: '11162972',
   inmueble_zona_registral: 'VI - Sede Pucallpa',
   stand_numero: '',
+  stand_detalles: 'CON FRENTE A LA CUADRA _ DEL _',
   total_stands: '25',
+
+  // Objeto
+  actividad_comercial: '',
 
   // Propietario
   propietario_nombre: 'TRANSPORTES ARELLANO S.A.',
@@ -118,15 +128,15 @@ export const defaultContractData: ContractData = {
   propietario_partida_registral: '02011638',
 
   // Fechas
-  fecha_inicio: new Date().toISOString().split('T')[0],
-  fecha_fin: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  fecha_inicio: '2026-01-01',
+  fecha_fin: '2026-12-31',
   plazo_meses: '12',
 
   // Financiero
   renta_mensual: '1000.00',
   renta_texto: 'MIL CON 00/100 SOLES',
-  garantia_monto: '1000.00',
-  garantia_texto: 'MIL CON 00/100 SOLES',
+  garantia_monto: '3200.00',
+  garantia_texto: 'TRES MIL DOSCIENTOS CON 00/100 SOLES',
   adelanto_monto: '1000.00',
   adelanto_texto: 'MIL CON 00/100 SOLES',
   penalidad_diaria: '50.00',

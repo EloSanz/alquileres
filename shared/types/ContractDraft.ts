@@ -68,7 +68,7 @@ export class ContractDraft {
     public data: ContractData,
     public createdAt: string,
     public updatedAt: string
-  ) {}
+  ) { }
 
   validate(): string[] {
     const errors: string[] = [];
@@ -100,7 +100,7 @@ export class CreateContractDraft {
   constructor(
     public name: string,
     public data: ContractData
-  ) {}
+  ) { }
 
   validate(): string[] {
     const errors: string[] = [];
@@ -129,7 +129,7 @@ export class UpdateContractDraft {
   constructor(
     public name?: string,
     public data?: ContractData
-  ) {}
+  ) { }
 
   validate(): string[] {
     const errors: string[] = [];
@@ -200,12 +200,12 @@ export const defaultContractData: ContractData = {
   plazo_meses: '12',
 
   // Financiero
-  renta_mensual: '1000.00',
-  renta_texto: 'MIL CON 00/100 SOLES',
-  garantia_monto: '1000.00',
-  garantia_texto: 'MIL CON 00/100 SOLES',
-  adelanto_monto: '1000.00',
-  adelanto_texto: 'MIL CON 00/100 SOLES',
+  renta_mensual: '1600.00',
+  renta_texto: 'MIL SEISCIENTOS CON 00 SOLES',
+  garantia_monto: '1600.00',
+  garantia_texto: 'MIL SEISCIENTOS CON 00 SOLES',
+  adelanto_monto: '1600.00',
+  adelanto_texto: 'MIL SEISCIENTOS CON 00 SOLES',
   penalidad_diaria: '50.00',
   penalidad_texto: 'CINCUENTA DOLARES',
   dia_vencimiento: '29',
