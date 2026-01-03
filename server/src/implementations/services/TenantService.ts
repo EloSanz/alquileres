@@ -32,28 +32,26 @@ export class TenantService implements ITenantService {
     private tenantRepository: ITenantRepository,
     private paymentRepository: IPaymentRepository,
     private propertyRepository: IPropertyRepository
-  ) {}
+  ) { }
 
   /**
    * Calcula el estado de pago de un inquilino basado en los pagos del año actual
    * Si hay algún pago del año actual que no está PAGADO, el inquilino tiene CON_DEUDA
    * Si todos los pagos del año actual están PAGADO, el inquilino está AL_DIA
    */
-  private async calculatePaymentStatus(tenantId: number, fechaInicioContrato: Date | null): Promise<EstadoPago> {
+  private async calculatePaymentStatus(tenantId: number, fechaInicioContrato: Date | null, year?: number): Promise<EstadoPago> {
     if (!fechaInicioContrato) {
       return EstadoPago.AL_DIA; // Si no hay fecha de inicio, asumimos al día
     }
 
+    const currentYear = year || new Date().getFullYear();
     const now = new Date();
     const contractStart = new Date(fechaInicioContrato);
 
-    // Si el contrato aún no ha empezado, está al día
-    if (contractStart > now) {
+    // Si el contrato empieza en el futuro (después del año consultado), está al día
+    if (contractStart.getFullYear() > currentYear) {
       return EstadoPago.AL_DIA;
     }
-
-    // Obtener el año actual
-    const currentYear = new Date().getFullYear();
 
     // Obtener todos los pagos del inquilino
     const payments = await this.paymentRepository.findByTenantId(tenantId);
@@ -80,14 +78,14 @@ export class TenantService implements ITenantService {
     return EstadoPago.AL_DIA;
   }
 
-  async getAllTenants(_userId: number): Promise<TenantDTO[]> {
+  async getAllTenants(_userId: number, year?: number): Promise<TenantDTO[]> {
     const entities = await this.tenantRepository.findAll();
 
     // Actualizar estado de pago para cada tenant y obtener sus propiedades
     const updatedEntities = await Promise.all(
       entities.map(async (entity) => {
         if (entity.fechaInicioContrato) {
-          const calculatedStatus = await this.calculatePaymentStatus(entity.id!, entity.fechaInicioContrato);
+          const calculatedStatus = await this.calculatePaymentStatus(entity.id!, entity.fechaInicioContrato, year);
 
           // Si el estado calculado es diferente al actual, actualizar
           if (entity.estadoPago !== calculatedStatus) {
@@ -188,10 +186,10 @@ export class TenantService implements ITenantService {
     }
     if (data.fechaInicioContrato !== undefined) {
       // Handle empty strings and validate date
-      const dateStr = typeof data.fechaInicioContrato === 'string' 
-        ? data.fechaInicioContrato.trim() 
+      const dateStr = typeof data.fechaInicioContrato === 'string'
+        ? data.fechaInicioContrato.trim()
         : data.fechaInicioContrato;
-      
+
       if (!dateStr || dateStr === '') {
         entity.fechaInicioContrato = null;
       } else {

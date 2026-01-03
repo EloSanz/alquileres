@@ -57,12 +57,12 @@ export const tenantRoutes = new Elysia({ prefix: '/tenants' })
     }
 
     const token: string = authHeader.substring(7).trim()
-    
+
     // Debug: Log token format (solo primeros y últimos caracteres por seguridad)
     if (token.length < 10 || token.split('.').length !== 3) {
-      logError('Token malformed - invalid format', undefined, { 
-        route: 'tenants', 
-        method: request.method, 
+      logError('Token malformed - invalid format', undefined, {
+        route: 'tenants',
+        method: request.method,
         url: request.url,
         tokenLength: token.length,
         tokenParts: token.split('.').length,
@@ -75,9 +75,9 @@ export const tenantRoutes = new Elysia({ prefix: '/tenants' })
       const payload = jwtVerify(token, JWT_SECRET) as JWTPayload
       return { userId: payload.userId }
     } catch (error: any) {
-      logError('Token verification failed', error, { 
-        route: 'tenants', 
-        method: request.method, 
+      logError('Token verification failed', error, {
+        route: 'tenants',
+        method: request.method,
         url: request.url,
         errorMessage: error.message,
         tokenLength: token.length,
@@ -87,6 +87,9 @@ export const tenantRoutes = new Elysia({ prefix: '/tenants' })
     }
   })
   .get('/', tenantController.getAll, {
+    query: t.Object({
+      year: t.Optional(t.String())
+    }),
     detail: {
       tags: ['Tenants'],
       summary: 'Get all tenants'

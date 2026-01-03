@@ -3,8 +3,9 @@ import { ITenantService } from '../interfaces/services/ITenantService';
 export class TenantController {
   constructor(private tenantService: ITenantService) { }
 
-  getAll = async ({ userId }: { userId: number }) => {
-    const tenants = await this.tenantService.getAllTenants(userId);
+  getAll = async ({ userId, query }: { userId: number; query?: { year?: string } }) => {
+    const year = query?.year ? parseInt(query.year) : undefined;
+    const tenants = await this.tenantService.getAllTenants(userId, year);
     return {
       success: true,
       message: 'Tenants retrieved successfully',

@@ -2,20 +2,27 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApi, checkAuthError } from '../contexts/ApiContext';
 import { Tenant, CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
 
+import { useYear } from '../contexts/YearContext';
+
 // Keys for cache invalidation
 const TENANT_KEYS = {
-    all: ['tenants'] as const,
+    all: (year?: number) => ['tenants', year] as const,
     detail: (id: number) => ['tenants', id] as const,
 };
 
 export const useTenants = () => {
     const api = useApi();
     const queryClient = useQueryClient();
+    const { selectedYear } = useYear();
 
     const tenantsQuery = useQuery({
-        queryKey: TENANT_KEYS.all,
+        queryKey: TENANT_KEYS.all(selectedYear),
         queryFn: async () => {
-            const response = await api.api.tenants.get();
+            const response = await api.api.tenants.get({
+                query: {
+                    year: selectedYear.toString()
+                }
+            });
 
             if (response.error) {
                 if (checkAuthError(response.error)) throw new Error('Authentication required');
@@ -43,7 +50,7 @@ export const useTenants = () => {
             return response.data.data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: TENANT_KEYS.all });
+            queryClient.invalidateQueries({ queryKey: TENANT_KEYS.all(selectedYear) });
         }
     });
 
@@ -61,7 +68,7 @@ export const useTenants = () => {
             return response.data.data;
         },
         onSuccess: (updatedTenant) => {
-            queryClient.invalidateQueries({ queryKey: TENANT_KEYS.all });
+            queryClient.invalidateQueries({ queryKey: TENANT_KEYS.all(selectedYear) });
             queryClient.invalidateQueries({ queryKey: TENANT_KEYS.detail(updatedTenant.id) });
         }
     });
@@ -84,7 +91,7 @@ export const useTenants = () => {
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: TENANT_KEYS.all });
+            queryClient.invalidateQueries({ queryKey: TENANT_KEYS.all(selectedYear) });
         }
     });
 
