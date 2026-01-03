@@ -89,6 +89,7 @@ export default function ContractEditorModal({
       if (!initialData.fecha_fin?.trim()) missing.push('Fecha de Fin');
       if (!initialData.renta_mensual?.trim()) missing.push('Renta Mensual');
       if (!initialData.stand_numero?.trim()) missing.push('Número de Stand');
+      if (!initialData.actividad_comercial?.trim()) missing.push('Actividad Comercial');
       setMissingFields(missing);
 
       setError('');
@@ -138,6 +139,7 @@ export default function ContractEditorModal({
       if (!newData.fecha_fin?.trim()) missing.push('Fecha de Fin');
       if (!newData.renta_mensual?.trim()) missing.push('Renta Mensual');
       if (!newData.stand_numero?.trim()) missing.push('Número de Stand');
+      if (!newData.actividad_comercial?.trim()) missing.push('Actividad Comercial');
 
       setMissingFields(missing);
 
@@ -242,9 +244,7 @@ export default function ContractEditorModal({
       formatErrors.push('DNI del Arrendatario debe tener 7-9 caracteres (dígitos + opcional letra)');
     }
 
-    if (!contractData.actividad_comercial?.trim()) {
-      formatErrors.push('La actividad comercial es requerida');
-    }
+
 
     // Validar fechas
     if (contractData.fecha_inicio.trim()) {
@@ -419,7 +419,8 @@ export default function ContractEditorModal({
       const exportRequiredFields = [
         { key: 'arrendatario_nombre', label: 'Nombre del Arrendatario' },
         { key: 'arrendatario_dni', label: 'DNI del Arrendatario' },
-        { key: 'stand_numero', label: 'Número de Stand' }
+        { key: 'stand_numero', label: 'Número de Stand' },
+        { key: 'actividad_comercial', label: 'Actividad Comercial' }
       ];
 
       const missingExportFields = exportRequiredFields
