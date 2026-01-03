@@ -48,8 +48,12 @@ export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
   // Las rutas se accederán como api.api.tenants.get()
   // En desarrollo: Vite proxy maneja /pentamont/api -> localhost:4000 (rewrite to /api)
   // En producción: Nginx maneja /pentamont/api -> localhost:4000 (stripped)
-  const baseUrl = import.meta.env.BASE_URL || '/pentamont/'
-  const apiUrl = `${window.location.origin}${baseUrl}`.replace(/\/$/, '')
+  // En producción (VPS): Nginx maneja /pentamont/api -> localhost:4000
+  // Queremos que las peticiones vayan a /pentamont/api/... para que Nginx las capture
+  const apiScope = import.meta.env.VITE_API_SCOPE || '/pentamont';
+  // Use URL constructor to safely join paths without mangling the protocol (http://)
+  // window.location.origin is like "http://localhost:4001"
+  const apiUrl = new URL(apiScope, window.location.origin).toString().replace(/\/$/, '');
 
   const api = treaty<App>(apiUrl, {
     headers: () => {
