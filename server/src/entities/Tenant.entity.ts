@@ -24,7 +24,9 @@ export class TenantEntity {
     public fechaInicioContrato: Date | null,
     public estadoPago: EstadoPago,
     public createdAt: Date,
-    public updatedAt: Date
+    public updatedAt: Date,
+    public payments?: any[],
+    public properties?: any[]
   ) { }
 
   static fromPrisma(prismaData: any): TenantEntity {
@@ -39,7 +41,9 @@ export class TenantEntity {
       prismaData.fechaInicioContrato,
       prismaData.estadoPago || EstadoPago.AL_DIA,
       prismaData.createdAt,
-      prismaData.updatedAt
+      prismaData.updatedAt,
+      prismaData.payments,
+      prismaData.properties
     );
   }
 

@@ -39,13 +39,12 @@ export class TenantService implements ITenantService {
    * Si hay algún pago del año actual que no está PAGADO, el inquilino tiene CON_DEUDA
    * Si todos los pagos del año actual están PAGADO, el inquilino está AL_DIA
    */
-  private async calculatePaymentStatus(tenantId: number, fechaInicioContrato: Date | null, year?: number): Promise<EstadoPago> {
+  private async calculatePaymentStatus(tenantId: number, fechaInicioContrato: Date | null, year?: number, preloadedPayments?: any[]): Promise<EstadoPago> {
     if (!fechaInicioContrato) {
       return EstadoPago.AL_DIA; // Si no hay fecha de inicio, asumimos al día
     }
 
     const currentYear = year || new Date().getFullYear();
-    const now = new Date();
     const contractStart = new Date(fechaInicioContrato);
 
     // Si el contrato empieza en el futuro (después del año consultado), está al día
@@ -54,10 +53,10 @@ export class TenantService implements ITenantService {
     }
 
     // Obtener todos los pagos del inquilino
-    const payments = await this.paymentRepository.findByTenantId(tenantId);
+    const payments = preloadedPayments || await this.paymentRepository.findByTenantId(tenantId);
 
     // Filtrar pagos del año actual usando dueDate
-    const currentYearPayments = payments.filter(payment => {
+    const currentYearPayments = payments.filter((payment: any) => {
       const dueDate = new Date(payment.dueDate);
       return dueDate.getFullYear() === currentYear;
     });
@@ -79,13 +78,19 @@ export class TenantService implements ITenantService {
   }
 
   async getAllTenants(_userId: number, year?: number): Promise<TenantDTO[]> {
-    const entities = await this.tenantRepository.findAll();
+    let entities: TenantEntity[];
+    // Use optimized query if available
+    if (this.tenantRepository.findAllWithRelations) {
+      entities = await this.tenantRepository.findAllWithRelations();
+    } else {
+      entities = await this.tenantRepository.findAll();
+    }
 
     // Actualizar estado de pago para cada tenant y obtener sus propiedades
     const updatedEntities = await Promise.all(
       entities.map(async (entity) => {
         if (entity.fechaInicioContrato) {
-          const calculatedStatus = await this.calculatePaymentStatus(entity.id!, entity.fechaInicioContrato, year);
+          const calculatedStatus = await this.calculatePaymentStatus(entity.id!, entity.fechaInicioContrato, year, entity.payments);
 
           // Si el estado calculado es diferente al actual, actualizar
           if (entity.estadoPago !== calculatedStatus) {
@@ -94,10 +99,10 @@ export class TenantService implements ITenantService {
           }
         }
 
-        // Obtener las propiedades asociadas al tenant
-        const properties = await this.propertyRepository.findByTenantId(entity.id!);
+        // Obtener las propiedades asociadas al tenant (usar preloaded si existe)
+        const properties = entity.properties || await this.propertyRepository.findByTenantId(entity.id!);
         // Obtener números de local únicos y ordenados
-        const localNumbers = Array.from(new Set(properties.map(p => p.localNumber))).sort((a, b) => a - b);
+        const localNumbers = Array.from(new Set(properties.map((p: any) => p.localNumber))).sort((a, b) => a - b);
 
         // Agregar los números de local al DTO
         const dto = entity.toDTO();

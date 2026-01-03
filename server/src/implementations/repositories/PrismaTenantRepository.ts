@@ -10,6 +10,17 @@ export class PrismaTenantRepository implements ITenantRepository {
     return tenants.map((tenant: any) => TenantEntity.fromPrisma(tenant));
   }
 
+  async findAllWithRelations(): Promise<TenantEntity[]> {
+    const tenants = await prisma.tenant.findMany({
+      orderBy: { id: 'asc' },
+      include: {
+        payments: true,
+        properties: true
+      }
+    });
+    return tenants.map((tenant: any) => TenantEntity.fromPrisma(tenant));
+  }
+
   async findById(id: number): Promise<TenantEntity | null> {
     const tenant = await prisma.tenant.findUnique({ where: { id } });
     return tenant ? TenantEntity.fromPrisma(tenant) : null;
@@ -32,14 +43,14 @@ export class PrismaTenantRepository implements ITenantRepository {
     const data = tenant.toPrisma();
     delete (data as any).id; // Don't update id
     delete (data as any).createdAt; // Don't update createdAt
-    
+
     // Remove undefined values to avoid Prisma errors
     Object.keys(data).forEach(key => {
       if (data[key as keyof typeof data] === undefined) {
         delete data[key as keyof typeof data];
       }
     });
-    
+
     const updated = await prisma.tenant.update({ where: { id }, data });
     return TenantEntity.fromPrisma(updated);
   }
