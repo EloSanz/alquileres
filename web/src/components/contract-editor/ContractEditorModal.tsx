@@ -53,7 +53,7 @@ export default function ContractEditorModal({
   onClose
 }: ContractEditorModalProps) {
   const previewRef = useRef<HTMLDivElement>(null);
-  
+
   const [tabValue, setTabValue] = useState(0);
   const [contractData, setContractData] = useState<ContractData>(defaultContractData);
   const [error, setError] = useState('');
@@ -242,6 +242,10 @@ export default function ContractEditorModal({
       formatErrors.push('DNI del Arrendatario debe tener 7-9 caracteres (dígitos + opcional letra)');
     }
 
+    if (!contractData.actividad_comercial?.trim()) {
+      formatErrors.push('La actividad comercial es requerida');
+    }
+
     // Validar fechas
     if (contractData.fecha_inicio.trim()) {
       const startDate = new Date(contractData.fecha_inicio);
@@ -320,9 +324,9 @@ export default function ContractEditorModal({
       // Exportación nativa por impresión para máxima fidelidad
       const contentRoot = previewRef.current;
       if (!contentRoot) {
-          setError('Error interno: No se pudo acceder al contenido del contrato.');
-          return;
-        }
+        setError('Error interno: No se pudo acceder al contenido del contrato.');
+        return;
+      }
 
       // Crear un nuevo documento con solo el contenido del contrato
       const printWindow = window.open('', '_blank');
@@ -458,18 +462,18 @@ export default function ContractEditorModal({
       // Exportación nativa por impresión para máxima fidelidad
       const contentRoot = previewRef.current;
       if (!contentRoot) {
-          setError('Error interno: No se pudo acceder al contenido del contrato.');
-          return;
-        }
+        setError('Error interno: No se pudo acceder al contenido del contrato.');
+        return;
+      }
 
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-          setError('No se pudo abrir la ventana de impresión. Verifica que no estén bloqueados los pop-ups.');
-          return;
-        }
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        setError('No se pudo abrir la ventana de impresión. Verifica que no estén bloqueados los pop-ups.');
+        return;
+      }
 
       const html = contentRoot.outerHTML;
-        printWindow.document.write(`
+      printWindow.document.write(`
           <!DOCTYPE html>
           <html>
             <head>
@@ -482,14 +486,14 @@ export default function ContractEditorModal({
           <body>${html}</body>
           </html>
         `);
-        printWindow.document.close();
-        setTimeout(() => {
-          printWindow.focus();
-          printWindow.print();
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
       }, 300);
       setSnackbar({ open: true, message: 'Documento listo para imprimir/guardar como PDF' });
     } catch (err: any) {
-        setError('Error al generar el PDF. Intente nuevamente o use la función de impresión del navegador.');
+      setError('Error al generar el PDF. Intente nuevamente o use la función de impresión del navegador.');
     }
   };
 
@@ -538,9 +542,9 @@ export default function ContractEditorModal({
             // Vista dividida: formulario izquierda, preview derecha
             <Box sx={{ height: '100%', display: 'flex', gap: 2, overflow: 'hidden', p: 0 }}>
               {/* Panel izquierdo: Formulario */}
-              <Box sx={{ 
-                flex: 1, 
-                overflow: 'auto', 
+              <Box sx={{
+                flex: 1,
+                overflow: 'auto',
                 p: 3,
                 borderRight: 1,
                 borderColor: 'divider'
@@ -577,7 +581,7 @@ export default function ContractEditorModal({
                   onChange={handleDataChange}
                 />
               </Box>
-              
+
               {/* Panel derecho: Preview */}
               <Box sx={{
                 flex: 1,

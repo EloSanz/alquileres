@@ -10,12 +10,9 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  Business as BusinessIcon,
   Person as PersonIcon,
-  Home as HomeIcon,
   CalendarMonth as CalendarIcon,
   AttachMoney as MoneyIcon,
-  Description as DescriptionIcon,
   Assignment as AssignmentIcon,
   Gavel as GavelIcon,
 } from '@mui/icons-material';
@@ -46,22 +43,23 @@ interface FormFieldProps {
 const FormField = memo(({ label, field, data, error, placeholder, onChange, multiline, rows, type = 'text', xs = 12, md = 6, stacked }: FormFieldProps) => {
   const colMd = stacked ? 12 : md;
   return (
-  <Grid item xs={xs} md={colMd}>
-    <TextField
-      fullWidth
-      label={label}
-      placeholder={placeholder}
-      value={data[field]}
-      onChange={(e) => onChange(field, e.target.value)}
-      size="small"
-      multiline={multiline}
-      rows={rows}
-      type={type}
-      error={!!error}
-      helperText={error}
-    />
-  </Grid>
-)});
+    <Grid item xs={xs} md={colMd}>
+      <TextField
+        fullWidth
+        label={label}
+        placeholder={placeholder}
+        value={data[field]}
+        onChange={(e) => onChange(field, e.target.value)}
+        size="small"
+        multiline={multiline}
+        rows={rows}
+        type={type}
+        error={!!error}
+        helperText={error}
+      />
+    </Grid>
+  )
+});
 
 interface SectionCardProps {
   title: string;
@@ -92,60 +90,33 @@ const SectionCard = ({ title, icon, color, children }: SectionCardProps) => (
 function ContractFormSection({ data, stacked, fieldErrors = {}, onChange }: ContractFormSectionProps) {
   return (
     <Box>
-      {/* 1. ENCABEZADO */}
-      <SectionCard title="ENCABEZADO" icon={<DescriptionIcon />} color="primary.main">
-        <FormField stacked={stacked} label="Número de Stand" field="stand_numero" data={data} error={fieldErrors.stand_numero} onChange={onChange} />
-        <FormField stacked={stacked} label="Lugar de Firma" field="lugar_firma" data={data} error={fieldErrors.lugar_firma} onChange={onChange} />
-      </SectionCard>
-
-      {/* 2. ARRENDADOR */}
-      <SectionCard title="ARRENDADOR" icon={<BusinessIcon />} color="primary.main">
-        <FormField stacked={stacked} label="Nombre de la empresa" field="arrendador_nombre" data={data} error={fieldErrors.arrendador_nombre} onChange={onChange} md={12} />
-        <FormField stacked={stacked} label="RUC" field="arrendador_ruc" data={data} error={fieldErrors.arrendador_ruc} onChange={onChange} />
-        <FormField stacked={stacked} label="Nombre del Gerente General" field="gerente_nombre" data={data} error={fieldErrors.gerente_nombre} onChange={onChange} />
-        <FormField stacked={stacked} label="DNI del Gerente" field="gerente_dni" data={data} error={fieldErrors.gerente_dni} onChange={onChange} placeholder="Ej: 12345678 o 12345678A" />
-        <FormField stacked={stacked} label="Partida Registral del Gerente" field="gerente_partida_registral" data={data} onChange={onChange} placeholder="Ej: 05003448" />
-        <FormField stacked={stacked} label="Domicilio Fiscal" field="arrendador_domicilio" data={data} error={fieldErrors.arrendador_domicilio} onChange={onChange} md={12} />
-        <FormField stacked={stacked} label="Distrito" field="arrendador_distrito" data={data} error={fieldErrors.arrendador_distrito} onChange={onChange} md={4} />
-        <FormField stacked={stacked} label="Provincia" field="arrendador_provincia" data={data} error={fieldErrors.arrendador_provincia} onChange={onChange} md={4} />
-        <FormField stacked={stacked} label="Departamento" field="arrendador_departamento" data={data} error={fieldErrors.arrendador_departamento} onChange={onChange} md={4} />
-      </SectionCard>
-
-      {/* 3. ARRENDATARIO */}
+      {/* 2. ARRENDATARIO */}
       <SectionCard title="ARRENDATARIO" icon={<PersonIcon />} color="success.main">
-        <FormField stacked={stacked} label="Nombre completo" field="arrendatario_nombre" data={data} error={fieldErrors.arrendatario_nombre} onChange={onChange} md={12} />
-        <FormField stacked={stacked} label="DNI" field="arrendatario_dni" data={data} error={fieldErrors.arrendatario_dni} onChange={onChange} placeholder="Ej: 12345678 o 12345678A" />
-        <FormField stacked={stacked} label="Domicilio" field="arrendatario_domicilio" data={data} error={fieldErrors.arrendatario_domicilio} onChange={onChange} md={12} />
-        <FormField stacked={stacked} label="Distrito" field="arrendatario_distrito" data={data} error={fieldErrors.arrendatario_distrito} onChange={onChange} md={4} />
-        <FormField stacked={stacked} label="Provincia" field="arrendatario_provincia" data={data} error={fieldErrors.arrendatario_provincia} onChange={onChange} md={4} />
-        <FormField stacked={stacked} label="Departamento" field="arrendatario_departamento" data={data} error={fieldErrors.arrendatario_departamento} onChange={onChange} md={4} />
-      </SectionCard>
+        <FormField stacked={stacked} label="Nombre Completo" field="arrendatario_nombre" data={data} error={fieldErrors.arrendatario_nombre} onChange={onChange} md={8} />
+        <FormField stacked={stacked} label="DNI / RUC" field="arrendatario_dni" data={data} error={fieldErrors.arrendatario_dni} onChange={onChange} md={4} />
+        <FormField stacked={stacked} label="Domicilio Completo" field="arrendatario_domicilio" data={data} error={fieldErrors.arrendatario_domicilio} onChange={onChange} md={12} multiline rows={2} placeholder="Incluir distrito, provincia y departamento" />
 
-      {/* 4. ANTECEDENTES */}
-      <SectionCard title="ANTECEDENTES" icon={<HomeIcon />} color="warning.main">
-        <FormField stacked={stacked} label="Dirección del Inmueble" field="inmueble_direccion" data={data} error={fieldErrors.inmueble_direccion} onChange={onChange} md={12} />
-        <FormField stacked={stacked} label="Partida Registral del Inmueble" field="inmueble_partida_registral" data={data} error={fieldErrors.inmueble_partida_registral} onChange={onChange} placeholder="Ej: 11162972" />
-        <FormField stacked={stacked} label="Zona Registral" field="inmueble_zona_registral" data={data} error={fieldErrors.inmueble_zona_registral} onChange={onChange} />
-        
-        <Grid item xs={12}>
-          <Divider sx={{ my: 2 }}>
-            <Typography variant="caption" color="text.secondary">Propietario del bien (Comodato)</Typography>
-          </Divider>
+        <Grid item xs={12} md={stacked ? 12 : 6}>
+          <TextField
+            select
+            fullWidth
+            label="Sexo"
+            value={data.arrendatario_sexo}
+            onChange={e => onChange('arrendatario_sexo', e.target.value)}
+            size="small"
+            SelectProps={{ native: true }}
+          >
+            <option value="M">Masculino (Don)</option>
+            <option value="F">Femenino (Doña)</option>
+          </TextField>
         </Grid>
-        
-        <FormField stacked={stacked} label="Nombre del Propietario" field="propietario_nombre" data={data} error={fieldErrors.propietario_nombre} onChange={onChange} />
-        <FormField stacked={stacked} label="RUC del Propietario" field="propietario_ruc" data={data} error={fieldErrors.propietario_ruc} onChange={onChange} />
-        <FormField stacked={stacked} label="Domicilio del Propietario" field="propietario_domicilio" data={data} error={fieldErrors.propietario_domicilio} onChange={onChange} md={12} />
-        <FormField stacked={stacked} label="Representante Legal" field="propietario_representante" data={data} error={fieldErrors.propietario_representante} onChange={onChange} />
-        <FormField stacked={stacked} label="DNI del Representante" field="propietario_representante_dni" data={data} error={fieldErrors.propietario_representante_dni} onChange={onChange} />
-        <FormField stacked={stacked} label="Partida Registral del Propietario" field="propietario_partida_registral" data={data} error={fieldErrors.propietario_partida_registral} onChange={onChange} placeholder="Ej: 02011638" />
-        
-        <FormField stacked={stacked} label="Total de Stands" field="total_stands" data={data} error={fieldErrors.total_stands} onChange={onChange} />
       </SectionCard>
 
       {/* 5. OBJETO DEL CONTRATO */}
       <SectionCard title="OBJETO DEL CONTRATO" icon={<AssignmentIcon />} color="info.main">
         <FormField stacked={stacked} label="Número de Stand" field="stand_numero" data={data} error={fieldErrors.stand_numero} onChange={onChange} />
+        <FormField stacked={stacked} label="Detalles del Stand" field="stand_detalles" data={data} error={fieldErrors.stand_detalles} onChange={onChange} md={12} multiline rows={2} placeholder="Ej: CON FRENTE A LA CUADRA 6..." />
+        <FormField stacked={stacked} label="Actividad Comercial" field="actividad_comercial" data={data} error={fieldErrors.actividad_comercial} onChange={onChange} md={12} placeholder="Ej: LIBRERÍA, DISEÑO GRAFICO..." />
       </SectionCard>
 
       {/* 6. PLAZO DEL CONTRATO */}
@@ -161,13 +132,13 @@ function ContractFormSection({ data, stacked, fieldErrors = {}, onChange }: Cont
         <FormField stacked={stacked} label="Renta en texto" field="renta_texto" data={data} error={fieldErrors.renta_texto} onChange={onChange} />
         <FormField stacked={stacked} label="Día de vencimiento" field="dia_vencimiento" data={data} error={fieldErrors.dia_vencimiento} onChange={onChange} />
         <FormField stacked={stacked} label="Días de tolerancia" field="tolerancia_dias" data={data} error={fieldErrors.tolerancia_dias} onChange={onChange} />
-        
+
         <Grid item xs={12}>
           <Divider sx={{ my: 2 }}>
             <Typography variant="caption" color="text.secondary">Datos Bancarios</Typography>
           </Divider>
         </Grid>
-        
+
         <FormField stacked={stacked} label="Nombre del Banco" field="banco_nombre" data={data} error={fieldErrors.banco_nombre} onChange={onChange} md={12} />
         <FormField stacked={stacked} label="Número de Cuenta" field="banco_cuenta" data={data} error={fieldErrors.banco_cuenta} onChange={onChange} />
         <FormField stacked={stacked} label="Código Interbancario (CCI)" field="banco_cci" data={data} error={fieldErrors.banco_cci} onChange={onChange} />
