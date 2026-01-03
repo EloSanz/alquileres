@@ -2,6 +2,10 @@
   "name": "alquileres-app",
   "version": "1.0.0",
   "description": "Sistema de Gestión de Alquileres - Full Stack",
+  "workspaces": [
+    "server",
+    "web"
+  ],
   "scripts": {
     "setup": "./setup.sh",
     "dev": "concurrently -n backend,frontend \"cd server && npm run dev:full\" \"cd web && npm run dev:full\"",
