@@ -156,6 +156,24 @@ export default function ContractEditorModal({
       });
       setFieldErrors(formatErrors);
 
+      // Auto-calcular fecha fin si cambia fecha inicio o plazo
+      if ((field === 'fecha_inicio' || field === 'plazo_meses') && newData.fecha_inicio && newData.plazo_meses) {
+        // Solo calcular si el campo modificado tiene un valor válido
+        const startDate = new Date(newData.fecha_inicio + 'T00:00:00');
+        const months = parseInt(newData.plazo_meses);
+
+        if (!isNaN(startDate.getTime()) && !isNaN(months) && months > 0) {
+          // Calcular nueva fecha fin: fecha inicio + X meses - 1 día
+          const newEndDate = new Date(startDate);
+          newEndDate.setMonth(newEndDate.getMonth() + months);
+          newEndDate.setDate(newEndDate.getDate() - 1);
+
+          if (!isNaN(newEndDate.getTime())) {
+            newData.fecha_fin = newEndDate.toISOString().split('T')[0];
+          }
+        }
+      }
+
       return newData;
     });
 
@@ -480,18 +498,20 @@ export default function ContractEditorModal({
             <head>
             <title>Contrato de Arrendamiento</title>
               <style>
-              @page { size: A4; margin: 20mm; }
-              body { margin: 0; padding: 0; }
+              @page { size: A4; margin: 0; }
+              body { margin: 0; padding: 25mm; }
               </style>
             </head>
           <body>${html}</body>
           </html>
         `);
       printWindow.document.close();
+      printWindow.document.title = 'Contrato de Arrendamiento';
+
       setTimeout(() => {
         printWindow.focus();
         printWindow.print();
-      }, 300);
+      }, 500);
       setSnackbar({ open: true, message: 'Documento listo para imprimir/guardar como PDF' });
     } catch (err: any) {
       setError('Error al generar el PDF. Intente nuevamente o use la función de impresión del navegador.');

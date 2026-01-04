@@ -141,6 +141,7 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
   };
 
   const arrendatarioLabel = data.arrendatario_sexo === 'F' ? 'LA ARRENDATARIA' : 'EL ARRENDATARIO';
+  const obligadoTerm = data.arrendatario_sexo === 'F' ? 'obligada' : 'obligado';
 
   return (
     <div style={containerStyle}>
@@ -159,7 +160,7 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
         según poder inscrito en la partida electrónica Nº 05003448 del registro de personas jurídicas de la oficina registral de Pucallpa,
         con domicilio fiscal sito en Jirón Tacna Nº 628 ( manzana 32 lote 8-9 b), del distrito de Callería,
         provincia de Coronel Portillo, departamento de Ucayali,
-        que en lo sucesivo se denominará <strong>EL ARRENDADOR</strong> y de la otra parte,
+        que en lo sucesivo se denominará <strong>EL ARRENDADOR</strong> y de la otra parte,{' '}
         {data.arrendatario_sexo === 'F' ? 'Doña ' : 'Don '}
         <PlaceholderText value={data.arrendatario_nombre} placeholder="Nombre del Arrendatario" />, identificado con D.N.I. Nº{' '}
         <PlaceholderText value={data.arrendatario_dni} placeholder="DNI del Arrendatario" />, con domicilio en <PlaceholderText value={data.arrendatario_domicilio} placeholder="Domicilio Completo" />, a quien en adelante se le denominará{' '}
@@ -228,7 +229,9 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
       <p style={paragraphStyle}>
         En caso de que <strong>{arrendatarioLabel}</strong> deseara prorrogar el plazo del presente contrato, deberá
         solicitarlo a <strong>EL ARRENDADOR</strong> con una anticipación no menor de TREINTA (30) días a la fecha de
-        conclusión del arrendamiento.
+        conclusión del arrendamiento; caso contrario <strong>{arrendatarioLabel}</strong> queda {obligadoTerm} a instruir a sus
+        ocupantes para que brinden a <strong>EL ARRENDADOR</strong> todas las facilidades para que, previa coordinación,
+        pueda mostrar <strong>EL INMUEBLE</strong> a terceros.
       </p>
       <p style={paragraphStyle}>
         En el supuesto que, a la terminación del presente contrato, por vencimiento del plazo o por resolución del
@@ -331,7 +334,7 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
       </p>
       <p style={paragraphStyle}>
         <strong>DECIMO PRIMERA:</strong> <strong>{arrendatarioLabel}</strong> se obliga a pagar puntualmente el monto de la
-        merced conductiva, en la forma, oportunidad y lugar pactados. Asimismo, <strong>{arrendatarioLabel}</strong>
+        merced conductiva, en la forma, oportunidad y lugar pactados. Asimismo, <strong>{arrendatarioLabel}</strong>{' '}
         está obligado a pagar puntualmente el importe de todos los servicios públicos, tales como agua y
         desagüe, energía eléctrica, arbitrios y otros suministrados en beneficio del bien.
       </p>
@@ -363,7 +366,7 @@ function ContractPreview({ data, fullPage }: ContractPreviewProps) {
       </p>
       <p style={paragraphStyle}>
         A la firma del presente contrato, <strong>{arrendatarioLabel}</strong> hacen entrega a <strong>EL ARRENDADOR</strong> el
-        importe de <strong>S/ {data.adelanto_monto || '____'} ({data.adelanto_texto || '____'})</strong>, en calidad de <strong>ADELANTO</strong>
+        importe de <strong>S/ {data.adelanto_monto || '____'} ({data.adelanto_texto || '____'})</strong>, en calidad de <strong>ADELANTO</strong>{' '}
         que cubren el importe de un mes de renta, es decir por el periodo comprendido entre el <strong>{getFirstMonthRange(data.fecha_inicio)}</strong>. Este pago se
         verifica en la fecha y sin más constancia de entrega y recepción del citado importe que la firma de las partes en el presente
         contrato, sin perjuicio de regularizarse la entrega del recibo de arrendamiento correspondiente.

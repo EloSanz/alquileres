@@ -113,21 +113,21 @@ function ContractFormSection({ data, stacked, fieldErrors = {}, onChange }: Cont
       </SectionCard>
 
       {/* 5. OBJETO DEL CONTRATO */}
-      <SectionCard title="OBJETO DEL CONTRATO" icon={<AssignmentIcon />} color="info.main">
+      <SectionCard title="OBJETO DEL CONTRATO (Cláusula Segunda)" icon={<AssignmentIcon />} color="info.main">
         <FormField stacked={stacked} label="Número de Stand" field="stand_numero" data={data} error={fieldErrors.stand_numero} onChange={onChange} />
         <FormField stacked={stacked} label="Detalles del Stand" field="stand_detalles" data={data} error={fieldErrors.stand_detalles} onChange={onChange} md={12} multiline rows={2} placeholder="Ej: CON FRENTE A LA CUADRA 6..." />
         <FormField stacked={stacked} label="Actividad Comercial" field="actividad_comercial" data={data} error={fieldErrors.actividad_comercial} onChange={onChange} md={12} placeholder="Ej: LIBRERÍA, DISEÑO GRAFICO..." />
       </SectionCard>
 
       {/* 6. PLAZO DEL CONTRATO */}
-      <SectionCard title="PLAZO DEL CONTRATO" icon={<CalendarIcon />} color="info.main">
+      <SectionCard title="PLAZO DEL CONTRATO (Cláusula Tercera)" icon={<CalendarIcon />} color="info.main">
         <FormField stacked={stacked} label="Fecha de Inicio" field="fecha_inicio" data={data} error={fieldErrors.fecha_inicio} onChange={onChange} type="date" />
         <FormField stacked={stacked} label="Fecha de Fin" field="fecha_fin" data={data} error={fieldErrors.fecha_fin} onChange={onChange} type="date" />
         <FormField stacked={stacked} label="Plazo (meses)" field="plazo_meses" data={data} error={fieldErrors.plazo_meses} onChange={onChange} />
       </SectionCard>
 
       {/* 7. LA MERCED CONDUCTIVA */}
-      <SectionCard title="LA MERCED CONDUCTIVA: FORMA Y OPORTUNIDAD DE PAGO" icon={<MoneyIcon />} color="error.main">
+      <SectionCard title="LA MERCED CONDUCTIVA (Cláusula Quinta)" icon={<MoneyIcon />} color="error.main">
         <FormField stacked={stacked} label="Renta Mensual (S/)" field="renta_mensual" data={data} error={fieldErrors.renta_mensual} onChange={onChange} />
         <FormField stacked={stacked} label="Renta en texto" field="renta_texto" data={data} error={fieldErrors.renta_texto} onChange={onChange} />
         <FormField stacked={stacked} label="Día de vencimiento" field="dia_vencimiento" data={data} error={fieldErrors.dia_vencimiento} onChange={onChange} />
@@ -145,7 +145,7 @@ function ContractFormSection({ data, stacked, fieldErrors = {}, onChange }: Cont
       </SectionCard>
 
       {/* 8. SOBRE LOS IMPORTES PECUNIARIOS */}
-      <SectionCard title="SOBRE LOS IMPORTES PECUNIARIOS" icon={<MoneyIcon />} color="error.main">
+      <SectionCard title="SOBRE LOS IMPORTES PECUNIARIOS (Cláusula Decimo Quinto)" icon={<MoneyIcon />} color="error.main">
         <FormField stacked={stacked} label="Adelanto (S/)" field="adelanto_monto" data={data} error={fieldErrors.adelanto_monto} onChange={onChange} />
         <FormField stacked={stacked} label="Adelanto en texto" field="adelanto_texto" data={data} error={fieldErrors.adelanto_texto} onChange={onChange} />
         <FormField stacked={stacked} label="Garantía (S/)" field="garantia_monto" data={data} error={fieldErrors.garantia_monto} onChange={onChange} />
