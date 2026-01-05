@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV - Eliseo Tomás Sanz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Muted & Formal Color Palette */
+            --primary-color: #2c3e50;
+            /* Dark Slate Blue */
+            --accent-color: #546e7a;
+            /* Muted Blue Grey */
+            --heading-color: #1a252f;
+            /* Almost Black */
+            --text-color: #37474f;
+            /* Dark Grey */
+            --light-text: #607d8b;
+            /* Grey Blue */
+            --bg-color: #ffffff;
+            --sidebar-bg: #f4f7f6;
+            /* Very subtle grey-green tint */
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-color);
+            background-color: #e0e5ec;
+            line-height: 1.6;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Paper-like container for screen view */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 40px auto;
+            background: white;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.05);
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            background-color: var(--sidebar-bg);
+            padding: 40px 30px;
+            border-right: 1px solid #dae1e7;
+            font-size: 0.9rem;
+        }
+
+        .contact-info {
+            margin-bottom: 35px;
+        }
+
+        .contact-item {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 0.85rem;
+            word-break: break-word;
+        }
+
+        .contact-item svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            color: var(--accent-color);
+            opacity: 0.8;
+        }
+
+        .contact-item:hover {
+            color: var(--primary-color);
+        }
+
+        .sidebar-section {
+            margin-bottom: 35px;
+        }
+
+        .sidebar-title {
+            text-transform: uppercase;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 1.2px;
+            margin-bottom: 18px;
+            color: var(--primary-color);
+            border-bottom: 1px solid #cfd8dc;
+            padding-bottom: 6px;
+        }
+
+        .skill-list,
+        .education-list {
+            list-style: none;
+        }
+
+        .skill-item {
+            margin-bottom: 15px;
+        }
+
+        .skill-category {
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--heading-color);
+            font-size: 0.9rem;
+        }
+
+        .skill-tags {
+            font-size: 0.85rem;
+            color: var(--light-text);
+            line-height: 1.4;
+        }
+
+        .edu-item {
+            margin-bottom: 15px;
+        }
+
+        .edu-degree {
+            font-weight: 600;
+            color: var(--heading-color);
+            line-height: 1.3;
+        }
+
+        .edu-school {
+            font-size: 0.85rem;
+            margin-top: 3px;
+        }
+
+        .edu-meta {
+            font-size: 0.8rem;
+            color: var(--light-text);
+            font-style: italic;
+            margin-top: 2px;
+        }
+
+        /* Main Content Styling */
+        .main-content {
+            padding: 50px 45px;
+        }
+
+        header {
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-family: 'Merriweather', serif;
+            font-size: 2.4rem;
+            color: var(--heading-color);
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            font-weight: 500;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .about-me {
+            color: var(--text-color);
+            font-size: 0.95rem;
+            text-align: justify;
+            line-height: 1.7;
+        }
+
+        .section {
+            margin-bottom: 35px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--primary-color);
+            border-bottom: 1px solid #dae1e7;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .experience-item {
+            margin-bottom: 25px;
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 6px;
+        }
+
+        .job-role {
+            font-weight: 700;
+            color: var(--heading-color);
+            font-size: 1.05rem;
+        }
+
+        .company-name {
+            font-family: 'Merriweather', serif;
+            font-weight: 700;
+            color: var(--heading-color);
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+
+        .job-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .date-location {
+            font-size: 0.85rem;
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+
+        .job-details {
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+
+        .job-details p {
+            margin-bottom: 8px;
+            text-align: justify;
+        }
+
+        /* Button for screen only */
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 28px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            /* More square = more formal */
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3);
+            transition: all 0.2s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-2px);
+            background: #1a252f;
+            box-shadow: 0 6px 16px rgba(44, 62, 80, 0.4);
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .page {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+                min-height: auto;
+                height: 100%;
+            }
+
+            .print-btn {
+                display: none;
+            }
+
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
+
+            h1,
+            h2,
+            h3,
+            .section-title {
+                page-break-after: avoid;
+            }
+
+            .experience-item,
+            .contact-item,
+            .skill-item {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="print-btn" onclick="window.print()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+        Guardar PDF
+    </button>
+
+    <div class="page">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Contacto</h3>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        Buenos Aires, Argentina
+                    </div>
+                    <a href="mailto:sanzeliseo03@gmail.com" class="contact-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                            </path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        sanzeliseo03@gmail.com
+                    </a>
+                    <div class="contact-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                            </path>
+                        </svg>
+                        +54 11 2356-3167
+                    </div>
+                    <a href="https://linkedin.com/in/eliseo-tomas-sanz" target="_blank" class="contact-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z">
+                            </path>
+                            <rect x="2" y="9" width="4" height="12"></rect>
+                            <circle cx="4" cy="4" r="2"></circle>
+                        </svg>
+                        LinkedIn
+                    </a>
+                    <a href="https://github.com/EloSanz" target="_blank" class="contact-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                            </path>
+                        </svg>
+                        github.com/EloSanz
+                    </a>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Tecnologías</h3>
+                <ul class="skill-list">
+                    <li class="skill-item">
+                        <div class="skill-category">Lenguajes</div>
+                        <div class="skill-tags">Java, JavaScript, TypeScript, Python, C, C#, SQL</div>
+                    </li>
+                    <li class="skill-item">
+                        <div class="skill-category">Frameworks</div>
+                        <div class="skill-tags">Spring Boot, React, Angular</div>
+                    </li>
+                    <li class="skill-item">
+                        <div class="skill-category">Bases de Datos</div>
+                        <div class="skill-tags">PostgreSQL, Microsoft SQL Server, MySQL, MongoDB</div>
+                    </li>
+                    <li class="skill-item">
+                        <div class="skill-category">Herramientas & Cloud</div>
+                        <div class="skill-tags">Git, GitHub, Bitbucket, GitHub Actions, AWS (Lambda, S3)</div>
+                    </li>
+                    <li class="skill-item">
+                        <div class="skill-category">QA</div>
+                        <div class="skill-tags">Playwright, JUnit, Karate</div>
+                    </li>
+                    <li class="skill-item">
+                        <div class="skill-category">Metodologías</div>
+                        <div class="skill-tags">Agile (Scrum)</div>
+                    </li>
+                    <li class="skill-item">
+                        <div class="skill-category">Idiomas</div>
+                        <div class="skill-tags">Español (Nativo)<br>Inglés (Intermedio - B1)</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Educación</h3>
+                <ul class="education-list">
+                    <li class="edu-item">
+                        <div class="edu-degree">Ingeniería en Informática</div>
+                        <div class="edu-school">Universidad Nacional de La Matanza</div>
+                        <div class="edu-meta">4to año en curso (30+ materias aprobadas)</div>
+                    </li>
+                    <li class="edu-item">
+                        <div class="edu-degree">Bachiller en Economía y Administración</div>
+                        <div class="edu-school">EES No. 2 Haedo</div>
+                        <div class="edu-meta">Egresado: 2020</div>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Column -->
+        <main class="main-content">
+            <header>
+                <h1>Eliseo Tomás Sanz</h1>
+                <div class="subtitle">Software Developer</div>
+                <div class="about-me">
+                    Apasionado por la tecnología y el desarrollo de software. Me considero responsable, proactivo y
+                    orientado al trabajo en equipo, siempre buscando soluciones innovadoras y eficientes para cada
+                    desafío. Me entusiasma la oportunidad de unirme a su equipo y poder demostrar mis habilidades en una
+                    entrevista cuando lo dispongan.
+                </div>
+            </header>
+
+            <section class="section">
+                <h2 class="section-title">Experiencia Laboral</h2>
+
+                <div class="experience-item">
+                    <div class="company-name">Mercado Libre</div>
+                    <div class="job-meta">
+                        <div class="job-role">Backend Software Developer</div>
+                        <div class="date-location">Dic 2024 – Actualidad</div>
+                    </div>
+                    <div class="job-details">
+                        <p>Actualmente me desempeño como desarrollador backend en Mercado Libre, enfocándome en el
+                            desarrollo y mantenimiento de microservicios internos utilizando <strong>Java</strong> y
+                            <strong>Spring Boot</strong>. Mi rol implica trabajar con arquitecturas escalables,
+                            pipelines de CI/CD y herramientas internas que soportan operaciones clave del negocio.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="experience-item">
+                    <div class="company-name">Sirius Software</div>
+                    <div class="job-meta">
+                        <div class="job-role">Trainee Software Developer</div>
+                        <div class="date-location">Jul 2024 – Dic 2024</div>
+                    </div>
+                    <div class="job-details">
+                        <p>Trabajé en la automatización de procesos utilizando scripts de <strong>Python</strong>.
+                            También realicé pruebas de QA y seguimiento de defectos para páginas web, utilizando
+                            <strong>Playwright</strong> y <strong>GitHub Actions</strong> para la automatización e
+                            integración de CI/CD.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="experience-item">
+                    <div class="company-name">Proyecto de Investigación (UNLaM)</div>
+                    <div class="job-meta">
+                        <div class="job-role">Becario Tecnológico (Technology Intern)</div>
+                        <div class="date-location">Jul 2023 – Actualidad</div>
+                    </div>
+                    <div class="job-details">
+                        <p>Actualmente formo parte de un equipo de investigación universitaria financiado por CONICET.
+                            En este rol, contribuyo al diseño, desarrollo y mantenimiento de aplicaciones utilizando
+                            <strong>Angular</strong> y <strong>Java</strong>, participando activamente en el proyecto
+                            programado para finalizar en diciembre de 2027.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+</body>
+
+</html>
