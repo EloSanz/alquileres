@@ -27,15 +27,20 @@ import {
   InputLabel,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import RoleGuard from '../components/RoleGuard';
 import OpenPaymentsForTenantButton from '../components/OpenPaymentsForTenantButton';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
-import FilterBar, { type FilterConfig } from '../components/FilterBar';
+import FilterBar from '../components/FilterBar';
+import type { FilterConfig } from '../components/FilterBar';
 import { useTenants } from '../hooks/useTenants';
 import { useProperties } from '../hooks/useProperties';
 import { Tenant, CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
+import { useAuth } from '../contexts/AuthContext';
 
 const TenantPage = () => {
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole('ADMIN');
   const { tenants, isLoading: loading, error, createTenant, updateTenant, deleteTenant } = useTenants();
   const { properties } = useProperties();
 
@@ -356,8 +361,8 @@ const TenantPage = () => {
               <TableRow
                 key={tenant.id}
                 hover
-                onClick={() => handleEdit(tenant)}
-                sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.12)' } }}
+                onClick={() => isAdmin && handleEdit(tenant)}
+                sx={{ cursor: isAdmin ? 'pointer' : 'default', '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.12)' } }}
               >
                 <TableCell>{tenant.firstName} {tenant.lastName}</TableCell>
                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tenant.phone || '-'}</TableCell>
@@ -380,8 +385,10 @@ const TenantPage = () => {
                   {tenant.fechaInicioContrato ? formatDate(tenant.fechaInicioContrato) : '-'}
                 </TableCell>
                 <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                  <IconButton size="small" onClick={() => handleEdit(tenant)} color="primary"><EditIcon /></IconButton>
-                  <IconButton size="small" onClick={() => handleDelete(tenant)} color="error"><DeleteIcon /></IconButton>
+                  <RoleGuard allowedRoles={['ADMIN']} fallback={<Typography variant="caption" color="text.secondary">Solo lectura</Typography>}>
+                    <IconButton size="small" onClick={() => handleEdit(tenant)} color="primary"><EditIcon /></IconButton>
+                    <IconButton size="small" onClick={() => handleDelete(tenant)} color="error"><DeleteIcon /></IconButton>
+                  </RoleGuard>
                 </TableCell>
               </TableRow>
             ))}
@@ -396,16 +403,18 @@ const TenantPage = () => {
         </Table>
       </TableContainer>
 
-      <Fab
-        color="primary"
-        variant="extended"
-        size="large"
-        sx={{ position: 'fixed', bottom: 16, right: 16, px: 3, py: 1.5 }}
-        onClick={() => setCreateDialogOpen(true)}
-      >
-        <AddIcon sx={{ mr: 1 }} />
-        Agregar Inquilino
-      </Fab>
+      <RoleGuard allowedRoles={['ADMIN']}>
+        <Fab
+          color="primary"
+          variant="extended"
+          size="large"
+          sx={{ position: 'fixed', bottom: 16, right: 16, px: 3, py: 1.5 }}
+          onClick={() => setCreateDialogOpen(true)}
+        >
+          <AddIcon sx={{ mr: 1 }} />
+          Agregar Inquilino
+        </Fab>
+      </RoleGuard>
 
       {/* Dialogs */}
       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth>
@@ -429,7 +438,9 @@ const TenantPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
-          <Button onClick={handleCreateTenant} variant="contained">Crear</Button>
+          <RoleGuard allowedRoles={['ADMIN']}>
+            <Button onClick={handleCreateTenant} variant="contained">Crear</Button>
+          </RoleGuard>
         </DialogActions>
       </Dialog>
 
@@ -495,7 +506,9 @@ const TenantPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
-          <Button onClick={handleUpdateTenant} variant="contained">Actualizar</Button>
+          <RoleGuard allowedRoles={['ADMIN']}>
+            <Button onClick={handleUpdateTenant} variant="contained">Actualizar</Button>
+          </RoleGuard>
         </DialogActions>
       </Dialog>
 
@@ -509,7 +522,7 @@ const TenantPage = () => {
           <Button onClick={handleDeleteConfirm} color="error" variant="contained">Eliminar</Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </Container >
   );
 };
 

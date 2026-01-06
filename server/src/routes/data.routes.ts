@@ -24,40 +24,9 @@ const contractService = new ContractService(contractRepository, paymentRepositor
 const paymentService = new PaymentService(paymentRepository);
 
 export const dataRoutes = new Elysia({ prefix: '/data' })
-  .use(authPlugin)
-  .derive(async ({ headers, request }) => {
-    const authHeader: string | undefined = headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      logError('No token provided', undefined, { route: 'data', method: request.method, url: request.url });
-      throw new Error('No token provided');
-    }
-
-    const token: string = authHeader.substring(7).trim();
-    
-    if (token.length < 10 || token.split('.').length !== 3) {
-      logError('Token malformed - invalid format', undefined, { 
-        route: 'data', 
-        method: request.method, 
-        url: request.url,
-        tokenLength: token.length,
-        tokenParts: token.split('.').length
-      });
-      throw new Error('Invalid token');
-    }
-
-    try {
-      const payload = jwtVerify(token, JWT_SECRET) as JWTPayload;
-      return { userId: payload.userId };
-    } catch (error: any) {
-      logError('Token verification failed', error, { 
-        route: 'data', 
-        method: request.method, 
-        url: request.url,
-        errorMessage: error.message
-      });
-      throw new Error('Invalid token');
-    }
+  // Auth middleware removed
+  .derive(async () => {
+    return { userId: 1 }
   })
   .get('/all', async ({ userId }) => {
     try {

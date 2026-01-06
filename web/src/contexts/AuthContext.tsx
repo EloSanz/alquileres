@@ -4,15 +4,17 @@ interface User {
   id: number;
   username: string;
   email: string;
+  role?: 'ADMIN' | 'READ_ONLY';
   createdAt: string;
   updatedAt: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (token: string, user: User) => void;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  hasRole: (roles: string[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,9 +27,8 @@ export const useAuth = () => {
   return context;
 };
 
-// Función para redirigir al login cuando el token es inválido
+// Función para redirigir al login cuando no hay sesión
 const redirectToLogin = () => {
-  localStorage.removeItem('pentamont_token');
   localStorage.removeItem('pentamont_user');
   // Use BASE_URL from Vite to avoid hardcoded paths
   const baseUrl = import.meta.env.BASE_URL || '/';
@@ -38,74 +39,64 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Check for existing token and user data on app start
-    const token = localStorage.getItem('pentamont_token');
+    // Check for existing user data on app start
     const savedUser = localStorage.getItem('pentamont_user');
 
-    if (token && savedUser) {
-      // Validar formato JWT (debe tener 3 partes separadas por puntos)
-      const cleanToken = String(token).trim().replace(/^["']|["']$/g, '');
-      const tokenParts = cleanToken.split('.');
-
-      if (tokenParts.length !== 3) {
-        // Token malformado, limpiar todo y redirigir
-        console.warn('Token malformado detectado al iniciar, redirigiendo al login');
-        console.warn('Token malformado detectado al iniciar, redirigiendo al login');
-        redirectToLogin();
-        return;
-      }
-
+    if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
-
-        // Verificar que el token sea válido con el backend
-        const verifyToken = async () => {
-          try {
-            const response = await fetch(`${window.location.origin}/pentamont/api/auth/me`, {
-              headers: {
-                'Authorization': `Bearer ${cleanToken}`
-              }
-            });
-
-            if (!response.ok || response.status === 401) {
-              // Token inválido o expirado, redirigir al login
-              console.warn('Token inválido o expirado, redirigiendo al login');
-              redirectToLogin();
-              return;
-            }
-
-            const data = await response.json();
-            if (!data.success) {
-              redirectToLogin();
-            }
-          } catch (error) {
-            // Error de red, pero no redirigir (podría ser temporal)
-            console.warn('Error verificando token:', error);
-          }
-        };
-
-        verifyToken();
+        const storedUser = JSON.parse(savedUser);
+        setUser(storedUser);
       } catch (error) {
         // Invalid user data, clear everything
-        console.warn('Datos de usuario inválidos, redirigiendo al login');
         console.warn('Datos de usuario inválidos, redirigiendo al login');
         redirectToLogin();
       }
     }
   }, []);
 
-  const login = (token: string, userData: User) => {
-    localStorage.setItem('pentamont_token', token);
-    localStorage.setItem('pentamont_user', JSON.stringify(userData));
-    setUser(userData);
+  const login = async (username: string, password: string): Promise<boolean> => {
+    // Simple env-based authentication
+    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+    const readOnlyPassword = import.meta.env.VITE_READONLY_PASSWORD;
+
+    let role: 'ADMIN' | 'READ_ONLY' | null = null;
+
+    if (username === 'admin' && password === adminPassword) {
+      role = 'ADMIN';
+    } else if (username === 'pentamont' && password === readOnlyPassword) {
+      role = 'READ_ONLY';
+    }
+
+    if (role) {
+      // Mock user object since we don't have a DB
+      const mockUser: User = {
+        id: role === 'ADMIN' ? 1 : 2,
+        username: username,
+        email: `${username}@pentamont.com`,
+        role: role,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      localStorage.setItem('pentamont_user', JSON.stringify(mockUser));
+      setUser(mockUser);
+      return true;
+    }
+
+    return false;
   };
 
   const logout = () => {
-    localStorage.removeItem('pentamont_token');
     localStorage.removeItem('pentamont_user');
     setUser(null);
-    setUser(null);
     redirectToLogin();
+  };
+
+  const hasRole = (allowedRoles: string[]) => {
+    if (!user) return false;
+    // Default to ADMIN if role is not present (backward compatibility)
+    const userRole = user.role || 'ADMIN';
+    return allowedRoles.includes(userRole);
   };
 
   const value = {
@@ -113,6 +104,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     login,
     logout,
     isAuthenticated: !!user,
+    hasRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

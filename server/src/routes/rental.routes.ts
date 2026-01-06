@@ -17,24 +17,9 @@ const rentalService = new RentalService(rentalRepository, tenantRepository, prop
 const rentalController = new RentalController(rentalService);
 
 export const rentalRoutes = new Elysia({ prefix: '/rentals' })
-  .use(authPlugin)
-  .derive(async ({ headers, request }) => {
-    const authHeader = headers.authorization
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      logError('No token provided', undefined, { route: 'rentals', method: request.method, url: request.url })
-      throw new Error('No token provided')
-    }
-
-    const token = authHeader.substring(7)
-
-    try {
-      const payload = jwtVerify(token, JWT_SECRET) as JWTPayload
-      return { userId: payload.userId }
-    } catch (error: any) {
-      logError('Token verification failed', error, { route: 'rentals', method: request.method, url: request.url })
-      throw new Error('Invalid token')
-    }
+  // Auth middleware removed
+  .derive(async () => {
+    return { userId: 1 }
   })
   .get('/', rentalController.getAll, {
     detail: {

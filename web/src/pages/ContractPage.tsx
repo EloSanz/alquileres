@@ -32,6 +32,7 @@ import { Contract, UpdateContract } from '../../../shared/types/Contract';
 import ContractDetailsModal from '../components/ContractDetailsModal';
 import ContractEditorModal from '../components/contract-editor/ContractEditorModal';
 import CreateContractModal from '../components/CreateContractModal';
+import RoleGuard from '../components/RoleGuard';
 
 // Función para extraer el año de una fecha (Date o string)
 const getYearFromDate = (date: Date | string | null | undefined): number | null => {
@@ -338,14 +339,16 @@ const ContractPage = () => {
                     S/ {contract.monthlyRent?.toFixed(2) || '0.00'}
                   </TableCell>
                   <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleEdit(contract, e)}
-                      title="Editar Alquiler Mensual"
-                      color="primary"
-                    >
-                      <EditIcon />
-                    </IconButton>
+                    <RoleGuard allowedRoles={['ADMIN']} fallback={<Typography variant="caption" color="text.secondary">Solo lectura</Typography>}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleEdit(contract, e)}
+                        title="Editar Alquiler Mensual"
+                        color="primary"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </RoleGuard>
                   </TableCell>
                 </TableRow>
               ))
@@ -430,25 +433,27 @@ const ContractPage = () => {
       </Tooltip>
 
       {/* FAB para agregar contrato */}
-      <Tooltip title="Agregar nuevo contrato" placement="left">
-        <Fab
-          color="primary"
-          variant="extended"
-          size="large"
-          aria-label="agregar contrato"
-          onClick={() => setCreateContractOpen(true)}
-          sx={{
-            position: 'fixed',
-            bottom: 112,
-            right: 32,
-            px: 3,
-            py: 1.5
-          }}
-        >
-          <AddIcon sx={{ mr: 1 }} />
-          Agregar Contrato
-        </Fab>
-      </Tooltip>
+      <RoleGuard allowedRoles={['ADMIN']}>
+        <Tooltip title="Agregar nuevo contrato" placement="left">
+          <Fab
+            color="primary"
+            variant="extended"
+            size="large"
+            aria-label="agregar contrato"
+            onClick={() => setCreateContractOpen(true)}
+            sx={{
+              position: 'fixed',
+              bottom: 112,
+              right: 32,
+              px: 3,
+              py: 1.5
+            }}
+          >
+            <AddIcon sx={{ mr: 1 }} />
+            Agregar Contrato
+          </Fab>
+        </Tooltip>
+      </RoleGuard>
     </Container>
   );
 };

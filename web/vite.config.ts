@@ -15,8 +15,7 @@ export default defineConfig(({ mode }) => {
       extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
       // Alias para imports más limpios (opcional, los imports relativos también funcionarán)
       alias: {
-        '@shared': path.resolve(__dirname, '../shared'),
-        'zod': path.resolve(__dirname, './node_modules/zod')
+        '@shared': path.resolve(__dirname, '../shared')
       }
     },
     server: {

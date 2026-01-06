@@ -32,6 +32,7 @@ import { Property, CreateProperty, UpdateProperty } from '../../../shared/types/
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
 import PropertyDetailsModal from '../components/PropertyDetailsModal';
+import RoleGuard from '../components/RoleGuard';
 
 const PropertyPage = () => {
   const {
@@ -301,22 +302,24 @@ const PropertyPage = () => {
                   />
                 </TableCell>
                 <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => handleEdit(property, e)}
-                    title="Editar"
-                    color="primary"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => handleDelete(property, e)}
-                    title="Eliminar"
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+                  <RoleGuard allowedRoles={['ADMIN']} fallback={<Typography variant="caption" color="text.secondary">Solo lectura</Typography>}>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleEdit(property, e)}
+                      title="Editar"
+                      color="primary"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleDelete(property, e)}
+                      title="Eliminar"
+                      color="error"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </RoleGuard>
                 </TableCell>
               </TableRow>
             ))}
@@ -333,23 +336,25 @@ const PropertyPage = () => {
         </Table>
       </TableContainer>
 
-      <Fab
-        color="primary"
-        variant="extended"
-        size="large"
-        aria-label="add"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-          px: 3,
-          py: 1.5
-        }}
-        onClick={() => setCreateDialogOpen(true)}
-      >
-        <AddIcon sx={{ mr: 1 }} />
-        Agregar Local
-      </Fab>
+      <RoleGuard allowedRoles={['ADMIN']}>
+        <Fab
+          color="primary"
+          variant="extended"
+          size="large"
+          aria-label="add"
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            px: 3,
+            py: 1.5
+          }}
+          onClick={() => setCreateDialogOpen(true)}
+        >
+          <AddIcon sx={{ mr: 1 }} />
+          Agregar Local
+        </Fab>
+      </RoleGuard>
 
       {/* Dialogs and Modals simplified for brevity but functionally effectively identical */}
 
