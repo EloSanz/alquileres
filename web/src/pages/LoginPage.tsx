@@ -45,55 +45,15 @@ const LoginPage = () => {
     setError('');
 
     try {
-      // Usar fetch directamente con la ruta correcta /pentamont/api/auth/login
-      const response = await fetch(`${window.location.origin}/pentamont/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier: formData.identifier,
-          password: formData.password,
-        }),
-      });
+      const success = await login(formData.identifier, formData.password);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Error al iniciar sesión' }));
-        setError(errorData.message || `Error ${response.status}`);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success && data.data) {
-        // Asegurar que el token esté limpio (sin espacios ni comillas)
-        const token = String(data.data.token || '').trim().replace(/^["']|["']$/g, '');
-        const user = data.data.user;
-
-        if (!token) {
-          setError('Token no recibido del servidor');
-          return;
-        }
-
-        // Validar formato JWT (debe tener 3 partes separadas por puntos)
-        const tokenParts = token.split('.');
-        if (tokenParts.length !== 3) {
-          console.error('Token malformado recibido:', {
-            length: token.length,
-            parts: tokenParts.length,
-            preview: token.substring(0, 20) + '...'
-          });
-          setError('Token inválido recibido del servidor');
-          return;
-        }
-
-        login(token, user);
+      if (success) {
         navigate('/');
       } else {
-        setError(data.message || 'Error al iniciar sesión');
+        setError('Credenciales inválidas');
       }
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+      setError('Error al iniciar sesión');
     } finally {
       setLoading(false);
     }

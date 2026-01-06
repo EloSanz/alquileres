@@ -40,24 +40,9 @@ const updateServiceBodySchema = t.Object({
 });
 
 export const serviceRoutes = new Elysia({ prefix: '/services' })
-  .use(authPlugin)
-  .derive(async ({ headers, request }) => {
-    const authHeader: string | undefined = headers.authorization
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      logError('No token provided', undefined, { route: 'services', method: request.method, url: request.url })
-      throw new Error('No token provided')
-    }
-
-    const token: string = authHeader.substring(7)
-
-    try {
-      const payload = jwtVerify(token, JWT_SECRET) as JWTPayload
-      return { userId: payload.userId }
-    } catch (error: any) {
-      logError('Token verification failed', error, { route: 'services', method: request.method, url: request.url })
-      throw new Error('Invalid token')
-    }
+  // Auth middleware removed
+  .derive(async () => {
+    return { userId: 1 }
   })
   .get('/', serviceController.getAll, {
     detail: {

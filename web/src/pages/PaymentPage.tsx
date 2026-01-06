@@ -17,7 +17,8 @@ import {
   IconButton,
   Autocomplete,
 } from '@mui/material';
-import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon, ViewModule as ViewModuleIcon, TableChart as TableChartIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon, ViewModule as ViewModuleIcon, TableChart as TableChartIcon, Add as AddIcon } from '@mui/icons-material';
+import RoleGuard from '../components/RoleGuard';
 import NavigationTabs from '../components/NavigationTabs';
 import { Property } from '../../../shared/types/Property';
 import { usePayments } from '../hooks/usePayments';
@@ -590,6 +591,28 @@ const PaymentPage = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Create Payment FAB accessible only to ADMIN */}
+      <RoleGuard allowedRoles={['ADMIN']}>
+        <Fab
+          color="primary"
+          variant="extended"
+          size="large"
+          aria-label="agregar pago"
+          sx={{
+            position: 'fixed',
+            bottom: 32,
+            right: 16,
+            px: 3,
+            py: 1.5,
+            zIndex: 1000
+          }}
+          onClick={() => setCreateDialogOpen(true)}
+        >
+          <AddIcon sx={{ mr: 1 }} />
+          Agregar Pago
+        </Fab>
+      </RoleGuard>
+
       {/* Edit Payment Modal */}
       <EditPaymentModal
         open={editDialogOpen}
@@ -630,7 +653,7 @@ const PaymentPage = () => {
           setSelectedPayment(null);
         }}
       />
-    </Container>
+    </Container >
   );
 };
 

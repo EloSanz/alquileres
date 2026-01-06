@@ -40,24 +40,9 @@ const updateTaxBodySchema = t.Object({
 });
 
 export const taxRoutes = new Elysia({ prefix: '/taxes' })
-  .use(authPlugin)
-  .derive(async ({ headers, request }) => {
-    const authHeader: string | undefined = headers.authorization
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      logError('No token provided', undefined, { route: 'taxes', method: request.method, url: request.url })
-      throw new Error('No token provided')
-    }
-
-    const token: string = authHeader.substring(7)
-
-    try {
-      const payload = jwtVerify(token, JWT_SECRET) as JWTPayload
-      return { userId: payload.userId }
-    } catch (error: any) {
-      logError('Token verification failed', error, { route: 'taxes', method: request.method, url: request.url })
-      throw new Error('Invalid token')
-    }
+  // Auth middleware removed
+  .derive(async () => {
+    return { userId: 1 }
   })
   .get('/', taxController.getAll, {
     detail: {

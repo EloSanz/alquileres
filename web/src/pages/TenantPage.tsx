@@ -27,6 +27,7 @@ import {
   InputLabel,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import RoleGuard from '../components/RoleGuard';
 import OpenPaymentsForTenantButton from '../components/OpenPaymentsForTenantButton';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
@@ -380,8 +381,10 @@ const TenantPage = () => {
                   {tenant.fechaInicioContrato ? formatDate(tenant.fechaInicioContrato) : '-'}
                 </TableCell>
                 <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                  <IconButton size="small" onClick={() => handleEdit(tenant)} color="primary"><EditIcon /></IconButton>
-                  <IconButton size="small" onClick={() => handleDelete(tenant)} color="error"><DeleteIcon /></IconButton>
+                  <RoleGuard allowedRoles={['ADMIN']} fallback={<Typography variant="caption" color="text.secondary">Solo lectura</Typography>}>
+                    <IconButton size="small" onClick={() => handleEdit(tenant)} color="primary"><EditIcon /></IconButton>
+                    <IconButton size="small" onClick={() => handleDelete(tenant)} color="error"><DeleteIcon /></IconButton>
+                  </RoleGuard>
                 </TableCell>
               </TableRow>
             ))}
@@ -396,16 +399,18 @@ const TenantPage = () => {
         </Table>
       </TableContainer>
 
-      <Fab
-        color="primary"
-        variant="extended"
-        size="large"
-        sx={{ position: 'fixed', bottom: 16, right: 16, px: 3, py: 1.5 }}
-        onClick={() => setCreateDialogOpen(true)}
-      >
-        <AddIcon sx={{ mr: 1 }} />
-        Agregar Inquilino
-      </Fab>
+      <RoleGuard allowedRoles={['ADMIN']}>
+        <Fab
+          color="primary"
+          variant="extended"
+          size="large"
+          sx={{ position: 'fixed', bottom: 16, right: 16, px: 3, py: 1.5 }}
+          onClick={() => setCreateDialogOpen(true)}
+        >
+          <AddIcon sx={{ mr: 1 }} />
+          Agregar Inquilino
+        </Fab>
+      </RoleGuard>
 
       {/* Dialogs */}
       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth>
@@ -429,7 +434,9 @@ const TenantPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
-          <Button onClick={handleCreateTenant} variant="contained">Crear</Button>
+          <RoleGuard allowedRoles={['ADMIN']}>
+            <Button onClick={handleCreateTenant} variant="contained">Crear</Button>
+          </RoleGuard>
         </DialogActions>
       </Dialog>
 
@@ -509,7 +516,7 @@ const TenantPage = () => {
           <Button onClick={handleDeleteConfirm} color="error" variant="contained">Eliminar</Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </Container >
   );
 };
 

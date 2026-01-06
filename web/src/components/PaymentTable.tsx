@@ -12,6 +12,7 @@ import {
   Switch,
   FormControlLabel,
 } from '@mui/material';
+import RoleGuard from './RoleGuard';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { Payment } from '../../../shared/types/Payment';
 import { formatDateLocal } from '../utils/dateUtils';
@@ -53,8 +54,8 @@ export default function PaymentTable({
         </TableHead>
         <TableBody>
           {payments.map((payment) => (
-            <TableRow 
-              key={payment.id} 
+            <TableRow
+              key={payment.id}
               hover
               onClick={() => onPaymentClick(payment)}
               sx={{
@@ -72,53 +73,57 @@ export default function PaymentTable({
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography variant="body2">
                     {payment.paymentMethod === 'YAPE' ? 'Yape' :
-                     payment.paymentMethod === 'DEPOSITO' ? 'Depósito' :
-                     payment.paymentMethod === 'TRANSFERENCIA_VIRTUAL' ? 'Transferencia Virtual' :
-                     payment.paymentMethod}
+                      payment.paymentMethod === 'DEPOSITO' ? 'Depósito' :
+                        payment.paymentMethod === 'TRANSFERENCIA_VIRTUAL' ? 'Transferencia Virtual' :
+                          payment.paymentMethod}
                   </Typography>
                   {payment.paymentMethod === 'YAPE' && (
-                    <FormControlLabel
-                      sx={{ ml: 1 }}
-                      label={`Pentamont: ${payment.pentamontSettled ? 'Sí' : 'No'}`}
-                      control={
-                        <Switch
-                          size="small"
-                          checked={!!payment.pentamontSettled}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            onTogglePentamont(payment);
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      }
-                      onClick={(e) => e.stopPropagation()}
-                    />
+                    <RoleGuard allowedRoles={['ADMIN']}>
+                      <FormControlLabel
+                        sx={{ ml: 1 }}
+                        label={`Pentamont: ${payment.pentamontSettled ? 'Sí' : 'No'}`}
+                        control={
+                          <Switch
+                            size="small"
+                            checked={!!payment.pentamontSettled}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              onTogglePentamont(payment);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        }
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </RoleGuard>
                   )}
                 </Box>
               </TableCell>
               <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(payment);
-                  }}
-                  title="Editar"
-                  color="primary"
-                >
-                  <EditIcon />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(payment);
-                  }}
-                  title="Eliminar"
-                  color="error"
-                >
-                  <DeleteIcon />
-                </IconButton>
+                <RoleGuard allowedRoles={['ADMIN']} fallback={<Typography variant="caption" color="text.secondary">Solo lectura</Typography>}>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(payment);
+                    }}
+                    title="Editar"
+                    color="primary"
+                  >
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(payment);
+                    }}
+                    title="Eliminar"
+                    color="error"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </RoleGuard>
               </TableCell>
             </TableRow>
           ))}

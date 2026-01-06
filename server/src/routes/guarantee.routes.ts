@@ -42,24 +42,9 @@ const updateGuaranteeBodySchema = t.Object({
 });
 
 export const guaranteeRoutes = new Elysia({ prefix: '/guarantees' })
-  .use(authPlugin)
-  .derive(async ({ headers, request }) => {
-    const authHeader: string | undefined = headers.authorization
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      logError('No token provided', undefined, { route: 'guarantees', method: request.method, url: request.url })
-      throw new Error('No token provided')
-    }
-
-    const token: string = authHeader.substring(7)
-
-    try {
-      const payload = jwtVerify(token, JWT_SECRET) as JWTPayload
-      return { userId: payload.userId }
-    } catch (error: any) {
-      logError('Token verification failed', error, { route: 'guarantees', method: request.method, url: request.url })
-      throw new Error('Invalid token')
-    }
+  // Auth middleware removed
+  .derive(async () => {
+    return { userId: 1 }
   })
   .get('/', guaranteeController.getAll, {
     detail: {

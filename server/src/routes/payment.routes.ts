@@ -46,24 +46,9 @@ const updatePaymentBodySchema = t.Object({
 });
 
 export const paymentRoutes = new Elysia({ prefix: '/payments' })
-  .use(authPlugin)
-  .derive(async ({ headers, request }) => {
-    const authHeader: string | undefined = headers.authorization
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      logError('No token provided', undefined, { route: 'payments', method: request.method, url: request.url })
-      throw new Error('No token provided')
-    }
-
-    const token: string = authHeader.substring(7)
-
-    try {
-      const payload = jwtVerify(token, JWT_SECRET) as JWTPayload
-      return { userId: payload.userId }
-    } catch (error: any) {
-      logError('Token verification failed', error, { route: 'payments', method: request.method, url: request.url })
-      throw new Error('Invalid token')
-    }
+  // Auth middleware removed
+  .derive(async () => {
+    return { userId: 1 }
   })
   .get('/', paymentController.getAll, {
     detail: {

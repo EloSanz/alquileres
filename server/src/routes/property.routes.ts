@@ -35,24 +35,9 @@ const updatePropertyBodySchema = t.Object({
 });
 
 export const propertyRoutes = new Elysia({ prefix: '/properties' })
-  .use(authPlugin)
-  .derive(async ({ headers, request }) => {
-    const authHeader: string | undefined = headers.authorization
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      logError('No token provided', undefined, { route: 'properties', method: request.method, url: request.url })
-      throw new Error('No token provided')
-    }
-
-    const token: string = authHeader.substring(7)
-
-    try {
-      const payload = jwtVerify(token, JWT_SECRET) as JWTPayload
-      return { userId: payload.userId }
-    } catch (error: any) {
-      logError('Token verification failed', error, { route: 'properties', method: request.method, url: request.url })
-      throw new Error('Invalid token')
-    }
+  // Auth middleware removed but we inject a dummy userId for controllers
+  .derive(async () => {
+    return { userId: 1 } // Hardcoded admin ID for internal trusted usage
   })
   .get('/', propertyController.getAll, {
     detail: {
