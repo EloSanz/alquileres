@@ -31,12 +31,16 @@ import RoleGuard from '../components/RoleGuard';
 import OpenPaymentsForTenantButton from '../components/OpenPaymentsForTenantButton';
 import NavigationTabs from '../components/NavigationTabs';
 import SearchBar from '../components/SearchBar';
-import FilterBar, { type FilterConfig } from '../components/FilterBar';
+import FilterBar from '../components/FilterBar';
+import type { FilterConfig } from '../components/FilterBar';
 import { useTenants } from '../hooks/useTenants';
 import { useProperties } from '../hooks/useProperties';
 import { Tenant, CreateTenant, UpdateTenant } from '../../../shared/types/Tenant';
+import { useAuth } from '../contexts/AuthContext';
 
 const TenantPage = () => {
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole('ADMIN');
   const { tenants, isLoading: loading, error, createTenant, updateTenant, deleteTenant } = useTenants();
   const { properties } = useProperties();
 
@@ -357,8 +361,8 @@ const TenantPage = () => {
               <TableRow
                 key={tenant.id}
                 hover
-                onClick={() => handleEdit(tenant)}
-                sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.12)' } }}
+                onClick={() => isAdmin && handleEdit(tenant)}
+                sx={{ cursor: isAdmin ? 'pointer' : 'default', '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.12)' } }}
               >
                 <TableCell>{tenant.firstName} {tenant.lastName}</TableCell>
                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tenant.phone || '-'}</TableCell>
@@ -502,7 +506,9 @@ const TenantPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
-          <Button onClick={handleUpdateTenant} variant="contained">Actualizar</Button>
+          <RoleGuard allowedRoles={['ADMIN']}>
+            <Button onClick={handleUpdateTenant} variant="contained">Actualizar</Button>
+          </RoleGuard>
         </DialogActions>
       </Dialog>
 

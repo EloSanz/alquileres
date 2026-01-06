@@ -18,6 +18,7 @@ import { usePayments } from '../hooks/usePayments';
 import { Payment, type UpdatePayment, PaymentStatus, UpdatePaymentSchema } from '../../../shared/types/Payment';
 import { generateReceiptPDFDataUrl } from '../utils/receiptGenerator';
 import PentaMontReceiptModal from './PentaMontReceiptModal';
+import { useAuth } from '../contexts/AuthContext';
 
 export interface EditPaymentModalProps {
   open: boolean;
@@ -32,6 +33,8 @@ export default function EditPaymentModal({
   onClose,
   onSuccess,
 }: EditPaymentModalProps) {
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole(['ADMIN']);
   const { updatePayment, isUpdating } = usePayments();
   const [editForm, setEditForm] = useState({
     amount: '',
@@ -187,7 +190,7 @@ export default function EditPaymentModal({
   return (
     <>
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogTitle>Editar Pago</DialogTitle>
+        <DialogTitle>{isAdmin ? 'Editar Pago' : 'Detalle del Pago'}</DialogTitle>
         <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -204,6 +207,7 @@ export default function EditPaymentModal({
               required
               sx={{ mb: 2 }}
               inputProps={{ min: 0, step: 0.01 }}
+              disabled={!isAdmin}
             />
             <TextField
               fullWidth
@@ -214,6 +218,7 @@ export default function EditPaymentModal({
               required
               sx={{ mb: 2 }}
               InputLabelProps={{ shrink: true }}
+              disabled={!isAdmin}
             />
             <TextField
               fullWidth
@@ -224,6 +229,7 @@ export default function EditPaymentModal({
               required
               sx={{ mb: 2 }}
               InputLabelProps={{ shrink: true }}
+              disabled={!isAdmin}
             />
             <TextField
               select
@@ -233,6 +239,7 @@ export default function EditPaymentModal({
               onChange={(e) => setEditForm({ ...editForm, paymentMethod: e.target.value })}
               required
               sx={{ mb: 2 }}
+              disabled={!isAdmin}
             >
               <MenuItem value="YAPE">Yape</MenuItem>
               <MenuItem value="DEPOSITO">Depósito</MenuItem>
@@ -246,6 +253,7 @@ export default function EditPaymentModal({
               onChange={(e) => setEditForm({ ...editForm, status: e.target.value as PaymentStatus })}
               required
               sx={{ mb: 2 }}
+              disabled={!isAdmin}
             >
               <MenuItem value={PaymentStatus.PAGADO}>Pagado</MenuItem>
               <MenuItem value={PaymentStatus.VENCIDO}>Vencido</MenuItem>
@@ -259,53 +267,56 @@ export default function EditPaymentModal({
               multiline
               rows={2}
               sx={{ mb: 2 }}
+              disabled={!isAdmin}
             />
 
-            {/* Upload de Comprobante */}
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Comprobante de Pago
-              </Typography>
-              <input
-                accept="image/*"
-                style={{ display: 'none' }}
-                id="edit-receipt-image-upload"
-                type="file"
-                onChange={handleEditImageChange}
-                key={editReceiptImageFile ? editReceiptImageFile.name : 'edit-file-input'}
-              />
-              <label htmlFor="edit-receipt-image-upload">
-                <Button
-                  variant="outlined"
-                  component="span"
-                  startIcon={<CloudUploadIcon />}
-                  fullWidth
-                  sx={{ mb: 2 }}
-                  disabled={isUpdating}
-                >
-                  {editReceiptImageFile ? editReceiptImageFile.name : editReceiptImagePreview ? 'Cambiar Imagen del Comprobante' : 'Seleccionar Imagen del Comprobante'}
-                </Button>
-              </label>
-              {editReceiptImagePreview && (
-                <Box sx={{ mt: 2 }}>
-                  <Box
-                    component="img"
-                    src={editReceiptImagePreview}
-                    alt="Preview del comprobante"
-                    sx={{
-                      maxWidth: '100%',
-                      maxHeight: '300px',
-                      objectFit: 'contain',
-                      borderRadius: 1,
-                      border: '1px solid',
-                      borderColor: 'divider'
-                    }}
-                  />
-                </Box>
-              )}
-            </Box>
+            {/* Upload de Comprobante - Solo para ADMIN */}
+            {isAdmin && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                  Comprobante de Pago
+                </Typography>
+                <input
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  id="edit-receipt-image-upload"
+                  type="file"
+                  onChange={handleEditImageChange}
+                  key={editReceiptImageFile ? editReceiptImageFile.name : 'edit-file-input'}
+                />
+                <label htmlFor="edit-receipt-image-upload">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<CloudUploadIcon />}
+                    fullWidth
+                    sx={{ mb: 2 }}
+                    disabled={isUpdating}
+                  >
+                    {editReceiptImageFile ? editReceiptImageFile.name : editReceiptImagePreview ? 'Cambiar Imagen del Comprobante' : 'Seleccionar Imagen del Comprobante'}
+                  </Button>
+                </label>
+                {editReceiptImagePreview && (
+                  <Box sx={{ mt: 2 }}>
+                    <Box
+                      component="img"
+                      src={editReceiptImagePreview}
+                      alt="Preview del comprobante"
+                      sx={{
+                        maxWidth: '100%',
+                        maxHeight: '300px',
+                        objectFit: 'contain',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider'
+                      }}
+                    />
+                  </Box>
+                )}
+              </Box>
+            )}
 
-            {/* Mostrar comprobante existente al final - solo si el estado es Pagado */}
+            {/* Mostrar comprobante existente al final */}
             {payment && payment.status === PaymentStatus.PAGADO && (
               <Box sx={{ mt: 3 }}>
                 <Divider sx={{ mb: 2 }} />
@@ -347,10 +358,10 @@ export default function EditPaymentModal({
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={isUpdating || generatingReceipt}>
-            Cancelar
+            {isAdmin ? 'Cancelar' : 'Cerrar'}
           </Button>
-          {/* Botón para generar recibo - solo visible cuando el pago está en estado Pagado */}
-          {payment && payment.status === PaymentStatus.PAGADO && (
+          {/* Botón para generar recibo - solo visible para ADMIN y cuando el pago está en estado Pagado */}
+          {isAdmin && payment && payment.status === PaymentStatus.PAGADO && (
             <Button
               onClick={handleGenerateReceipt}
               variant="outlined"
@@ -361,9 +372,11 @@ export default function EditPaymentModal({
               {generatingReceipt ? 'Generando...' : 'Generar Recibo Penta Mont'}
             </Button>
           )}
-          <Button onClick={handleUpdatePayment} variant="contained" disabled={isUpdating || generatingReceipt}>
-            {isUpdating ? 'Actualizando...' : 'Actualizar'}
-          </Button>
+          {isAdmin && (
+            <Button onClick={handleUpdatePayment} variant="contained" disabled={isUpdating || generatingReceipt}>
+              {isUpdating ? 'Actualizando...' : 'Actualizar'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
       <PentaMontReceiptModal

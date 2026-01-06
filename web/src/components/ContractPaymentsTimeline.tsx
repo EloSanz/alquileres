@@ -13,7 +13,9 @@ import { Payment } from '../../../shared/types/Payment';
 import { buildContractTimeline, type ContractMonthInfo } from '../services/contractTimeline';
 import type { Contract } from '../../../shared/types/Contract';
 import EditPaymentModal from './EditPaymentModal';
+import RoleGuard from './RoleGuard';
 import { useYear } from '../contexts/YearContext';
+
 
 export interface ContractPaymentsTimelineProps {
     contract: Contract;
@@ -22,6 +24,7 @@ export interface ContractPaymentsTimelineProps {
 type MonthStatus = 'PAID' | 'DUE' | 'FUTURE';
 
 export default function ContractPaymentsTimeline({ contract }: ContractPaymentsTimelineProps) {
+
     const { payments: allPayments } = usePayments();
     const { selectedYear } = useYear();
     const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -165,26 +168,28 @@ export default function ContractPaymentsTimeline({ contract }: ContractPaymentsT
                                 }}
                             >
                                 {payment && (
-                                    <IconButton
-                                        size="small"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleEditClick(mi);
-                                        }}
-                                        sx={{
-                                            position: 'absolute',
-                                            bottom: 4,
-                                            right: 4,
-                                            bgcolor: 'background.paper',
-                                            boxShadow: 1,
-                                            '&:hover': {
-                                                bgcolor: 'primary.light',
-                                                color: 'primary.contrastText'
-                                            }
-                                        }}
-                                    >
-                                        <EditIcon fontSize="small" />
-                                    </IconButton>
+                                    <RoleGuard allowedRoles={['ADMIN']}>
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEditClick(mi);
+                                            }}
+                                            sx={{
+                                                position: 'absolute',
+                                                bottom: 4,
+                                                right: 4,
+                                                bgcolor: 'background.paper',
+                                                boxShadow: 1,
+                                                '&:hover': {
+                                                    bgcolor: 'primary.light',
+                                                    color: 'primary.contrastText'
+                                                }
+                                            }}
+                                        >
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                    </RoleGuard>
                                 )}
                                 <Typography
                                     variant="subtitle1"
