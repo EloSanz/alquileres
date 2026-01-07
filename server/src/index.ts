@@ -181,6 +181,10 @@ process.on('SIGINT', () => {
 
 server.listen(4000, () => {
   console.log('🚀 Server running at http://localhost:4000')
+  console.log('📝 Environment Check:')
+  console.log('   DATABASE_URL:', process.env.DATABASE_URL ? '✅ Defined' : '❌ MISSING')
+  console.log('   JWT_SECRET:', process.env.JWT_SECRET ? '✅ Defined' : '❌ MISSING')
+  console.log(`   NODE_ENV: ${process.env.NODE_ENV}`)
   console.log('Press Ctrl+C to stop the server')
 })
 

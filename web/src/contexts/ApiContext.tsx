@@ -55,6 +55,13 @@ export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
   // window.location.origin is like "http://localhost:4001"
   const apiUrl = new URL(apiScope, window.location.origin).toString().replace(/\/$/, '');
 
+  console.log('[ApiContext] Config:', {
+    VITE_API_SCOPE: import.meta.env.VITE_API_SCOPE,
+    resolvedApiScope: apiScope,
+    fullApiUrl: apiUrl,
+    origin: window.location.origin
+  });
+
   const api = treaty<App>(apiUrl, {
     headers: () => {
       const token = localStorage.getItem('pentamont_token')

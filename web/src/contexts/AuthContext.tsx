@@ -35,8 +35,11 @@ const redirectToLogin = () => {
   window.location.href = `${baseUrl}login`.replace(/\/+/g, '/');
 };
 
+import { useApi } from './ApiContext';
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const api = useApi();
 
   useEffect(() => {
     // Check for existing user data on app start
@@ -55,38 +58,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    // Simple env-based authentication
-    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
-    const readOnlyPassword = import.meta.env.VITE_READONLY_PASSWORD;
+    try {
+      const { data, error } = await api.api.auth.login.post({
+        identifier: username,
+        password
+      });
 
-    let role: 'ADMIN' | 'READ_ONLY' | null = null;
+      if (error) {
+        console.error('Login error:', error);
+        return false;
+      }
 
-    if (username === 'admin' && password === adminPassword) {
-      role = 'ADMIN';
-    } else if (username === 'pentamont' && password === readOnlyPassword) {
-      role = 'READ_ONLY';
+      if (data && data.success) {
+        const { user: apiUser, token } = data.data;
+
+        // Store token
+        localStorage.setItem('pentamont_token', token);
+
+        // Enhance user object with role (defaulting to ADMIN as backend doesn't send it yet)
+        // This maintains compatibility with the existing frontend role logic
+        const userWithRole: User = {
+          ...apiUser,
+          role: 'ADMIN', // Default role for now
+        };
+
+        localStorage.setItem('pentamont_user', JSON.stringify(userWithRole));
+        setUser(userWithRole);
+        return true;
+      }
+
+      return false;
+    } catch (err) {
+      console.error('Login exception:', err);
+      return false;
     }
-
-    if (role) {
-      // Mock user object since we don't have a DB
-      const mockUser: User = {
-        id: role === 'ADMIN' ? 1 : 2,
-        username: username,
-        email: `${username}@pentamont.com`,
-        role: role,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      localStorage.setItem('pentamont_user', JSON.stringify(mockUser));
-      setUser(mockUser);
-      return true;
-    }
-
-    return false;
   };
 
   const logout = () => {
+    localStorage.removeItem('pentamont_token');
     localStorage.removeItem('pentamont_user');
     setUser(null);
     redirectToLogin();

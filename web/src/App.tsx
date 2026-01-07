@@ -159,15 +159,15 @@ function App() {
   return (
     <Router basename="/pentamont">
       <ThemeProvider>
-        <AuthProvider>
-          <ApiProvider>
+        <ApiProvider>
+          <AuthProvider>
             <YearProvider>
               <QueryClientProvider client={queryClient}>
                 <AppContent />
               </QueryClientProvider>
             </YearProvider>
-          </ApiProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </ApiProvider>
       </ThemeProvider>
     </Router>
   );
