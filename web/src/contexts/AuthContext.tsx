@@ -75,11 +75,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Store token
         localStorage.setItem('pentamont_token', token);
 
-        // Enhance user object with role (defaulting to ADMIN as backend doesn't send it yet)
-        // This maintains compatibility with the existing frontend role logic
+        // Enhance user object with role
+        // RESTORING LEGACY LOGIC: 'pentamont' is READ_ONLY, others (like 'admin') are ADMIN
+        const role = apiUser.username === 'pentamont' ? 'READ_ONLY' : 'ADMIN';
+
         const userWithRole: User = {
           ...apiUser,
-          role: 'ADMIN', // Default role for now
+          role: role as 'ADMIN' | 'READ_ONLY',
         };
 
         localStorage.setItem('pentamont_user', JSON.stringify(userWithRole));
