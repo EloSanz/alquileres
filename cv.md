@@ -22,7 +22,7 @@ Poseo una fuerte capacidad técnica en integración de **Model Context Protocols
 *Parte del equipo de tecnología en la empresa de e-commerce líder de Latinoamérica.*
 
 * **Optimización Crítica:** Implementación de estrategias de caché distribuida en servicios críticos de múltiples APIs. Se logró un **70% de Cache Hit Ratio**, resolviendo problemas de *downtime* recurrentes en la base de datos NoSQL y estabilizando el sistema.
-* **Integración de IA:** Desarrollo e implementación de servidores **MCP (Model Context Protocols)** internos para el equipo, optimizando procesos de *troubleshooting* automatizado y acelerando el *onboarding* de nuevos desarrolladores.
+* **MCP Builder & AI Integration:** Rol activo como **MCP Builder**, desarrollando herramientas internas utilizando **FastMCP** (Python). Creación de servidores **MCP** propios para conectar LLMs con una **RAG** que desarrollé a partir de la lógica de negocio y código fuente del equipo, optimizando procesos de *troubleshooting* automatizado y acelerando el *onboarding*.
 * **Desarrollo Backend:** Mantenimiento evolutivo y creación de microservicios en **Java (Spring Boot)**, asegurando alta disponibilidad, escalabilidad y aplicando principios **SOLID**.
 
 ### **SIRIUS SOFTWARE** | Argentina (Remoto)
