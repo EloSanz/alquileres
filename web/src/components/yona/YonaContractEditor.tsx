@@ -412,6 +412,8 @@ export default function YonaContractEditor({
             console.log('🚀 Iniciando exportación PDF...');
 
             // Validar campos requeridos para exportación PDF
+            // Se ha relajado la validación para permitir imprimir contratos "en blanco" (templates)
+            /*
             const exportRequiredFields = [
                 { key: 'arrendatario_nombre', label: 'Nombre del Arrendatario' },
                 { key: 'arrendatario_dni', label: 'DNI del Arrendatario' },
@@ -427,6 +429,7 @@ export default function YonaContractEditor({
                 setExportWarningOpen(true);
                 return;
             }
+            */
 
             // Validar formatos de campos
             const formatErrors = validateFieldFormats();

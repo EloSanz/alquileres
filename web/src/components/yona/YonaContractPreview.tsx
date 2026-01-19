@@ -7,16 +7,18 @@ interface YonaContractPreviewProps {
 }
 
 // Componente para mostrar placeholders con mensajes de campos faltantes
-function PlaceholderText({ value, placeholder }: { value: string | number | null | undefined; placeholder: string }) {
+function PlaceholderText({ value, placeholder, minWidth = '100px' }: { value: string | number | null | undefined; placeholder?: string, minWidth?: string }) {
     const stringValue = String(value || '').trim();
     if (!stringValue) {
         return (
             <span style={{
-                color: '#d32f2f',
-                fontStyle: 'italic',
-                textDecoration: 'underline'
+                display: 'inline-block',
+                borderBottom: '1px solid #000',
+                minWidth: minWidth,
+                margin: '0 4px',
+                lineHeight: '1em'
             }}>
-                [Falta completar: {placeholder}]
+                &nbsp;
             </span>
         );
     }
@@ -67,7 +69,7 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
         maxWidth: fullPage ? '170mm' : 'none',
         margin: fullPage ? '0 auto' : '0',
         padding: fullPage ? '0 5mm' : '0',
-        textAlign: 'justify' as const,
+        textAlign: 'left' as const,
         wordWrap: 'break-word' as const,
         overflowWrap: 'break-word' as const,
     };
@@ -87,7 +89,7 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
     };
 
     const paragraphStyle = {
-        textAlign: 'justify' as const,
+        textAlign: 'left' as const,
         marginBottom: '8px',
     };
 
@@ -140,10 +142,10 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
             {/* Introducción */}
             <p style={paragraphStyle}>
                 Conste por el presente documento el contrato de arrendamiento de estacionamiento que celebran de una parte{' '}
-                <strong>{data.arrendador_nombre}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendador_dni || '____'} placeholder="DNI Arrendador" />, con domicilio en{' '}
-                <PlaceholderText value={data.arrendador_domicilio || '____'} placeholder="Domicilio Arrendador" />, a quien en adelante se le denominará <strong>EL ARRENDADOR</strong>; y de la otra parte{' '}
-                <strong>{data.arrendatario_nombre}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendatario_dni} placeholder="DNI Arrendatario" />, con domicilio en{' '}
-                <PlaceholderText value={data.arrendatario_domicilio} placeholder="Domicilio Arrendatario" />, a quien en adelante se le denominará <strong>EL ARRENDATARIO</strong>; en los términos y condiciones siguientes:
+                <strong>{data.arrendador_nombre}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendador_dni || '____'} placeholder="DNI Arrendador" minWidth="120px" />, con domicilio en{' '}
+                <PlaceholderText value={data.arrendador_domicilio || '____'} placeholder="Domicilio Arrendador" minWidth="250px" />, a quien en adelante se le denominará <strong>EL ARRENDADOR</strong>; y de la otra parte{' '}
+                <strong>{data.arrendatario_nombre || <PlaceholderText value={null} minWidth="300px" />}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendatario_dni} placeholder="DNI Arrendatario" minWidth="120px" />, con domicilio en{' '}
+                <PlaceholderText value={data.arrendatario_domicilio} placeholder="Domicilio Arrendatario" minWidth="350px" />, a quien en adelante se le denominará <strong>EL ARRENDATATIO</strong>; en los términos y condiciones siguientes:
             </p>
 
             {/* Clausulas */}
@@ -156,29 +158,29 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
             <p style={sectionTitleStyle}>SEGUNDA: DESTINO</p>
             <p style={paragraphStyle}>
                 El estacionamiento será utilizado únicamente para guardar el vehículo de placa{' '}
-                <PlaceholderText value={data.vehiculo_placa} placeholder="Placa" />, marca{' '}
-                <PlaceholderText value={data.vehiculo_marca} placeholder="Marca" />, modelo{' '}
-                <PlaceholderText value={data.vehiculo_modelo} placeholder="Modelo" />. Queda prohibido destinarlo a otro uso sin autorización expresa y escrita de <strong>EL ARRENDADOR</strong>.
+                <PlaceholderText value={data.vehiculo_placa} placeholder="Placa" minWidth="100px" />, marca{' '}
+                <PlaceholderText value={data.vehiculo_marca} placeholder="Marca" minWidth="100px" />, modelo{' '}
+                <PlaceholderText value={data.vehiculo_modelo} placeholder="Modelo" minWidth="100px" />. Queda prohibido destinarlo a otro uso sin autorización expresa y escrita de <strong>EL ARRENDADOR</strong>.
             </p>
 
             <p style={sectionTitleStyle}>TERCERA: PLAZO</p>
             <p style={paragraphStyle}>
-                El plazo del presente contrato es de <strong>{data.plazo_meses || '____'}</strong> meses, iniciándose el{' '}
-                <strong>{formatDateShort(data.fecha_inicio)}</strong> y culminando el <strong>{formatDateShort(data.fecha_fin)}</strong>, pudiendo renovarse previo acuerdo entre las partes.
+                El plazo del presente contrato es de <strong>{data.plazo_meses || <PlaceholderText value={null} minWidth="50px" />}</strong> meses, iniciándose el{' '}
+                <strong>{data.fecha_inicio ? formatDateShort(data.fecha_inicio) : <PlaceholderText value={null} minWidth="120px" />}</strong> y culminando el <strong>{data.fecha_fin ? formatDateShort(data.fecha_fin) : <PlaceholderText value={null} minWidth="120px" />}</strong>, pudiendo renovarse previo acuerdo entre las partes.
             </p>
 
             <p style={sectionTitleStyle}>CUARTA: RENTA</p>
             <p style={paragraphStyle}>
                 <strong>EL ARRENDATARIO</strong> pagará a <strong>EL ARRENDADOR</strong> la suma de S/{' '}
-                <PlaceholderText value={data.renta_mensual} placeholder="Monto" /> ({data.renta_texto || '____'} soles) mensuales, por adelantado, dentro de los primeros{' '}
-                <strong>{data.dia_vencimiento || '____'}</strong> días de cada mes, mediante{' '}
-                <PlaceholderText value={data.metodo_pago} placeholder="efectivo / transferencia / Yape / Plin / otro medio" />.
+                <PlaceholderText value={data.renta_mensual} placeholder="Monto" minWidth="100px" /> ({data.renta_texto || <PlaceholderText value={null} minWidth="150px" />} soles) mensuales, por adelantado, dentro de los primeros{' '}
+                <strong>{data.dia_vencimiento || <PlaceholderText value={null} minWidth="50px" />}</strong> días de cada mes, mediante{' '}
+                <PlaceholderText value={data.metodo_pago} placeholder="Medio de Pago" minWidth="150px" />.
             </p>
 
             <p style={sectionTitleStyle}>QUINTA: GARANTÍA</p>
             <p style={paragraphStyle}>
                 A la firma del presente contrato, <strong>EL ARRENDATARIO</strong> entrega la suma de S/{' '}
-                <PlaceholderText value={data.garantia_monto} placeholder="Monto Garantía" /> como garantía, la cual será devuelta al término del contrato, siempre que el estacionamiento sea devuelto en las mismas condiciones en que fue entregado.
+                <PlaceholderText value={data.garantia_monto} placeholder="Monto Garantía" minWidth="100px" /> como garantía, la cual será devuelta al término del contrato, siempre que el estacionamiento sea devuelto en las mismas condiciones en que fue entregado.
             </p>
 
             <p style={sectionTitleStyle}>SEXTA: OBLIGACIONES DEL ARRENDATARIO</p>
@@ -219,8 +221,8 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
             </p>
 
             <p style={paragraphStyle}>
-                En señal de conformidad, firman el presente contrato en <strong>{data.lugar_firma || '____'}</strong>, a los{' '}
-                <strong>{firmaParts.day}</strong> días del mes de <strong>{firmaParts.month}</strong> del año <strong>{firmaParts.year}</strong>.
+                En señal de conformidad, firman el presente contrato en <strong>{data.lugar_firma || <PlaceholderText value={null} minWidth="100px" />}</strong>, a los{' '}
+                <strong>{firmaParts.day !== '____' ? firmaParts.day : <PlaceholderText value={null} minWidth="50px" />}</strong> días del mes de <strong>{firmaParts.month !== '____' ? firmaParts.month : <PlaceholderText value={null} minWidth="100px" />}</strong> del año <strong>{firmaParts.year !== '____' ? firmaParts.year : <PlaceholderText value={null} minWidth="60px" />}</strong>.
             </p>
 
             {/* Firmas */}
@@ -239,10 +241,10 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
                 <div style={signatureBoxStyle}>
                     <div style={signatureLineStyle}>
                         <p style={signatureNameStyle}>
-                            <strong>{data.arrendatario_nombre}</strong>
+                            <strong>{data.arrendatario_nombre || <PlaceholderText value={null} minWidth="250px" />}</strong>
                         </p>
                         <p style={signatureNameStyle}>
-                            <strong>D.N.I: <PlaceholderText value={data.arrendatario_dni} placeholder="DNI" /></strong>
+                            <strong>D.N.I: <PlaceholderText value={data.arrendatario_dni} placeholder="DNI" minWidth="120px" /></strong>
                         </p>
                         <p style={{ ...signatureTextStyle, marginTop: '8px' }}>EL ARRENDATARIO</p>
                     </div>
