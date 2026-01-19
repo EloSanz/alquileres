@@ -9,7 +9,7 @@ export default function YonaPage() {
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Paper sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <Paper sx={{ p: { xs: 2, md: 4 }, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     Yona - Contratos
                 </Typography>

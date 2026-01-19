@@ -11,6 +11,8 @@ import {
     Typography,
     IconButton,
     Alert,
+    useTheme,
+    useMediaQuery,
 } from '@mui/material';
 import { Close as CloseIcon, Print as PrintIcon } from '@mui/icons-material';
 import { type YonaHandoverData, defaultYonaHandoverData } from '../../services/yonaContractService';
@@ -51,14 +53,21 @@ export default function YonaHandoverEditor({
 }: YonaHandoverEditorProps) {
     const previewRef = useRef<HTMLDivElement>(null);
 
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
     const [tabValue, setTabValue] = useState(0);
     const [handoverData, setHandoverData] = useState<YonaHandoverData>(defaultYonaHandoverData);
     const [error, setError] = useState('');
-    const [splitView, setSplitView] = useState(true);
+    const [splitView, setSplitView] = useState(!isMobile);
+
+    useEffect(() => {
+        setSplitView(!isMobile);
+    }, [isMobile]);
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
-        if (newValue === 0) setSplitView(true);
+        if (newValue === 0 && !isMobile) setSplitView(true);
         else setSplitView(false);
     };
 
@@ -113,6 +122,7 @@ export default function YonaHandoverEditor({
             onClose={handleClose}
             maxWidth="xl"
             fullWidth
+            fullScreen={isMobile}
             PaperProps={{
                 sx: { height: '95vh', maxHeight: '95vh', display: 'flex', flexDirection: 'column' }
             }}
@@ -164,9 +174,11 @@ export default function YonaHandoverEditor({
             <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
                 <Button onClick={handleClose} color="inherit">Cerrar</Button>
                 <Box sx={{ flex: 1 }} />
-                <Button onClick={() => setSplitView(v => !v)} variant="outlined" color="secondary">
-                    {splitView ? 'Vista de Pestañas' : 'Vista Dividida'}
-                </Button>
+                {!isMobile && (
+                    <Button onClick={() => setSplitView(v => !v)} variant="outlined" color="secondary">
+                        {splitView ? 'Vista de Pestañas' : 'Vista Dividida'}
+                    </Button>
+                )}
                 <Button onClick={handleExportPDF} variant="contained" startIcon={<PrintIcon />}>
                     Exportar PDF
                 </Button>

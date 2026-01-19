@@ -12,6 +12,8 @@ import {
     IconButton,
     Alert,
     Snackbar,
+    useTheme,
+    useMediaQuery,
 } from '@mui/material';
 import { Close as CloseIcon, Print as PrintIcon } from '@mui/icons-material';
 import { type YonaContractData, defaultYonaContractData } from '../../services/yonaContractService';
@@ -54,6 +56,9 @@ export default function YonaContractEditor({
 }: YonaContractEditorProps) {
     const previewRef = useRef<HTMLDivElement>(null);
 
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
     const [tabValue, setTabValue] = useState(0);
     const [contractData, setContractData] = useState<YonaContractData>(defaultYonaContractData);
     const [error, setError] = useState('');
@@ -61,9 +66,18 @@ export default function YonaContractEditor({
     const [snackbar, setSnackbar] = useState({ open: false, message: '' });
     const [missingFields, setMissingFields] = useState<string[]>([]);
     const [previewReady, setPreviewReady] = useState(false);
-    const [splitView, setSplitView] = useState(true); // Vista dividida por defecto
+    const [splitView, setSplitView] = useState(!isMobile); // Vista dividida solo en desktop
     const [exportWarningOpen, setExportWarningOpen] = useState(false);
     const [exportWarningFields, setExportWarningFields] = useState<string[]>([]);
+
+    // Actualizar splitView cuando cambia el tamaño de pantalla
+    useEffect(() => {
+        if (isMobile) {
+            setSplitView(false);
+        } else {
+            setSplitView(true);
+        }
+    }, [isMobile]);
 
     // Reset form when modal opens
     useEffect(() => {
@@ -92,9 +106,9 @@ export default function YonaContractEditor({
             setError('');
             setFieldErrors({});
             setTabValue(0);
-            setSplitView(true); // Activar vista dividida por defecto al abrir
+            setSplitView(!isMobile); // Activar vista dividida solo si no es mobile
         }
-    }, [open, draft]);
+    }, [open, draft, isMobile]);
 
     // Mark preview as ready when split view is active or tab changes to preview tab
     useEffect(() => {
@@ -109,8 +123,8 @@ export default function YonaContractEditor({
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
-        // Mantener split view solo en la pestaña de formulario
-        if (newValue === 0) {
+        // Mantener split view solo en la pestaña de formulario y si no es mobile
+        if (newValue === 0 && !isMobile) {
             setSplitView(true);
         } else {
             setSplitView(false);
@@ -510,6 +524,7 @@ export default function YonaContractEditor({
                 onClose={handleClose}
                 maxWidth="xl"
                 fullWidth
+                fullScreen={isMobile}
                 PaperProps={{
                     sx: { height: '95vh', maxHeight: '95vh', display: 'flex', flexDirection: 'column' }
                 }}
@@ -707,13 +722,15 @@ export default function YonaContractEditor({
                         Cerrar
                     </Button>
                     <Box sx={{ flex: 1 }} />
-                    <Button
-                        onClick={() => setSplitView(v => !v)}
-                        variant="outlined"
-                        color="secondary"
-                    >
-                        {splitView ? 'Vista de Pestañas' : 'Vista Dividida'}
-                    </Button>
+                    {!isMobile && (
+                        <Button
+                            onClick={() => setSplitView(v => !v)}
+                            variant="outlined"
+                            color="secondary"
+                        >
+                            {splitView ? 'Vista de Pestañas' : 'Vista Dividida'}
+                        </Button>
+                    )}
                     {!splitView && (
                         <Button
                             onClick={tabValue === 0 ? () => setTabValue(1) : handleExportPDF}
