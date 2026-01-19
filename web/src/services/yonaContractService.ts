@@ -30,9 +30,9 @@ export interface YonaContractData {
 }
 
 export const defaultYonaContractData: YonaContractData = {
-    arrendador_nombre: "INVERSIONES YONA S.A.C.",
-    arrendador_dni: "20608298782", // This is RUC actually based on previous context, but labeling as DNI for variable consitency or I should check. Let's stick to the prompt's implied simple structure. The user previously had distinct fields, I'll use a standard set.
-    arrendador_domicilio: "AV. ALFONSO UGARTE NRO. 1360 (FTE A COMISARIA ALFONSO UGARTE) LIMA - LIMA - LIMA",
+    arrendador_nombre: "Yona Yinka Arellano Baldoceda",
+    arrendador_dni: "06011353",
+    arrendador_domicilio: "JR. RODRIGUEZ DE MENDOZA 284 - CHANCHAMAYO - JUNIN", // Updated from RUC image
 
     arrendatario_nombre: "",
     arrendatario_dni: "",
@@ -44,8 +44,8 @@ export const defaultYonaContractData: YonaContractData = {
     fecha_fin: "",
     plazo_meses: "",
 
-    renta_mensual: "",
-    renta_texto: "",
+    renta_mensual: "300",
+    renta_texto: "TRESCIENTOS",
     dia_vencimiento: "",
 
     garantia_monto: "",
@@ -57,4 +57,30 @@ export const defaultYonaContractData: YonaContractData = {
     vehiculo_marca: "",
     vehiculo_modelo: "",
     metodo_pago: "EFECTIVO"
+};
+
+export interface YonaHandoverData {
+    estacionamiento_numero: string;
+    edificio_direccion: string;
+    entrega_receptor_nombre: string;
+    entrega_receptor_dni: string;
+    entrega_receptor_partida: string;
+    compradora_nombre: string;
+    compradora_dni: string;
+    inmobiliaria_nombre: string;
+    items_entrega: string;
+    lugar_fecha_entrega: string;
+}
+
+export const defaultYonaHandoverData: YonaHandoverData = {
+    estacionamiento_numero: "doble N° 3 - 4",
+    edificio_direccion: "Calle Victor Almozara 261 – Surquillo de la provincia y departamento de Lima",
+    entrega_receptor_nombre: "Milagros Ernestina Mazzetto Arellano",
+    entrega_receptor_dni: "40875711",
+    entrega_receptor_partida: "15797549",
+    compradora_nombre: "Yona Yinka Arellano Baldoceda",
+    compradora_dni: "06011353",
+    inmobiliaria_nombre: "METROPOLI 3 SAC",
+    items_entrega: "- 1 control remote puerta vehicular",
+    lugar_fecha_entrega: `Lima, ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`
 };

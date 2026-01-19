@@ -55,6 +55,7 @@ const FormField = memo(({ label, field, data, error, placeholder, onChange, mult
                 type={type}
                 error={!!error}
                 helperText={error}
+                InputLabelProps={type === 'date' ? { shrink: true } : undefined}
             />
         </Grid>
     )

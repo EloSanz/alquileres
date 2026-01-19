@@ -183,18 +183,18 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
 
             <p style={sectionTitleStyle}>SEXTA: OBLIGACIONES DEL ARRENDATARIO</p>
             <ul style={listStyle}>
-                <li>a) Usar el estacionamiento conforme a su destino.</li>
-                <li>b) No subarrendar ni ceder el uso del espacio.</li>
-                <li>c) Mantener limpio el estacionamiento.</li>
-                <li>d) Responder por los daños ocasionados por su vehículo.</li>
-                <li>e) Cumplir puntualmente con el pago de la renta.</li>
+                <li> Usar el estacionamiento conforme a su destino.</li>
+                <li> No subarrendar ni ceder el uso del espacio.</li>
+                <li> Mantener limpio el estacionamiento.</li>
+                <li> Responder por los daños ocasionados por su vehículo.</li>
+                <li> Cumplir puntualmente con el pago de la renta.</li>
             </ul>
 
             <p style={sectionTitleStyle}>SÉTIMA: OBLIGACIONES DEL ARRENDADOR</p>
             <ul style={listStyle}>
-                <li>a) Entregar el estacionamiento en condiciones adecuadas de uso.</li>
-                <li>b) Garantizar el uso pacífico durante la vigencia del contrato.</li>
-                <li>c) Realizar reparaciones estructurales que no sean atribuibles al ARRENDATARIO.</li>
+                <li> Entregar el estacionamiento en condiciones adecuadas de uso.</li>
+                <li> Garantizar el uso pacífico durante la vigencia del contrato.</li>
+                <li> Realizar reparaciones estructurales que no sean atribuibles al ARRENDATARIO.</li>
             </ul>
 
             <p style={sectionTitleStyle}>OCTAVA: RESPONSABILIDAD</p>
