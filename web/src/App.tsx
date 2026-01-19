@@ -33,9 +33,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Component to redirect authenticated users away from auth pages
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   if (isAuthenticated) {
+    if (user?.username === 'yona') {
+      return <Navigate to="/yona" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 

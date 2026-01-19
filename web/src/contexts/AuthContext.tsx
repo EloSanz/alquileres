@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // Enhance user object with role
         // RESTORING LEGACY LOGIC: 'pentamont' is READ_ONLY, others (like 'admin') are ADMIN
-        const role = apiUser.username === 'pentamont' ? 'READ_ONLY' : 'ADMIN';
+        const role = (apiUser.username === 'pentamont' || apiUser.username === 'yona') ? 'READ_ONLY' : 'ADMIN';
 
         const userWithRole: User = {
           ...apiUser,
