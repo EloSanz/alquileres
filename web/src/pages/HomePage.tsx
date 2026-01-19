@@ -286,6 +286,34 @@ const HomePage = () => {
             </CardContent>
           </Card>
         </Grid>
+        {user?.username === 'yona' && (
+          <Grid item xs={12} sm={6} md={12}>
+            <Card
+              sx={{
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 200,
+                '&:hover': { transform: 'translateY(-4px)' }
+              }}
+              onClick={() => navigate('/yona')}
+            >
+              <CardContent sx={{ textAlign: 'center', py: 4, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 2 }}>
+                  <ContractIcon sx={{ fontSize: 40, color: 'secondary.main' }} />
+                  <Typography variant="h6">
+                    Contratos Yona
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Gestiona los contratos específicos de Yona (Cocheras)
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
       </Grid>
     </Container>
   );

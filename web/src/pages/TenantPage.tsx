@@ -40,7 +40,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const TenantPage = () => {
   const { hasRole } = useAuth();
-  const isAdmin = hasRole('ADMIN');
+  const isAdmin = hasRole(['ADMIN']);
   const { tenants, isLoading: loading, error, createTenant, updateTenant, deleteTenant } = useTenants();
   const { properties } = useProperties();
 

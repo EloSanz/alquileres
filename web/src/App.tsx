@@ -18,6 +18,7 @@ import ServicePage from './pages/ServicePage';
 import TaxPage from './pages/TaxPage';
 import GuaranteePage from './pages/GuaranteePage';
 import MaintenancePage from './pages/MaintenancePage';
+import YonaPage from './pages/YonaPage';
 
 // Component to protect authenticated routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -135,6 +136,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <MaintenancePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/yona"
+            element={
+              <ProtectedRoute>
+                <YonaPage />
               </ProtectedRoute>
             }
           />

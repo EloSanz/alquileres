@@ -48,7 +48,11 @@ const LoginPage = () => {
       const success = await login(formData.identifier, formData.password);
 
       if (success) {
-        navigate('/');
+        if (formData.identifier === 'yona') {
+          navigate('/yona');
+        } else {
+          navigate('/');
+        }
       } else {
         setError('Credenciales inválidas');
       }

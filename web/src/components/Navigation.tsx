@@ -23,7 +23,7 @@ import YearSelector from './YearSelector';
 
 const Navigation = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -51,6 +51,16 @@ const Navigation = () => {
           <ListItemText primary="Inicio" />
         </ListItemButton>
       </ListItem>
+      {user?.username === 'yona' && (
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => handleNavigate('/yona')}>
+            <ListItemIcon>
+              <HomeIcon />
+            </ListItemIcon>
+            <ListItemText primary="Contratos Yona" />
+          </ListItemButton>
+        </ListItem>
+      )}
       <Divider />
       <ListItem disablePadding>
         <ListItemButton onClick={handleLogout}>
@@ -86,6 +96,21 @@ const Navigation = () => {
               >
                 Inicio
               </Button>
+
+              {user?.username === 'yona' && (
+                <Button
+                  color="inherit"
+                  onClick={() => navigate('/yona')}
+                  sx={{
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.1)'
+                    }
+                  }}
+                >
+                  Contratos Yona
+                </Button>
+              )}
 
               <Button
                 color="inherit"
