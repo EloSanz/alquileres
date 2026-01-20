@@ -369,13 +369,13 @@ export default function YonaContractEditor({
               ${styles}
               @page {
                 size: A4;
-                margin: 1cm;
+                margin: 0;
               }
               body {
                 font-family: 'Arial', sans-serif;
                 line-height: 1.6;
                 color: #000;
-                margin: 0;
+                margin: 1cm;
                 padding: 20px;
               }
               .contract-content {

@@ -166,7 +166,7 @@ export const defaultContractData: ContractData = {
   gerente_nombre: 'ROMAN MICHAEL ARELLANO RIVERA',
   gerente_dni: '08885646',
   gerente_partida_registral: '05003448',
-  arrendador_domicilio: 'Jirón Tacna Nº 628 (manzana 32 lote 8-9)',
+  arrendador_domicilio: ' Jirón Tacna Nº 628 (manzana 32 lote 8-9)',
   arrendador_distrito: 'Callería',
   arrendador_provincia: 'Coronel Portillo',
   arrendador_departamento: 'Ucayali',

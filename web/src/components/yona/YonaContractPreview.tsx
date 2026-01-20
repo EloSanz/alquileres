@@ -10,13 +10,40 @@ interface YonaContractPreviewProps {
 function PlaceholderText({ value, placeholder, minWidth = '100px' }: { value: string | number | null | undefined; placeholder?: string, minWidth?: string }) {
     const stringValue = String(value || '').trim();
     if (!stringValue) {
+        const numericWidth = parseInt(minWidth, 10);
+        const isPx = minWidth.includes('px');
+
+        // Si es un ancho grande (>150px), lo dividimos en segmentos más pequeños
+        // para permitir que el subrayado se ajuste (wrap) al ancho de la línea.
+        if (isPx && !isNaN(numericWidth) && numericWidth > 150) {
+            const segmentSize = 50; // Segmentos más cortos para mejor ajuste
+            const count = Math.ceil(numericWidth / segmentSize);
+            const segmentWidth = Math.floor(numericWidth / count);
+
+            return (
+                <span title={placeholder} style={{ whiteSpace: 'normal' }}>
+                    {Array.from({ length: count }).map((_, i) => (
+                        <span key={i} style={{
+                            display: 'inline-block',
+                            borderBottom: '1px solid #000',
+                            width: `${segmentWidth}px`,
+                            margin: '0',
+                            height: '1em',
+                            verticalAlign: 'bottom'
+                        }} />
+                    ))}
+                </span>
+            );
+        }
+
         return (
-            <span style={{
+            <span title={placeholder} style={{
                 display: 'inline-block',
                 borderBottom: '1px solid #000',
                 minWidth: minWidth,
                 margin: '0 4px',
-                lineHeight: '1em'
+                lineHeight: '1em',
+                verticalAlign: 'bottom'
             }}>
                 &nbsp;
             </span>
@@ -141,11 +168,11 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
             <hr style={dividerStyle} />
 
             {/* Introducción */}
-            <p style={{ ...paragraphStyle, textAlign: 'justify', textJustify: 'inter-word' }}>
+            <p style={{ ...paragraphStyle, textAlign: 'left', textJustify: 'inter-word' }}>
                 Conste por el presente documento el contrato de arrendamiento de estacionamiento que celebran de una parte
-                <strong> {data.arrendador_nombre}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendador_dni || '____'} placeholder="DNI Arrendador" minWidth="120px" />, con domicilio en
+                <strong> {data.arrendador_nombre}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendador_dni || '____'} placeholder="DNI Arrendador" minWidth="120px" />, con domicilio en{' '}
                 <PlaceholderText value={data.arrendador_domicilio || '____'} placeholder="Domicilio Arrendador" minWidth="250px" />, a quien en adelante se le denominará <strong>EL ARRENDADOR</strong>; y de la otra parte
-                <strong> {data.arrendatario_nombre || <PlaceholderText value={null} minWidth="300px" />}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendatario_dni} placeholder="DNI Arrendatario" minWidth="120px" />, con domicilio en
+                <strong> {data.arrendatario_nombre || <PlaceholderText value={null} minWidth="300px" />}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendatario_dni} placeholder="DNI Arrendatario" minWidth="120px" />, con domicilio en{' '}
                 <PlaceholderText value={data.arrendatario_domicilio} placeholder="Domicilio Arrendatario" minWidth="350px" />, a quien en adelante se le denominará <strong>EL ARRENDATARIO</strong>; en los términos y condiciones siguientes:
             </p>
 
@@ -153,7 +180,7 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
             <p style={sectionTitleStyle}>PRIMERA: OBJETO</p>
             <p style={paragraphStyle}>
                 <strong>EL ARRENDADOR</strong> da en arrendamiento a <strong>EL ARRENDATARIO</strong> el espacio de estacionamiento N.°{' '}
-                <PlaceholderText value={data.stand_numero} placeholder="Número de Estacionamiento" />, situado en Calle Víctor Alzamora #291, destinado exclusivamente para el estacionamiento de un vehículo automotor.
+                <PlaceholderText value={data.stand_numero} placeholder="Número de Estacionamiento" />, situado en Calle Víctor Alzamora #261, destinado exclusivamente para el estacionamiento de un vehículo automotor.
             </p>
 
             <p style={sectionTitleStyle}>SEGUNDA: DESTINO</p>

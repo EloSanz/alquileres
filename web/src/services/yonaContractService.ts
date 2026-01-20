@@ -32,7 +32,7 @@ export interface YonaContractData {
 export const defaultYonaContractData: YonaContractData = {
     arrendador_nombre: "Yona Yinka Arellano Baldoceda",
     arrendador_dni: "06011353",
-    arrendador_domicilio: "JR. RODRIGUEZ DE MENDOZA 284 - CHANCHAMAYO - JUNIN", // Updated from RUC image
+    arrendador_domicilio: "Jirón Rodriguez 284 - San Ramón CHANCHAMAYO - JUNIN", // Updated from RUC image
 
     arrendatario_nombre: "",
     arrendatario_dni: "",
