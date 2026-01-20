@@ -492,8 +492,8 @@ export default function YonaContractEditor({
             <head>
             <title>Contrato de Arrendamiento</title>
               <style>
-              @page { size: A4; margin: 0; }
-              body { margin: 0; padding: 25mm; }
+              @page { size: A4; margin: 25mm; }
+              body { margin: 0; padding: 0; font-family: "Times New Roman", serif; }
               </style>
             </head>
           <body>${html}</body>

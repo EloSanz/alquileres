@@ -89,7 +89,8 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
     };
 
     const paragraphStyle = {
-        textAlign: 'left' as const,
+        textAlign: 'justify' as const,
+        textJustify: 'inter-word' as const,
         marginBottom: '8px',
     };
 
@@ -140,19 +141,19 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
             <hr style={dividerStyle} />
 
             {/* Introducción */}
-            <p style={paragraphStyle}>
-                Conste por el presente documento el contrato de arrendamiento de estacionamiento que celebran de una parte{' '}
-                <strong>{data.arrendador_nombre}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendador_dni || '____'} placeholder="DNI Arrendador" minWidth="120px" />, con domicilio en{' '}
-                <PlaceholderText value={data.arrendador_domicilio || '____'} placeholder="Domicilio Arrendador" minWidth="250px" />, a quien en adelante se le denominará <strong>EL ARRENDADOR</strong>; y de la otra parte{' '}
-                <strong>{data.arrendatario_nombre || <PlaceholderText value={null} minWidth="300px" />}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendatario_dni} placeholder="DNI Arrendatario" minWidth="120px" />, con domicilio en{' '}
-                <PlaceholderText value={data.arrendatario_domicilio} placeholder="Domicilio Arrendatario" minWidth="350px" />, a quien en adelante se le denominará <strong>EL ARRENDATATIO</strong>; en los términos y condiciones siguientes:
+            <p style={{ ...paragraphStyle, textAlign: 'justify', textJustify: 'inter-word' }}>
+                Conste por el presente documento el contrato de arrendamiento de estacionamiento que celebran de una parte
+                <strong> {data.arrendador_nombre}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendador_dni || '____'} placeholder="DNI Arrendador" minWidth="120px" />, con domicilio en
+                <PlaceholderText value={data.arrendador_domicilio || '____'} placeholder="Domicilio Arrendador" minWidth="250px" />, a quien en adelante se le denominará <strong>EL ARRENDADOR</strong>; y de la otra parte
+                <strong> {data.arrendatario_nombre || <PlaceholderText value={null} minWidth="300px" />}</strong>, identificado(a) con DNI N.° <PlaceholderText value={data.arrendatario_dni} placeholder="DNI Arrendatario" minWidth="120px" />, con domicilio en
+                <PlaceholderText value={data.arrendatario_domicilio} placeholder="Domicilio Arrendatario" minWidth="350px" />, a quien en adelante se le denominará <strong>EL ARRENDATARIO</strong>; en los términos y condiciones siguientes:
             </p>
 
             {/* Clausulas */}
             <p style={sectionTitleStyle}>PRIMERA: OBJETO</p>
             <p style={paragraphStyle}>
                 <strong>EL ARRENDADOR</strong> da en arrendamiento a <strong>EL ARRENDATARIO</strong> el espacio de estacionamiento N.°{' '}
-                <PlaceholderText value={data.stand_numero} placeholder="Número de Estacionamiento" />, destinado exclusivamente para el estacionamiento de un vehículo automotor.
+                <PlaceholderText value={data.stand_numero} placeholder="Número de Estacionamiento" />, situado en Calle Víctor Alzamora #291, destinado exclusivamente para el estacionamiento de un vehículo automotor.
             </p>
 
             <p style={sectionTitleStyle}>SEGUNDA: DESTINO</p>
@@ -173,8 +174,7 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
             <p style={paragraphStyle}>
                 <strong>EL ARRENDATARIO</strong> pagará a <strong>EL ARRENDADOR</strong> la suma de S/{' '}
                 <PlaceholderText value={data.renta_mensual} placeholder="Monto" minWidth="100px" /> ({data.renta_texto || <PlaceholderText value={null} minWidth="150px" />} soles) mensuales, por adelantado, dentro de los primeros{' '}
-                <strong>{data.dia_vencimiento || <PlaceholderText value={null} minWidth="50px" />}</strong> días de cada mes, mediante{' '}
-                <PlaceholderText value={data.metodo_pago} placeholder="Medio de Pago" minWidth="150px" />.
+                <strong>{data.dia_vencimiento || <PlaceholderText value={null} minWidth="50px" />}</strong> días de cada mes, mediante Depósito bancario al número de cuenta Cta Interbank 1663424070466 CCI: 00316601342407046665.
             </p>
 
             <p style={sectionTitleStyle}>QUINTA: GARANTÍA</p>
@@ -209,20 +209,25 @@ function YonaContractPreview({ data, fullPage }: YonaContractPreviewProps) {
                 El incumplimiento de cualquiera de las obligaciones dará derecho a la parte afectada a resolver el contrato, previa comunicación escrita.
             </p>
 
-            <p style={sectionTitleStyle}>DÉCIMA: LEGISLACIÓN APLICABLE</p>
+            <p style={sectionTitleStyle}>DÉCIMA: CLÁUSULA DE ALLANAMIENTO FUTURO</p>
+            <p style={paragraphStyle}>
+                Las partes acuerdan que <strong>EL ARRENDATARIO</strong> se somete a la cláusula de allanamiento futuro, de conformidad con el artículo 594 del Código Procesal Civil modificado por la Ley N° 30201 y la Ley N° 30933. En consecuencia, en caso de incurrir en más de dos meses y medio de incumplimiento en el pago de la renta o de haberse concluido el plazo del contrato, <strong>EL ARRENDATARIO</strong> deberá desocupar y restituir inmediatamente el bien a <strong>EL ARRENDADOR</strong>, conforme a lo establecido en la ley mencionada.
+            </p>
+
+            <p style={sectionTitleStyle}>DÉCIMO PRIMERA: LEGISLACIÓN APLICABLE</p>
             <p style={paragraphStyle}>
                 El presente contrato se rige por las disposiciones del Código Civil Peruano.
             </p>
 
-            <p style={sectionTitleStyle}>DÉCIMO PRIMERA: DOMICILIO Y JURISDICCIÓN</p>
+            <p style={sectionTitleStyle}>DÉCIMO SEGUNDA: DOMICILIO Y JURISDICCIÓN</p>
             <p style={paragraphStyle}>
                 Para todos los efectos legales, las partes señalan como sus domicilios los indicados en la introducción y se someten a la jurisdicción de los jueces y tribunales de{' '}
-                <PlaceholderText value={data.lugar_firma || '____'} placeholder="Ciudad" />.
+                <strong>Lima</strong>.
             </p>
 
             <p style={paragraphStyle}>
-                En señal de conformidad, firman el presente contrato en <strong>{data.lugar_firma || <PlaceholderText value={null} minWidth="100px" />}</strong>, a los{' '}
-                <strong>{firmaParts.day !== '____' ? firmaParts.day : <PlaceholderText value={null} minWidth="50px" />}</strong> días del mes de <strong>{firmaParts.month !== '____' ? firmaParts.month : <PlaceholderText value={null} minWidth="100px" />}</strong> del año <strong>{firmaParts.year !== '____' ? firmaParts.year : <PlaceholderText value={null} minWidth="60px" />}</strong>.
+                En señal de conformidad, firman el presente contrato en <strong>Lima</strong>, a los{' '}
+                <strong>{firmaParts.day !== '____' ? firmaParts.day : '____'}</strong> días del mes de <strong>{firmaParts.month !== '____' ? firmaParts.month : '____'}</strong> del año <strong>{firmaParts.year !== '____' ? firmaParts.year : '2026'}</strong>.
             </p>
 
             {/* Firmas */}
