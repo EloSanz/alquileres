@@ -70,7 +70,7 @@ export class PaymentEntity {
     paymentDate?: string;
     dueDate: string;
     paymentMethod?: string;
-    status?: PaymentStatus;
+    status?: PaymentStatus | string;
     pentamontSettled?: boolean;
     notes?: string;
     receiptImageUrl?: string | null;
@@ -81,15 +81,15 @@ export class PaymentEntity {
       null, // id
       data.tenantId,
       data.propertyId ?? null,
-      data.contractId || null,
-      data.monthNumber || null,
+      data.contractId ?? null,
+      data.monthNumber ?? null,
       data.tenantFullName || null,
       data.tenantPhone || null,
       data.amount,
       paymentDate,
       dueDate,
       (data.paymentMethod as PaymentMethod) || PaymentMethod.YAPE,
-      convertFrontendStatusToPrisma(data.status || FrontendPaymentStatus.VENCIDO), // Por defecto VENCIDO (impago) hasta que el usuario lo cambie
+      convertFrontendStatusToPrisma(data.status || FrontendPaymentStatus.FUTURO),
       data.pentamontSettled ?? false,
       data.notes || null,
       data.receiptImageUrl || null,

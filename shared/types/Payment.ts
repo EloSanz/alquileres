@@ -31,15 +31,18 @@ export const PaymentSchema = z.object({
 export type Payment = z.infer<typeof PaymentSchema>;
 
 export const CreatePaymentSchema = z.object({
-  tenantId: z.number().int().positive('Tenant ID is required'),
-  propertyId: z.number().nullable().optional(),
-  amount: z.number().positive('Amount must be greater than 0'),
-  dueDate: z.string().min(1, 'Due date is required'),
-  paymentDate: z.string().optional(),
+  tenantId: z.number().int().positive(),
+  propertyId: z.number().int().positive().optional().nullable(),
+  contractId: z.number().int().positive().optional().nullable(),
+  monthNumber: z.number().int().min(1).max(12).optional().nullable(),
+  amount: z.number().positive(),
+  paymentDate: z.string(), // ISO date string
+  dueDate: z.string(), // ISO date string
   paymentMethod: z.string().optional(),
   status: z.nativeEnum(PaymentStatus).optional(),
   pentamontSettled: z.boolean().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  receiptImageUrl: z.string().optional().nullable(),
 });
 
 export type CreatePayment = z.infer<typeof CreatePaymentSchema>;

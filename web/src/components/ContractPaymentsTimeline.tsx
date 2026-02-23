@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
     Box,
     Grid,
@@ -7,21 +7,20 @@ import {
     IconButton,
     Divider,
 } from '@mui/material';
-import { Edit as EditIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Add as AddIcon } from '@mui/icons-material';
 import { usePayments } from '../hooks/usePayments';
-import { Payment } from '../../../shared/types/Payment';
-import { buildContractTimeline, type ContractMonthInfo } from '../services/contractTimeline';
+import { Payment, CreatePayment, PaymentStatus } from '../../../shared/types/Payment';
 import type { Contract } from '../../../shared/types/Contract';
 import EditPaymentModal from './EditPaymentModal';
 import RoleGuard from './RoleGuard';
 import { useYear } from '../contexts/YearContext';
+import { usePaymentTimeline } from '../hooks/usePaymentTimeline';
+import { TimelineSlot, SlotStatus } from '../domain/timeline';
 
 
 export interface ContractPaymentsTimelineProps {
     contract: Contract;
 }
-
-type MonthStatus = 'PAID' | 'DUE' | 'FUTURE';
 
 export default function ContractPaymentsTimeline({ contract }: ContractPaymentsTimelineProps) {
 
@@ -29,86 +28,75 @@ export default function ContractPaymentsTimeline({ contract }: ContractPaymentsT
     const { selectedYear } = useYear();
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+    const [initialPaymentData, setInitialPaymentData] = useState<Partial<CreatePayment> | undefined>(undefined);
 
-    // Filter payments for this contract
-    const contractPayments = useMemo(() => {
-        if (!contract || !allPayments) return [];
-        return allPayments.filter(p => p.contractId === contract.id);
-    }, [allPayments, contract]);
+    // Use the new hook for all logic
+    const timelineSlots = usePaymentTimeline({
+        payments: allPayments || [],
+        year: selectedYear,
+        contractId: contract.id,
+        tenantId: contract.tenantId || undefined,
+        propertyId: contract.propertyId || undefined
+    });
 
-    // Filtrar pagos por año seleccionado usando dueDate
-    const filteredPayments = useMemo(() => {
-        return contractPayments.filter(p => {
-            const dueDate = new Date(p.dueDate);
-            return dueDate.getFullYear() === selectedYear;
-        });
-    }, [contractPayments, selectedYear]);
-
-    const timeline = useMemo<ContractMonthInfo[]>(() => {
-        if (!contract) return [];
-        return buildContractTimeline(selectedYear, filteredPayments);
-    }, [filteredPayments, selectedYear, contract]);
-
-    const getPaymentByMonth = (monthNumber: number): Payment | undefined => {
-        return filteredPayments.find(p => {
-            const dueDate = new Date(p.dueDate);
-            const month = dueDate.getMonth() + 1;
-            return month === monthNumber;
-        });
-    };
-
-    const getColor = (status?: MonthStatus) => {
+    const getColor = (status: SlotStatus) => {
         switch (status) {
-            case 'PAID':
-                return 'success.light';
-            case 'DUE':
-                return 'warning.light';
-            case 'FUTURE':
-            default:
-                return 'grey.50';
+            case 'PAID': return 'success.light';
+            case 'DUE': return 'warning.light';
+            case 'FUTURE': return 'grey.50';
+            default: return 'grey.50';
         }
     };
 
-    const getBorderColor = (status?: MonthStatus) => {
+    const getBorderColor = (status: SlotStatus) => {
         switch (status) {
-            case 'PAID':
-                return 'success.main';
-            case 'DUE':
-                return 'warning.main';
-            case 'FUTURE':
-            default:
-                return 'grey.500';
+            case 'PAID': return 'success.main';
+            case 'DUE': return 'warning.main';
+            case 'FUTURE': return 'grey.500';
+            default: return 'grey.500';
         }
     };
 
-    const getStatusLabel = (status?: MonthStatus) => {
+    const getStatusLabel = (status: SlotStatus) => {
         switch (status) {
-            case 'PAID':
-                return 'Pagado';
-            case 'DUE':
-                return 'Impago';
-            case 'FUTURE':
-            default:
-                return 'Futuro';
+            case 'PAID': return 'Pagado';
+            case 'DUE': return 'Impago';
+            case 'FUTURE': return 'Futuro';
+            default: return 'Futuro';
         }
     };
 
-    const getStatusColor = (status?: MonthStatus) => {
+    const getStatusColor = (status: SlotStatus) => {
         switch (status) {
-            case 'PAID':
-                return 'success.dark';
-            case 'DUE':
-                return 'warning.dark';
-            case 'FUTURE':
-            default:
-                return 'text.secondary';
+            case 'PAID': return 'success.dark';
+            case 'DUE': return 'warning.dark';
+            case 'FUTURE': return 'text.secondary';
+            default: return 'text.secondary';
         }
     };
 
-    const handleEditClick = (monthInfo: ContractMonthInfo) => {
-        const payment = getPaymentByMonth(monthInfo.monthNumber);
-        if (payment && payment.id !== 0) {
-            setEditingPayment(payment);
+    const handleSlotClick = (slot: TimelineSlot) => {
+        if (slot.payment && slot.payment.id !== 0) {
+            // Edit existing payment
+            setEditingPayment(slot.payment);
+            setInitialPaymentData(undefined);
+            setEditDialogOpen(true);
+        } else {
+            // Create new payment for this month slot
+            const dueDate = new Date(selectedYear, slot.monthNumber - 1, 1);
+            const paymentDate = new Date();
+
+            setEditingPayment(null);
+            setInitialPaymentData({
+                tenantId: contract.tenantId || undefined,
+                propertyId: contract.propertyId || undefined,
+                contractId: contract.id,
+                monthNumber: slot.monthNumber,
+                amount: contract.monthlyRent,
+                dueDate: dueDate.toISOString().split('T')[0],
+                paymentDate: paymentDate.toISOString().split('T')[0],
+                status: PaymentStatus.PAGADO, // Default for new payment
+            });
             setEditDialogOpen(true);
         }
     };
@@ -116,6 +104,7 @@ export default function ContractPaymentsTimeline({ contract }: ContractPaymentsT
     const handleEditSuccess = async () => {
         setEditDialogOpen(false);
         setEditingPayment(null);
+        setInitialPaymentData(undefined);
     };
 
     const formatCurrency = (amount: number) => {
@@ -131,25 +120,23 @@ export default function ContractPaymentsTimeline({ contract }: ContractPaymentsT
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="subtitle2">
-                    Estado de cuotas (12 meses)
+                    Estado de cuotas ({selectedYear})
                 </Typography>
             </Box>
 
             <Grid container spacing={1.2}>
-                {timeline.map((mi) => {
-                    const status = mi.status as MonthStatus;
-                    const payment = getPaymentByMonth(mi.monthNumber);
-                    const gridKey = `${mi.monthNumber}-${status}-${payment?.id || 'none'}-${payment?.updatedAt || 'no-payment'}`;
+                {timelineSlots.map((slot) => {
+                    const gridKey = `${contract.id}-${slot.year}-${slot.monthNumber}-${slot.status}`;
 
                     return (
                         <Grid item xs={4} sm={3} md={2} key={gridKey}>
                             <Box
-                                onClick={() => handleEditClick(mi)}
+                                onClick={() => handleSlotClick(slot)}
                                 sx={{
                                     borderRadius: 1,
                                     border: '1px solid',
-                                    borderColor: getBorderColor(status),
-                                    bgcolor: getColor(status),
+                                    borderColor: getBorderColor(slot.status),
+                                    bgcolor: getColor(slot.status),
                                     px: 1.5,
                                     py: 2,
                                     textAlign: 'center',
@@ -161,36 +148,34 @@ export default function ContractPaymentsTimeline({ contract }: ContractPaymentsT
                                     flexDirection: 'column',
                                     width: '100%',
                                     position: 'relative',
-                                    cursor: payment ? 'pointer' : 'default',
+                                    cursor: 'pointer',
                                     '&:hover': {
                                         bgcolor: 'action.hover',
                                     }
                                 }}
                             >
-                                {payment && (
-                                    <RoleGuard allowedRoles={['ADMIN']}>
-                                        <IconButton
-                                            size="small"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleEditClick(mi);
-                                            }}
-                                            sx={{
-                                                position: 'absolute',
-                                                bottom: 4,
-                                                right: 4,
-                                                bgcolor: 'background.paper',
-                                                boxShadow: 1,
-                                                '&:hover': {
-                                                    bgcolor: 'primary.light',
-                                                    color: 'primary.contrastText'
-                                                }
-                                            }}
-                                        >
-                                            <EditIcon fontSize="small" />
-                                        </IconButton>
-                                    </RoleGuard>
-                                )}
+                                <RoleGuard allowedRoles={['ADMIN']}>
+                                    <IconButton
+                                        size="small"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSlotClick(slot);
+                                        }}
+                                        sx={{
+                                            position: 'absolute',
+                                            bottom: 4,
+                                            right: 4,
+                                            bgcolor: 'background.paper',
+                                            boxShadow: 1,
+                                            '&:hover': {
+                                                bgcolor: 'primary.light',
+                                                color: 'primary.contrastText'
+                                            }
+                                        }}
+                                    >
+                                        {!slot.isMissing ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />}
+                                    </IconButton>
+                                </RoleGuard>
                                 <Typography
                                     variant="subtitle1"
                                     sx={{
@@ -203,21 +188,21 @@ export default function ContractPaymentsTimeline({ contract }: ContractPaymentsT
                                         wordBreak: 'break-word'
                                     }}
                                 >
-                                    Mes {mi.monthNumber} · {mi.label}
+                                    Mes {slot.monthNumber} · {slot.monthLabel.split(' ')[0]}
                                 </Typography>
                                 <Typography
                                     variant="body2"
                                     sx={{
                                         fontWeight: 800,
-                                        color: getStatusColor(status),
+                                        color: getStatusColor(slot.status),
                                         mt: 0.7,
                                         fontSize: '1.05rem',
                                         letterSpacing: 0.2
                                     }}
                                 >
-                                    {getStatusLabel(status)}
+                                    {getStatusLabel(slot.status)}
                                 </Typography>
-                                {payment && (
+                                {slot.payment && (
                                     <Typography
                                         variant="caption"
                                         sx={{
@@ -226,7 +211,7 @@ export default function ContractPaymentsTimeline({ contract }: ContractPaymentsT
                                             color: 'text.secondary'
                                         }}
                                     >
-                                        {formatCurrency((contract?.monthlyRent ?? payment.amount) || 0)}
+                                        {formatCurrency((contract?.monthlyRent ?? slot.payment.amount) || 0)}
                                     </Typography>
                                 )}
                             </Box>
@@ -250,17 +235,17 @@ export default function ContractPaymentsTimeline({ contract }: ContractPaymentsT
                 </Stack>
             </Stack>
 
-            {editingPayment && editingPayment.id !== 0 && (
-                <EditPaymentModal
-                    open={editDialogOpen}
-                    payment={editingPayment}
-                    onClose={() => {
-                        setEditDialogOpen(false);
-                        setEditingPayment(null);
-                    }}
-                    onSuccess={handleEditSuccess}
-                />
-            )}
+            <EditPaymentModal
+                open={editDialogOpen}
+                payment={editingPayment}
+                initialData={initialPaymentData}
+                onClose={() => {
+                    setEditDialogOpen(false);
+                    setEditingPayment(null);
+                    setInitialPaymentData(undefined);
+                }}
+                onSuccess={handleEditSuccess}
+            />
         </>
     );
 }

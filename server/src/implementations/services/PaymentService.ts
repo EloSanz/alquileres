@@ -6,7 +6,7 @@ import { NotFoundError } from '../../exceptions';
 import { logInfo } from '../../utils/logger';
 
 export class PaymentService implements IPaymentService {
-  constructor(private paymentRepository: IPaymentRepository) {}
+  constructor(private paymentRepository: IPaymentRepository) { }
 
   async getAllPayments(_userId: number): Promise<PaymentDTO[]> {
     const entities = await this.paymentRepository.findAll();
@@ -41,24 +41,8 @@ export class PaymentService implements IPaymentService {
     const updatedEntity = existingEntity.update(data);
 
     const savedEntity = await this.paymentRepository.update(updatedEntity);
-    
-    logInfo('[PaymentService] Entity saved to database', {
-      paymentId: id,
-      savedEntityDTO: JSON.stringify(savedEntity.toDTO(), null, 2),
-      savedPaymentDate: savedEntity.paymentDate,
-      savedDueDate: savedEntity.dueDate,
-      savedUpdatedAt: savedEntity.updatedAt
-    });
 
-    const resultDTO = savedEntity.toDTO();
-    logInfo('[PaymentService] Returning DTO', {
-      paymentId: id,
-      resultDTO: JSON.stringify(resultDTO, null, 2),
-      resultPaymentDate: resultDTO.paymentDate,
-      resultDueDate: resultDTO.dueDate
-    });
-
-    return resultDTO;
+    return savedEntity.toDTO();
   }
 
   async deletePayment(id: number, _userId: number): Promise<boolean> {
