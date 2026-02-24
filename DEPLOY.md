@@ -1,369 +1,140 @@
-# 🚀 Guía de Despliegue en VPS
+# 🚀 Deploy en VPS
 
-Esta guía te ayudará a desplegar la aplicación en tu VPS.
+Guía de comandos para aplicar los últimos cambios en el servidor de producción.
 
-## 📋 Requisitos Previos
+---
 
-- Acceso SSH al VPS
-- Usuario con permisos sudo (o root)
-- Git instalado en el VPS
-- Conexión a internet desde el VPS
+## Cambios incluidos en este deploy
 
-## 🎯 Opción 1: Despliegue Automático (Recomendado)
+- Integración con **Cloudinary** para subir imágenes de comprobantes
+- Nuevos campos en la tabla `payments`: `receiptImageUrl`, `receiptImagePublicId`
+- Mejoras en el timeline de pagos 2026
+- Fixes en el modal de edición y generación de recibos PDF
 
-### Paso 1: Ejecutar script de despliegue
+---
 
-Desde tu máquina local:
+## Pasos
 
-```bash
-# Dar permisos de ejecución
-chmod +x deploy.sh
-
-# Ejecutar despliegue (ajusta el host si es necesario)
-./deploy.sh root@iCards
-
-# O con otro usuario/host
-./deploy.sh usuario@tu-vps.com
-```
-
-El script automáticamente:
-- ✅ Verifica e instala Node.js 20.x
-- ✅ Verifica e instala PostgreSQL
-- ✅ Crea la base de datos
-- ✅ Clona/actualiza el repositorio
-- ✅ Instala dependencias
-- ✅ Configura variables de entorno
-- ✅ Ejecuta migraciones y seed
-- ✅ Construye la aplicación
-- ✅ Configura PM2 para producción
-
-## 🎯 Opción 2: Despliegue Manual
-
-### Paso 1: Conectarse al VPS
+### 1. Ir al proyecto y traer los cambios
 
 ```bash
-ssh root@iCards
-# O tu usuario/host correspondiente
+cd /ruta/al/proyecto   # reemplazá con tu path real en el VPS
+git pull origin main
 ```
 
-### Paso 2: Instalar Node.js
+---
+
+### 2. Variables de entorno del backend
+
+Editá `server/.env` y asegurate de tener estas líneas con tus credenciales de Cloudinary:
 
 ```bash
-# Instalar Node.js 20.x
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt-get install -y nodejs
-
-# Verificar instalación
-node --version
-npm --version
+nano server/.env
 ```
 
-### Paso 3: Instalar PostgreSQL
-
-```bash
-# Instalar PostgreSQL
-apt-get update
-apt-get install -y postgresql postgresql-contrib
-
-# Iniciar servicio
-systemctl start postgresql
-systemctl enable postgresql
-
-# Crear base de datos
-sudo -u postgres psql -c "CREATE DATABASE alquileres_db;"
-```
-
-### Paso 4: Clonar Repositorio
-
-```bash
-# Crear directorio
-mkdir -p /var/www
-cd /var/www
-
-# Clonar repositorio
-git clone https://github.com/EloSanz/alquileres.git alquileres-app
-cd alquileres-app
-```
-
-### Paso 5: Instalar Dependencias
-
-```bash
-# Dependencias raíz
-npm install
-
-# Dependencias backend
-cd server
-npm install
-
-# Dependencias frontend
-cd ../web
-npm install
-```
-
-### Paso 6: Configurar Variables de Entorno
-
-```bash
-# Crear archivo .env en server/
-cd /var/www/alquileres-app/server
-nano .env
-```
-
-Agregar:
+Agregá:
 
 ```env
-DATABASE_URL="postgresql://postgres@localhost:5432/alquileres_db?schema=public"
-JWT_SECRET="tu-secret-jwt-muy-seguro-aqui"
+CLOUDINARY_CLOUD_NAME=dvwhe0t2b
+CLOUDINARY_API_KEY=755781918897121
+CLOUDINARY_API_SECRET=Gi5scALBSBjOxIuIYOX5gL_LItk
+CLOUDINARY_URL=cloudinary://755781918897121:Gi5scALBSBjOxIuIYOX5gL_LItk@dvwhe0t2b
 ```
 
-**⚠️ IMPORTANTE**: Cambia `JWT_SECRET` por un valor seguro. Puedes generar uno con:
-```bash
-openssl rand -hex 32
-```
+---
 
-### Paso 7: Configurar Base de Datos
-
-```bash
-cd /var/www/alquileres-app/server
-
-# Generar cliente Prisma
-npx prisma generate
-
-# Ejecutar migraciones
-npx prisma migrate deploy
-
-# Ejecutar seed (datos iniciales)
-npm run db:seed
-```
-
-### Paso 8: Construir Aplicación
+### 3. Instalar dependencias
 
 ```bash
-# Construir backend
-cd /var/www/alquileres-app/server
-npm run build
-
-# Construir frontend
-cd /var/www/alquileres-app/web
-npm run build
-```
-
-### Paso 9: Instalar PM2
-
-```bash
-# Instalar PM2 globalmente
-npm install -g pm2
-
-# Configurar PM2 para iniciar al arrancar
-pm2 startup
-# Seguir las instrucciones que aparecen
-```
-
-### Paso 10: Iniciar Aplicación con PM2
-
-```bash
-cd /var/www/alquileres-app
-
-# Iniciar backend
-cd server
-pm2 start dist/index.js --name alquileres-backend --env production
-
-# Iniciar frontend (servir archivos estáticos)
-cd ../web
-pm2 serve dist 4001 --name alquileres-frontend --spa
-
-# Guardar configuración
-pm2 save
-```
-
-## 🔧 Configuración de Nginx (Opcional pero Recomendado)
-
-Para servir la aplicación con un dominio y HTTPS:
-
-### Instalar Nginx
-
-```bash
-apt-get install -y nginx
-```
-
-### Configurar Nginx para Backend
-
-```bash
-nano /etc/nginx/sites-available/alquileres-backend
-```
-
-```nginx
-server {
-    listen 80;
-    server_name api.tu-dominio.com;
-
-    location /pentamont/lodemas/api {
-        proxy_pass http://localhost:4000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
-```
-
-### Configurar Nginx para Frontend
-
-```bash
-nano /etc/nginx/sites-available/alquileres-frontend
-```
-
-```nginx
-server {
-    listen 80;
-    server_name tu-dominio.com;
-
-    root /var/www/alquileres-app/web/dist;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    location /pentamont/lodemas/api {
-        proxy_pass http://localhost:4000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-### Habilitar sitios
-
-```bash
-ln -s /etc/nginx/sites-available/alquileres-backend /etc/nginx/sites-enabled/
-ln -s /etc/nginx/sites-available/alquileres-frontend /etc/nginx/sites-enabled/
-
-# Verificar configuración
-nginx -t
-
-# Reiniciar Nginx
-systemctl restart nginx
-```
-
-## 📊 Comandos Útiles de PM2
-
-```bash
-# Ver estado de servicios
-pm2 status
-
-# Ver logs
-pm2 logs
-
-# Ver logs de un servicio específico
-pm2 logs alquileres-backend
-pm2 logs alquileres-frontend
-
-# Reiniciar servicios
-pm2 restart all
-pm2 restart alquileres-backend
-
-# Detener servicios
-pm2 stop all
-
-# Eliminar servicios
-pm2 delete all
-```
-
-## 🔄 Actualizar Aplicación
-
-Para actualizar la aplicación después de cambios:
-
-```bash
-# Conectarse al VPS
-ssh root@iCards
-
-# Ir al directorio del proyecto
-cd /var/www/alquileres-app
-
-# Actualizar código
-git pull origin main  # o master
-
-# Reinstalar dependencias si hay cambios
-npm install
 cd server && npm install
 cd ../web && npm install
-
-# Reconstruir
-cd server && npm run build
-cd ../web && npm run build
-
-# Reiniciar servicios
-pm2 restart all
+cd ..
 ```
 
-## 🐛 Troubleshooting
+---
 
-### Error: Puerto 4000 o 4001 ya en uso
+### 4. Aplicar la migración de base de datos
+
+> ⚠️ **Si es la primera vez** que deployás este cambio (los campos `receiptImageUrl` y `receiptImagePublicId` no existen en la DB del VPS), primero creá la migración **en local**:
+>
+> ```bash
+> # Correr en tu máquina local, NO en el VPS
+> cd server
+> npm run db:migrate:dev -- --name add_receipt_image_fields
+> git add prisma/migrations
+> git commit -m "feat: add receipt image migration"
+> git push
+> ```
+>
+> Luego en el VPS:
 
 ```bash
-# Ver qué proceso usa el puerto
-lsof -i :4000
-lsof -i :4001
-
-# Matar proceso
-kill -9 <PID>
-
-# O reiniciar con PM2
-pm2 restart all
+cd server
+npm run db:migrate    # = prisma migrate deploy (aplica migraciones pendientes)
 ```
 
-### Error: Base de datos no conecta
+---
+
+### 5. Regenerar el cliente de Prisma
 
 ```bash
-# Verificar que PostgreSQL está corriendo
-systemctl status postgresql
-
-# Verificar conexión
-sudo -u postgres psql -c "SELECT 1;"
-
-# Verificar que la base de datos existe
-sudo -u postgres psql -l | grep alquileres_db
+npm run db:generate
+cd ..
 ```
 
-### Error: Permisos
+---
+
+### 6. Compilar el backend
 
 ```bash
-# Dar permisos al usuario
-chown -R $USER:$USER /var/www/alquileres-app
+cd server
+npm run build
+cd ..
 ```
 
-## 🔐 Credenciales por Defecto
+---
 
-Después del seed, puedes iniciar sesión con:
+### 7. Compilar el frontend
 
-- **Usuario**: `admin`
-- **Email**: `admin@alquileres.com`
-- **Contraseña**: `admin123`
+```bash
+cd web
+npm run build
+cd ..
+```
 
-**⚠️ IMPORTANTE**: Cambia estas credenciales en producción.
+---
 
-## 📝 Notas Importantes
+### 8. Reiniciar los procesos con PM2
 
-1. **Puertos**: 
-   - Backend: `4000`
-   - Frontend: `4001`
-   - Asegúrate de abrir estos puertos en el firewall si es necesario
+```bash
+pm2 restart alquileres-backend
+pm2 restart alquileres-frontend
+```
 
-2. **Variables de Entorno**: 
-   - El archivo `.env` debe estar en `server/.env`
-   - No lo subas al repositorio (debe estar en `.gitignore`)
+> Si es el primer deploy desde cero:
+> ```bash
+> pm2 start ecosystem.config.js
+> pm2 save
+> ```
 
-3. **Base de Datos**: 
-   - El seed crea datos de prueba
-   - En producción, considera limpiar datos de prueba
+---
 
-4. **PM2**: 
-   - Los servicios se reinician automáticamente si el servidor se reinicia
-   - Usa `pm2 logs` para debugging
+### 9. Verificar que todo levantó correctamente
 
+```bash
+pm2 logs alquileres-backend --lines 30
+pm2 logs alquileres-frontend --lines 30
+pm2 status
+```
+
+---
+
+## Troubleshooting
+
+| Problema | Solución |
+|---|---|
+| Falla la migración | Verificar permisos ALTER TABLE en el usuario de la DB |
+| Falla el build del backend | Correr `npm run type-check` para ver errores de TypeScript |
+| PM2 no levanta | `pm2 delete all && pm2 start ecosystem.config.js` |
+| Variables de entorno no se toman | Reiniciar PM2 después de editar el `.env` |
+| Cloudinary da 401 | Verificar que las credenciales en `.env` son correctas |
