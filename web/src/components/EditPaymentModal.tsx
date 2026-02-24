@@ -162,16 +162,20 @@ export default function EditPaymentModal({
         UpdatePaymentSchema.parse(paymentData);
         await updatePayment({ id: payment.id, data: paymentData });
       } else {
-        const finalTenantId = editForm.tenantId || initialData?.tenantId;
+        const finalContractId = editForm.contractId ?? initialData?.contractId ?? null;
+        const finalMonthNumber = editForm.monthNumber ?? initialData?.monthNumber ?? null;
+        const finalPropertyId = editForm.propertyId ?? initialData?.propertyId ?? null;
+        const finalTenantId = editForm.tenantId ?? initialData?.tenantId;
+
         if (!finalTenantId) {
           throw new Error("Faltan datos requeridos (Inquilino) para crear el pago.");
         }
 
         const paymentData: CreatePayment = {
           tenantId: finalTenantId,
-          propertyId: editForm.propertyId || initialData?.propertyId || null,
-          contractId: editForm.contractId || initialData?.contractId || null,
-          monthNumber: editForm.monthNumber || initialData?.monthNumber || null,
+          propertyId: finalPropertyId,
+          contractId: finalContractId,
+          monthNumber: finalMonthNumber,
           amount: parseFloat(editForm.amount),
           paymentDate: editForm.paymentDate,
           dueDate: editForm.dueDate,
