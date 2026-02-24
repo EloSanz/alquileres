@@ -23,4 +23,5 @@ export const protectedRoutes = new Elysia()
   .use(serviceRoutes)
   .use(taxRoutes)
   .use(guaranteeRoutes)
+  .use(maintenanceRoutes)
   .use(maintenanceRoutes);

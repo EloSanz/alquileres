@@ -29,7 +29,9 @@ const createPaymentBodySchema = t.Object({
   dueDate: t.String(),
   paymentMethod: t.Optional(t.String()),
   pentamontSettled: t.Optional(t.Boolean()),
-  notes: t.Optional(t.String())
+  notes: t.Optional(t.String()),
+  receiptImageUrl: t.Optional(t.Union([t.String(), t.Null()])),
+  receiptImagePublicId: t.Optional(t.Union([t.String(), t.Null()]))
 });
 
 const updatePaymentBodySchema = t.Object({
@@ -42,7 +44,8 @@ const updatePaymentBodySchema = t.Object({
   status: t.Optional(t.String()),
   pentamontSettled: t.Optional(t.Boolean()),
   notes: t.Optional(t.String()),
-  receiptImageUrl: t.Optional(t.Union([t.String(), t.Null()]))
+  receiptImageUrl: t.Optional(t.Union([t.String(), t.Null()])),
+  receiptImagePublicId: t.Optional(t.Union([t.String(), t.Null()]))
 });
 
 export const paymentRoutes = new Elysia({ prefix: '/payments' })

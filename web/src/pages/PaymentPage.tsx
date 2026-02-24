@@ -24,6 +24,7 @@ import { Property } from '../../../shared/types/Property';
 import { usePayments } from '../hooks/usePayments';
 import { useProperties } from '../hooks/useProperties';
 import { useTenants } from '../hooks/useTenants';
+import { useContracts } from '../hooks/useContracts';
 import { Payment, CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
 import EditPaymentModal from '../components/EditPaymentModal';
 import SearchBar from '../components/SearchBar';
@@ -39,11 +40,14 @@ const PaymentPage = () => {
     error: queryError,
     createPayment,
     updatePayment,
-    deletePayment
+    deletePayment,
+    uploadImage,
+    isUploading
   } = usePayments();
 
   const { properties } = useProperties();
   const { tenants } = useTenants();
+  const { contracts } = useContracts();
 
   const location = useLocation();
 
@@ -255,16 +259,42 @@ const PaymentPage = () => {
         return;
       }
 
+      let receiptImageUrl: string | undefined = undefined;
+      let receiptImagePublicId: string | undefined = undefined;
+
+      if (receiptImageFile) {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(receiptImageFile);
+        });
+
+        const uploadResult = await uploadImage(base64);
+        receiptImageUrl = uploadResult.url;
+        receiptImagePublicId = uploadResult.publicId;
+      }
+
+      // Intenta encontrar el contrato activo para esta propiedad para vincular el pago automáticamente
+      const activeContract = contracts?.find(c =>
+        c.propertyId === selectedProperty.id &&
+        c.tenantId === tenantId &&
+        c.status === 'ACTIVE'
+      );
+
       const paymentData: CreatePayment = {
         tenantId,
         propertyId: selectedProperty.id,
+        contractId: activeContract?.id || null,
+        monthNumber: new Date(createForm.dueDate).getUTCMonth() + 1, // Usar el mes del vencimiento
         amount: parseFloat(createForm.amount),
         dueDate: createForm.dueDate,
         paymentDate: createForm.paymentDate,
         paymentMethod: createForm.paymentMethod,
-        notes: createForm.notes || undefined
+        notes: createForm.notes || undefined,
+        receiptImageUrl,
+        receiptImagePublicId
       };
-      // (paymentData as any).receiptImage = receiptImageFile || null; // Ignored for now as backend doesn't support it in schema yet directly? Or schema doesn't match?
 
       await createPayment(paymentData);
 
@@ -573,20 +603,17 @@ const PaymentPage = () => {
                   </IconButton>
                 </Box>
               )}
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                Por ahora, cualquier imagen seleccionada será mockeada y se usará la imagen de prueba
-              </Typography>
             </Box>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setCreateDialogOpen(false)} disabled={loading || isUploading}>Cancelar</Button>
           <Button
             onClick={handleCreatePayment}
             variant="contained"
-            disabled={!selectedProperty || !!amountError || !createForm.amount}
+            disabled={!selectedProperty || !!amountError || !createForm.amount || loading || isUploading}
           >
-            Crear Pago
+            {isUploading ? 'Subiendo...' : 'Crear Pago'}
           </Button>
         </DialogActions>
       </Dialog>

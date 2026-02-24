@@ -2,6 +2,7 @@
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PaymentStatus as FrontendPaymentStatus } from '../../../shared/types/Payment';
 import { PaymentDTO } from '../dtos/payment.dto';
+import { getOptimizedUrl } from '../lib/cloudinary';
 
 // Helper function to convert frontend PaymentStatus to Prisma PaymentStatus
 function convertFrontendStatusToPrisma(frontendStatus: string | FrontendPaymentStatus): PaymentStatus {
@@ -53,6 +54,7 @@ export class PaymentEntity {
     public pentamontSettled: boolean,
     public notes: string | null,
     public receiptImageUrl: string | null,
+    public receiptImagePublicId: string | null,
     public createdAt: Date,
     public updatedAt: Date
   ) { }
@@ -74,6 +76,7 @@ export class PaymentEntity {
     pentamontSettled?: boolean;
     notes?: string;
     receiptImageUrl?: string | null;
+    receiptImagePublicId?: string | null;
   }): PaymentEntity {
     const paymentDate = data.paymentDate ? new Date(data.paymentDate) : new Date();
     const dueDate = new Date(data.dueDate);
@@ -93,6 +96,7 @@ export class PaymentEntity {
       data.pentamontSettled ?? false,
       data.notes || null,
       data.receiptImageUrl || null,
+      data.receiptImagePublicId || null,
       new Date(), // createdAt
       new Date()  // updatedAt
     );
@@ -115,6 +119,7 @@ export class PaymentEntity {
     pentamontSettled?: boolean;
     notes?: string;
     receiptImageUrl?: string | null;
+    receiptImagePublicId?: string | null;
   }): PaymentEntity {
     if (data.tenantId !== undefined) this.tenantId = data.tenantId;
     if (data.propertyId !== undefined) this.propertyId = data.propertyId;
@@ -135,6 +140,7 @@ export class PaymentEntity {
     if (data.pentamontSettled !== undefined) this.pentamontSettled = data.pentamontSettled;
     if (data.notes !== undefined) this.notes = data.notes;
     if (data.receiptImageUrl !== undefined) this.receiptImageUrl = data.receiptImageUrl;
+    if (data.receiptImagePublicId !== undefined) this.receiptImagePublicId = data.receiptImagePublicId;
     this.updatedAt = new Date();
     this.validate();
     return this;
@@ -157,6 +163,7 @@ export class PaymentEntity {
       prismaData.pentamontSettled ?? false,
       prismaData.notes,
       prismaData.receiptImageUrl || null,
+      prismaData.receiptImagePublicId || null,
       prismaData.createdAt,
       prismaData.updatedAt
     );
@@ -185,6 +192,7 @@ export class PaymentEntity {
       pentamontSettled: this.pentamontSettled,
       notes: this.notes,
       receiptImageUrl: this.receiptImageUrl,
+      receiptImagePublicId: this.receiptImagePublicId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };
@@ -216,7 +224,11 @@ export class PaymentEntity {
       status: convertPrismaStatusToFrontend(this.status),
       pentamontSettled: this.pentamontSettled,
       notes: this.notes,
-      receiptImageUrl: this.receiptImageUrl || '/comprobante.png',
+      // Si hay publicId usamos la URL optimizada de Cloudinary; si no, la URL cruda; null si no hay nada
+      receiptImageUrl: this.receiptImagePublicId
+        ? getOptimizedUrl(this.receiptImagePublicId)
+        : (this.receiptImageUrl || null),
+      receiptImagePublicId: this.receiptImagePublicId,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
     };
@@ -226,9 +238,7 @@ export class PaymentEntity {
     if (this.amount <= 0) {
       throw new Error('Payment amount must be greater than 0');
     }
-    if (this.contractId !== null && (this.monthNumber === null || this.monthNumber < 1 || this.monthNumber > 12)) {
-      throw new Error('Month number must be between 1 and 12 when contractId is set');
-    }
+    // monthNumber es opcional incluso cuando hay contractId (puede registrarse sin mes específico)
   }
 }
 

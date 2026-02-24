@@ -28,7 +28,7 @@ export class PrismaPaymentRepository implements IPaymentRepository {
       },
       orderBy: { paymentDate: 'desc' }
     });
-    
+
     return payments.map(payment => PaymentEntity.fromPrisma(payment));
   }
 
@@ -47,8 +47,6 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     const data = entity.toPrisma();
     // Remove id for creation since it's auto-generated
     delete (data as any).id;
-    // Exclude receiptImageUrl - not in Prisma schema yet (will be added in future migration)
-    delete (data as any).receiptImageUrl;
 
     const payment = await prisma.payment.create({
       data: data as any
@@ -61,15 +59,8 @@ export class PrismaPaymentRepository implements IPaymentRepository {
 
     delete (data as any).id; // Don't update id
     delete (data as any).createdAt; // Don't update createdAt
-    // Exclude relation fields - Prisma handles these through relations, not direct field updates
-    delete (data as any).tenantId;
-    delete (data as any).propertyId;
-    delete (data as any).contractId;
-    delete (data as any).monthNumber; // Don't update monthNumber
-    delete (data as any).tenantFullName; // Don't update tenantFullName
-    delete (data as any).tenantPhone; // Don't update tenantPhone
-    delete (data as any).receiptImageUrl; // receiptImageUrl not in Prisma schema yet
-    
+    // Removed stripping of linkage fields to allow correct updates
+
     // Remove undefined values to avoid Prisma errors
     // Allow null values for nullable fields (like notes)
     const cleanData: any = {};
@@ -78,12 +69,12 @@ export class PrismaPaymentRepository implements IPaymentRepository {
         cleanData[key] = value;
       }
     }
-    
+
     const payment = await prisma.payment.update({
       where: { id: entity.id! },
       data: cleanData
     });
-    
+
     return PaymentEntity.fromPrisma(payment);
   }
 

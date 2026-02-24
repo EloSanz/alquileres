@@ -23,25 +23,26 @@ export const usePaymentTimeline = ({ payments, year, contractId, tenantId, prope
         const relevantPayments = payments.filter(p => {
             // Linkage check: Match by contract OR (if no contract on payment) match by property/tenant
             if (contractId && p.contractId) {
+                // Both sides have a contractId — match directly
                 if (p.contractId !== contractId) return false;
             } else if (contractId && !p.contractId) {
-                // Fallback for orphaned payments: must match both tenant and property
-                if (tenantId && p.tenantId !== tenantId) return false;
-                if (propertyId && p.propertyId !== propertyId) return false;
-
-                // If it doesn't even have tenant/property, we can't link it
-                if (!p.tenantId && !p.propertyId) return false;
+                // Payment has no contractId (orphaned) — fall back to tenant+property match
+                if (tenantId !== undefined && p.tenantId !== tenantId) return false;
+                if (propertyId !== undefined && p.propertyId !== propertyId) return false;
+                // If neither tenantId ni propertyId fueron provistos, no se puede vincular
+                if (tenantId === undefined && propertyId === undefined) return false;
             } else if (!contractId) {
-                // Outside of contract context, just check tenant/property if provided
-                if (tenantId && p.tenantId !== tenantId) return false;
-                if (propertyId && p.propertyId !== propertyId) return false;
+                // Sin contexto de contrato — filtrar por tenant/property si se proveen
+                if (tenantId !== undefined && p.tenantId !== tenantId) return false;
+                if (propertyId !== undefined && p.propertyId !== propertyId) return false;
             }
 
-            // Year check using UTC to avoid timezone shifts
+            // Chequeo de año usando UTC para evitar shifts de zona horaria
             const dueDate = new Date(p.dueDate);
             const dueYear = dueDate.getUTCFullYear();
             return dueYear === year;
         });
+
 
         const slots: TimelineSlot[] = [];
 

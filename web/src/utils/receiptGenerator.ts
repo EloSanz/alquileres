@@ -161,42 +161,18 @@ export async function generateReceiptPDF(payment: Payment): Promise<Blob> {
   addInfoRow('Monto:', formatCurrency(payment.amount));
   addInfoRow('Método de Pago:', getPaymentMethodLabel(payment.paymentMethod));
   addInfoRow('Fecha de Pago:', formatDate(payment.paymentDate));
-  addInfoRow('Fecha de Vencimiento:', formatDate(payment.dueDate));
+
   addInfoRow(
     'Estado:',
     payment.status === PaymentStatus.PAGADO ? 'Pagado' : payment.status
   );
   addInfoRow('Fecha y Hora de Registro:', formatDateTime(payment.updatedAt));
 
-  // Notas si existen
-  if (payment.notes) {
-    yPosition += 5;
-    if (yPosition > pageHeight - margin - 30) {
-      doc.addPage();
-      yPosition = margin;
-    }
-
-    // Línea separadora más gruesa
-    doc.setDrawColor('#e0e0e0');
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 8;
-
-    addText('Notas:', margin, yPosition, {
-      fontSize: 11,
-      fontWeight: 'bold',
-      color: secondaryTextColor,
-    });
-    yPosition += 6;
-
-    const notesHeight = addText(payment.notes, margin, yPosition, {
-      fontSize: 11,
-      fontWeight: 'normal',
-      color: textColor,
-      maxWidth: contentWidth,
-    });
-    yPosition += notesHeight + 5;
+  // Nota solo si tiene valor
+  if (payment.notes && payment.notes.trim()) {
+    addInfoRow('Nota:', payment.notes.trim());
   }
+
 
   // Footer
   yPosition = pageHeight - margin - 10;

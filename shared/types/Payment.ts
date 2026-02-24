@@ -24,6 +24,7 @@ export const PaymentSchema = z.object({
   pentamontSettled: z.boolean(),
   notes: z.string().nullable(),
   receiptImageUrl: z.string().nullable(),
+  receiptImagePublicId: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string()
 });
@@ -43,6 +44,7 @@ export const CreatePaymentSchema = z.object({
   pentamontSettled: z.boolean().optional(),
   notes: z.string().optional(),
   receiptImageUrl: z.string().optional().nullable(),
+  receiptImagePublicId: z.string().optional().nullable(),
 });
 
 export type CreatePayment = z.infer<typeof CreatePaymentSchema>;
@@ -61,7 +63,8 @@ export const UpdatePaymentSchema = z.object({
   status: z.nativeEnum(PaymentStatus).optional(),
   pentamontSettled: z.boolean().optional(),
   notes: z.string().optional(),
-  receiptImageUrl: z.string().nullable().optional()
+  receiptImageUrl: z.string().nullable().optional(),
+  receiptImagePublicId: z.string().nullable().optional()
 });
 
 export type UpdatePayment = z.infer<typeof UpdatePaymentSchema>;

@@ -163,6 +163,8 @@ const queryClient = new QueryClient({
     queries: {
       retry: false,
       refetchOnWindowFocus: false,
+      refetchOnMount: true,   // Siempre re-fetchea al montar si los datos están stale
+      staleTime: 30_000,      // 30 segundos — evita re-fetcheos excesivos pero no acumula datos viejos
     },
   },
 });

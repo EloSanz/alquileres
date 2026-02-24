@@ -1,4 +1,3 @@
-// Prisma schema for Rental Management System
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model for system administrators
 model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
@@ -20,58 +18,50 @@ model User {
   @@map("users")
 }
 
-// Tenant (Inquilino) model
 model Tenant {
-  id                  Int        @id @default(autoincrement())
+  id                  Int         @id @default(autoincrement())
   firstName           String
   lastName            String
   phone               String?
-  documentId          String     @unique // DNI, Cedula, etc.
-  numeroLocal         String? // Número de local comercial
-  rubro               Rubro? // Rubro del negocio
-  fechaInicioContrato DateTime? // Fecha de inicio del contrato de alquiler
-  estadoPago          EstadoPago @default(AL_DIA) // Estado de pagos del inquilino
-  deletedAt           DateTime? // Soft delete timestamp
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
-
-  // Relations
-  properties Property[]
-  payments   Payment[]
-  rentals    Rental[] // Legacy relation
-  contracts  Contract[]
-  guarantees Guarantee[]
+  documentId          String      @unique
+  numeroLocal         String?
+  rubro               Rubro?
+  fechaInicioContrato DateTime?
+  estadoPago          EstadoPago  @default(AL_DIA)
+  deletedAt           DateTime?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  contracts           Contract[]
+  guarantees          Guarantee[]
+  payments            Payment[]
+  properties          Property[]
+  rentals             Rental[]
 
   @@map("tenants")
 }
 
-// Property (Propiedad/Inmueble) model
 model Property {
-  id          Int            @id @default(autoincrement())
-  localNumber Int // Número de local
-  ubicacion   UbicacionType  @default(BOULEVAR)
-  monthlyRent Decimal
-  status      PropertyStatus @default(ACTIVE) // Property status
-  deletedAt   DateTime? // Soft delete timestamp
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
-  // Relations
-  tenantId     Int? // Nullable to allow "available" properties
-  tenant       Tenant?       @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  payments     Payment[]
-  rentals      Rental[] // Legacy relation
+  id           Int            @id @default(autoincrement())
+  localNumber  Int
+  ubicacion    UbicacionType  @default(BOULEVAR)
+  monthlyRent  Decimal
+  status       PropertyStatus @default(ACTIVE)
+  deletedAt    DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  tenantId     Int?
   contracts    Contract[]
-  services     Service[]
-  taxes        Tax[]
   guarantees   Guarantee[]
   maintenances Maintenance[]
+  payments     Payment[]
+  tenant       Tenant?        @relation(fields: [tenantId], references: [id])
+  rentals      Rental[]
+  services     Service[]
+  taxes        Tax[]
 
   @@map("properties")
 }
 
-// Rental (Alquiler/Contrato) model - DEPRECATED
-// Mantained for backwards compatibility but not used in new relationships
 model Rental {
   id            Int          @id @default(autoincrement())
   tenantId      Int
@@ -84,94 +74,149 @@ model Rental {
   notes         String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-
-  // Relations (legacy)
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property      Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenant        Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, propertyId, startDate])
   @@map("rentals")
 }
 
-// Contract (Contrato) model
 model Contract {
   id             Int            @id @default(autoincrement())
   tenantId       Int?
   propertyId     Int?
-  // Redundancia para trazabilidad si tenantId queda en NULL
   tenantFullName String?
   startDate      DateTime
-  endDate        DateTime // startDate + 1 año
+  endDate        DateTime
   monthlyRent    Decimal
   status         ContractStatus @default(ACTIVE)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
-
-  // Relations
-  tenant       Tenant?       @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  property     Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  payments     Payment[]
-  services     Service[]
-  taxes        Tax[]
-  guarantees   Guarantee[]
-  maintenances Maintenance[]
+  property       Property?      @relation(fields: [propertyId], references: [id])
+  tenant         Tenant?        @relation(fields: [tenantId], references: [id])
+  guarantees     Guarantee[]
+  maintenances   Maintenance[]
+  payments       Payment[]
+  services       Service[]
+  taxes          Tax[]
 
   @@map("contracts")
 }
 
-// Payment (Pago) model
 model Payment {
-  id               Int           @id @default(autoincrement())
-  tenantId         Int? // Nullable para permitir eliminación de tenants
-  propertyId       Int? // Nullable para permitir eliminación de propiedades
-  contractId       Int? // Nuevo: nullable para compatibilidad con pagos antiguos
-  monthNumber      Int? // Nuevo: 1-12, nullable para compatibilidad
-  // Campos históricos para trazabilidad cuando se elimina el tenant
-  tenantFullName   String? // Nombre completo del inquilino que realizó el pago
-  tenantPhone      String? // Teléfono del inquilino que realizó el pago
-  amount           Decimal
-  paymentDate      DateTime      @default(now())
-  dueDate          DateTime
-  paymentMethod    PaymentMethod @default(YAPE)
-  status           PaymentStatus @default(FUTURO)
-  // Indica si este pago YAPE ya fue transferido a Pentamont (front/back office)
-  pentamontSettled Boolean       @default(false)
-  notes            String?
-  deletedAt        DateTime? // Soft delete timestamp
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                   Int           @id @default(autoincrement())
+  tenantId             Int?
+  propertyId           Int?
+  contractId           Int?
+  monthNumber          Int?
+  tenantFullName       String?
+  tenantPhone          String?
+  amount               Decimal
+  paymentDate          DateTime      @default(now())
+  dueDate              DateTime
+  paymentMethod        PaymentMethod @default(YAPE)
+  status               PaymentStatus @default(FUTURO)
+  pentamontSettled     Boolean       @default(false)
+  notes                String?
+  receiptImageUrl      String?
+  receiptImagePublicId String?
+  deletedAt            DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  contract             Contract?     @relation(fields: [contractId], references: [id])
+  property             Property?     @relation(fields: [propertyId], references: [id])
+  tenant               Tenant?       @relation(fields: [tenantId], references: [id])
 
-  // Relations - Permite eliminación de tenants manteniendo pagos históricos
-  tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  contract Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
-
-  @@unique([contractId, monthNumber]) // Una cuota por mes por contrato
+  @@unique([contractId, monthNumber])
   @@map("payments")
 }
 
-// Service (Servicio) model - Agua, Luz, Arbitrios
 model Service {
   id          Int         @id @default(autoincrement())
-  propertyId  Int? // Nullable para permitir eliminación de propiedades
-  contractId  Int? // Nullable para permitir eliminación de contratos
+  propertyId  Int?
+  contractId  Int?
   serviceType ServiceType @default(AGUA)
   amount      Decimal
   dueDate     DateTime
-  paidDate    DateTime? // Fecha de pago
+  paidDate    DateTime?
   isPaid      Boolean     @default(false)
   notes       String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-
-  // Relations
-  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  contract Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  contract    Contract?   @relation(fields: [contractId], references: [id])
+  property    Property?   @relation(fields: [propertyId], references: [id])
 
   @@map("services")
 }
 
-// Enums
+model ContractDraft {
+  id        Int      @id @default(autoincrement())
+  name      String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contract_drafts")
+}
+
+model Tax {
+  id         Int       @id @default(autoincrement())
+  propertyId Int?
+  contractId Int?
+  taxType    TaxType   @default(PREDIAL)
+  amount     Decimal
+  dueDate    DateTime
+  paidDate   DateTime?
+  isPaid     Boolean   @default(false)
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  contract   Contract? @relation(fields: [contractId], references: [id])
+  property   Property? @relation(fields: [propertyId], references: [id])
+
+  @@map("taxes")
+}
+
+model Guarantee {
+  id            Int           @id @default(autoincrement())
+  propertyId    Int?
+  contractId    Int?
+  tenantId      Int?
+  guaranteeType GuaranteeType @default(DEPOSITO)
+  amount        Decimal
+  depositDate   DateTime      @default(now())
+  returnDate    DateTime?
+  isReturned    Boolean       @default(false)
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  contract      Contract?     @relation(fields: [contractId], references: [id])
+  property      Property?     @relation(fields: [propertyId], references: [id])
+  tenant        Tenant?       @relation(fields: [tenantId], references: [id])
+
+  @@map("guarantees")
+}
+
+model Maintenance {
+  id              Int               @id @default(autoincrement())
+  propertyId      Int?
+  contractId      Int?
+  maintenanceType MaintenanceType   @default(REPARACION)
+  description     String
+  estimatedCost   Decimal?
+  actualCost      Decimal?
+  scheduledDate   DateTime?
+  completedDate   DateTime?
+  status          MaintenanceStatus @default(PENDING)
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  contract        Contract?         @relation(fields: [contractId], references: [id])
+  property        Property?         @relation(fields: [propertyId], references: [id])
+
+  @@map("maintenances")
+}
+
 enum UbicacionType {
   BOULEVAR
   SAN_MARTIN
@@ -179,20 +224,20 @@ enum UbicacionType {
 }
 
 enum PropertyStatus {
-  ACTIVE // Propiedad activa y alquilable
-  INACTIVE // Propiedad temporalmente inactiva
-  ARCHIVED // Propiedad archivada (soft delete)
+  ACTIVE
+  INACTIVE
+  ARCHIVED
 }
 
 enum TenantStatus {
-  ACTIVE // Inquilino activo
-  INACTIVE // Inquilino inactivo
-  ARCHIVED // Inquilino archivado (soft delete)
+  ACTIVE
+  INACTIVE
+  ARCHIVED
 }
 
 enum EstadoPago {
-  AL_DIA // Sin deudas pendientes
-  CON_DEUDA // Tiene meses con deuda
+  AL_DIA
+  CON_DEUDA
 }
 
 enum Rubro {
@@ -261,82 +306,4 @@ enum MaintenanceStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
-}
-
-// ContractDraft - Borradores de contratos para el editor WYSIWYG
-model ContractDraft {
-  id        Int      @id @default(autoincrement())
-  name      String // Nombre descriptivo: "Contrato Stand 16 - Melissa Rivera"
-  data      Json // Todos los campos del contrato en formato JSON
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("contract_drafts")
-}
-
-// Tax (Impuesto) model - Impuestos municipales, prediales, etc.
-model Tax {
-  id         Int       @id @default(autoincrement())
-  propertyId Int? // Nullable para permitir eliminación de propiedades
-  contractId Int? // Nullable para permitir eliminación de contratos
-  taxType    TaxType   @default(PREDIAL)
-  amount     Decimal
-  dueDate    DateTime
-  paidDate   DateTime? // Fecha de pago
-  isPaid     Boolean   @default(false)
-  notes      String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  // Relations
-  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  contract Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
-
-  @@map("taxes")
-}
-
-// Guarantee (Garantía) model - Depósitos de garantía, fianzas
-model Guarantee {
-  id            Int           @id @default(autoincrement())
-  propertyId    Int? // Nullable para permitir eliminación de propiedades
-  contractId    Int? // Nullable para permitir eliminación de contratos
-  tenantId      Int? // Nullable para permitir eliminación de tenants
-  guaranteeType GuaranteeType @default(DEPOSITO)
-  amount        Decimal
-  depositDate   DateTime      @default(now())
-  returnDate    DateTime? // Fecha de devolución
-  isReturned    Boolean       @default(false)
-  notes         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  // Relations
-  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  contract Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
-  tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-
-  @@map("guarantees")
-}
-
-// Maintenance (Mantenimiento) model - Trabajos de mantenimiento y reparaciones
-model Maintenance {
-  id              Int               @id @default(autoincrement())
-  propertyId      Int? // Nullable para permitir eliminación de propiedades
-  contractId      Int? // Nullable para permitir eliminación de contratos
-  maintenanceType MaintenanceType   @default(REPARACION)
-  description     String
-  estimatedCost   Decimal?
-  actualCost      Decimal?
-  scheduledDate   DateTime?
-  completedDate   DateTime?
-  status          MaintenanceStatus @default(PENDING)
-  notes           String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-
-  // Relations
-  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  contract Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
-
-  @@map("maintenances")
 }

@@ -37,7 +37,7 @@ export default function EditPaymentModal({
 }: EditPaymentModalProps) {
   const { hasRole } = useAuth();
   const isAdmin = hasRole(['ADMIN']);
-  const { updatePayment, createPayment, isUpdating, isCreating } = usePayments();
+  const { updatePayment, createPayment, isUpdating, isCreating, uploadImage, isUploading } = usePayments();
   const [editForm, setEditForm] = useState({
     amount: '',
     paymentDate: '',
@@ -59,7 +59,7 @@ export default function EditPaymentModal({
   const [receiptPdfUrl, setReceiptPdfUrl] = useState<string | null>(null);
 
   const isEditMode = !!payment;
-  const isLoading = isUpdating || isCreating || generatingReceipt;
+  const isLoading = isUpdating || isCreating || isUploading || generatingReceipt;
 
   // Cargar datos del pago cuando se abre el modal
   useEffect(() => {
@@ -132,17 +132,19 @@ export default function EditPaymentModal({
 
     try {
       let receiptImageUrl: string | null | undefined = undefined;
+      let receiptImagePublicId: string | null | undefined = undefined;
+
       if (editReceiptImageFile) {
-        receiptImageUrl = await new Promise<string>((resolve, reject) => {
+        const base64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result as string);
           reader.onerror = reject;
           reader.readAsDataURL(editReceiptImageFile!);
         });
-      } else if (editReceiptImagePreview && editReceiptImagePreview.startsWith('data:')) {
-        receiptImageUrl = editReceiptImagePreview;
-      } else if (editReceiptImagePreview) {
-        receiptImageUrl = editReceiptImagePreview;
+
+        const uploadResult = await uploadImage(base64);
+        receiptImageUrl = uploadResult.url;
+        receiptImagePublicId = uploadResult.publicId;
       }
 
       if (isEditMode && payment) {
@@ -153,7 +155,8 @@ export default function EditPaymentModal({
           paymentMethod: editForm.paymentMethod,
           status: editForm.status,
           notes: editForm.notes || undefined,
-          receiptImageUrl
+          receiptImageUrl,
+          receiptImagePublicId
         };
 
         UpdatePaymentSchema.parse(paymentData);
@@ -175,7 +178,8 @@ export default function EditPaymentModal({
           paymentMethod: editForm.paymentMethod,
           status: editForm.status,
           notes: editForm.notes || undefined,
-          receiptImageUrl
+          receiptImageUrl,
+          receiptImagePublicId
         };
 
         CreatePaymentSchema.parse(paymentData);
@@ -206,7 +210,12 @@ export default function EditPaymentModal({
     setGeneratingReceipt(true);
     setError('');
     try {
-      const receiptPdf = await generateReceiptPDFDataUrl(payment);
+      // Usar la nota del formulario por si el usuario escribió algo sin guardar
+      const paymentWithCurrentNotes = {
+        ...payment,
+        notes: editForm.notes?.trim() || payment.notes,
+      };
+      const receiptPdf = await generateReceiptPDFDataUrl(paymentWithCurrentNotes);
       setReceiptPdfUrl(receiptPdf);
       setReceiptModalOpen(true);
     } catch (receiptError) {
@@ -221,19 +230,9 @@ export default function EditPaymentModal({
     setReceiptPdfUrl(null);
   };
 
-  const getDisplayImage = () => {
-    if (editReceiptImagePreview) return editReceiptImagePreview;
-    if (payment?.receiptImageUrl) {
-      const base = import.meta.env.BASE_URL || '/';
-      const fallbackImage = `${base}comprobante.png`.replace(/\/+/g, '/');
-      if (payment.receiptImageUrl !== fallbackImage && payment.receiptImageUrl !== '/comprobante.png') {
-        return payment.receiptImageUrl;
-      }
-    }
-    return null;
-  };
-
-  const displayImage = getDisplayImage();
+  // Si hay preview local lo mostramos; si el backend ya envió una URL real la usamos;
+  // si es null, el render mostrará el mock comprobante.png
+  const displayImage = editReceiptImagePreview || payment?.receiptImageUrl || null;
 
   return (
     <>
@@ -271,17 +270,7 @@ export default function EditPaymentModal({
                   InputLabelProps={{ shrink: true }}
                   disabled={!isAdmin}
                 />
-                <TextField
-                  fullWidth
-                  label="Fecha de Vencimiento"
-                  type="date"
-                  value={editForm.dueDate}
-                  onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
-                  required
-                  sx={{ mb: 2 }}
-                  InputLabelProps={{ shrink: true }}
-                  disabled={!isAdmin}
-                />
+
                 <TextField
                   select
                   fullWidth
@@ -342,28 +331,22 @@ export default function EditPaymentModal({
                   position: 'relative'
                 }}
               >
-                {displayImage ? (
-                  <Box
-                    component="img"
-                    src={displayImage}
-                    alt="Comprobante"
-                    sx={{
-                      maxWidth: '100%',
-                      maxHeight: '600px',
-                      objectFit: 'contain',
-                      borderRadius: 1,
-                      mb: 2
-                    }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL || '/'}comprobante.png`.replace(/\/+/g, '/');
-                    }}
-                  />
-                ) : (
-                  <Box sx={{ textAlign: 'center', py: 8, opacity: 0.6 }}>
-                    <ReceiptIcon sx={{ fontSize: 60, mb: 1 }} />
-                    <Typography>No hay comprobante cargado</Typography>
-                  </Box>
-                )}
+                <Box
+                  component="img"
+                  src={displayImage || `${import.meta.env.BASE_URL || '/'}comprobante.png`.replace(/\/+/g, '/')}
+                  alt="Comprobante"
+                  sx={{
+                    maxWidth: '100%',
+                    maxHeight: '600px',
+                    objectFit: 'contain',
+                    borderRadius: 1,
+                    mb: 2,
+                    opacity: displayImage ? 1 : 0.4
+                  }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL || '/'}comprobante.png`.replace(/\/+/g, '/');
+                  }}
+                />
 
                 {isAdmin && (
                   <Box sx={{ mt: 2, width: '100%', maxWidth: 300 }}>

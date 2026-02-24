@@ -4,6 +4,7 @@ import { createServer } from 'node:http'
 import { userRoutes } from './routes/user.routes'
 import { protectedRoutes } from './routes/protected.routes'
 import { authRoutes } from './routes/auth.routes'
+import { mediaRoutes } from './routes/media.routes'
 import { errorPlugin } from './plugins/error.plugin'
 import { logRequest, logResponse, logError, logRequestBody } from './utils/logger'
 import { JWT_SECRET } from './types/jwt.types'
@@ -49,7 +50,8 @@ const app = new Elysia()
   .use(authRoutes)  // Auth routes don't need auth plugin (register/login are public)
   .use(userRoutes)
   .group('/api', app => app
-    .use(protectedRoutes)  // All protected routes under /api with auth
+    .use(protectedRoutes)
+    .use(mediaRoutes)
   )
   .get('/', () => ({ message: 'Rental Management API is running', timestamp: new Date().toISOString() }))
 

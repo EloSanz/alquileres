@@ -83,6 +83,21 @@ export const usePayments = () => {
         }
     });
 
+    const uploadImageMutation = useMutation({
+        mutationFn: async (base64Image: string) => {
+            const response = await api.api.media.upload.post({ image: base64Image });
+
+            if (response.error) {
+                const errorMsg = typeof response.error.value === 'string'
+                    ? response.error.value
+                    : (response.error.value as any)?.message || 'Failed to upload image';
+                throw new Error(errorMsg);
+            }
+
+            return response.data.data;
+        }
+    });
+
     return {
         payments: paymentsQuery.data || [],
         isLoading: paymentsQuery.isLoading,
@@ -94,5 +109,7 @@ export const usePayments = () => {
         isCreating: createPaymentMutation.isPending,
         isUpdating: updatePaymentMutation.isPending,
         isDeleting: deletePaymentMutation.isPending,
+        uploadImage: uploadImageMutation.mutateAsync,
+        isUploading: uploadImageMutation.isPending,
     };
 };
