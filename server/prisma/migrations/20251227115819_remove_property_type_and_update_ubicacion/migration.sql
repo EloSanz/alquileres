@@ -1,23 +1,21 @@
--- First, update existing BOULEVARD values to BOULEVAR
-UPDATE "properties" SET "ubicacion" = 'BOULEVAR' WHERE "ubicacion" = 'BOULEVARD';
-
--- Alter the enum to rename BOULEVARD to BOULEVAR and add PATIO
--- PostgreSQL doesn't support renaming enum values directly, so we need to:
--- 1. Create a new enum with the correct values
+-- 1. Crear el nuevo enum con los valores correctos
 CREATE TYPE "UbicacionType_new" AS ENUM ('BOULEVAR', 'SAN_MARTIN', 'PATIO');
 
--- 2. Update the column to use the new enum
-ALTER TABLE "properties" ALTER COLUMN "ubicacion" TYPE "UbicacionType_new" USING ("ubicacion"::text::"UbicacionType_new");
+-- 2. Convertir la columna a TEXT para poder hacer el UPDATE libremente
+ALTER TABLE "properties" ALTER COLUMN "ubicacion" TYPE TEXT;
 
--- 3. Drop the old enum
+-- 3. Ahora actualizar los datos (BOULEVARD → BOULEVAR) sin restricciones de enum
+UPDATE "properties" SET "ubicacion" = 'BOULEVAR' WHERE "ubicacion" = 'BOULEVARD';
+
+-- 4. Aplicar el nuevo tipo enum en la columna
+ALTER TABLE "properties" ALTER COLUMN "ubicacion" TYPE "UbicacionType_new" USING ("ubicacion"::"UbicacionType_new");
+
+-- 5. Eliminar el enum viejo y renombrar el nuevo
 DROP TYPE "UbicacionType";
-
--- 4. Rename the new enum to the original name
 ALTER TYPE "UbicacionType_new" RENAME TO "UbicacionType";
 
--- Drop the propertyType column
-ALTER TABLE "properties" DROP COLUMN "propertyType";
+-- 6. Eliminar la columna propertyType
+ALTER TABLE "properties" DROP COLUMN IF EXISTS "propertyType";
 
--- Drop the PropertyType enum
-DROP TYPE "PropertyType";
-
+-- 7. Eliminar el enum PropertyType si existe
+DROP TYPE IF EXISTS "PropertyType";
