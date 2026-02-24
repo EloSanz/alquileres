@@ -127,7 +127,6 @@ model Payment {
   property             Property?     @relation(fields: [propertyId], references: [id])
   tenant               Tenant?       @relation(fields: [tenantId], references: [id])
 
-  @@unique([contractId, monthNumber])
   @@map("payments")
 }
 

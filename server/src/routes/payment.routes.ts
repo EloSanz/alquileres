@@ -23,11 +23,14 @@ const tenantIdParamsSchema = t.Object({
 
 const createPaymentBodySchema = t.Object({
   tenantId: t.Number({ minimum: 1 }),
-  propertyId: t.Union([t.Number({ minimum: 1 }), t.Null()]),
+  propertyId: t.Optional(t.Union([t.Number({ minimum: 1 }), t.Null()])),
+  contractId: t.Optional(t.Union([t.Number({ minimum: 1 }), t.Null()])),
+  monthNumber: t.Optional(t.Union([t.Number({ minimum: 1, maximum: 12 }), t.Null()])),
   amount: t.Number({ minimum: 0 }),
   paymentDate: t.Optional(t.String()),
   dueDate: t.String(),
   paymentMethod: t.Optional(t.String()),
+  status: t.Optional(t.String()),
   pentamontSettled: t.Optional(t.Boolean()),
   notes: t.Optional(t.String()),
   receiptImageUrl: t.Optional(t.Union([t.String(), t.Null()])),
@@ -37,6 +40,8 @@ const createPaymentBodySchema = t.Object({
 const updatePaymentBodySchema = t.Object({
   tenantId: t.Optional(t.Union([t.Number({ minimum: 1 }), t.Null()])),
   propertyId: t.Optional(t.Union([t.Number({ minimum: 1 }), t.Null()])),
+  contractId: t.Optional(t.Union([t.Number({ minimum: 1 }), t.Null()])),
+  monthNumber: t.Optional(t.Union([t.Number({ minimum: 1, maximum: 12 }), t.Null()])),
   amount: t.Optional(t.Number({ minimum: 0 })),
   paymentDate: t.Optional(t.String()),
   dueDate: t.Optional(t.String()),
