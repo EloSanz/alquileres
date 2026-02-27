@@ -84,7 +84,7 @@ export default function EditPaymentModal({
         setEditForm({
           amount: initialData.amount?.toString() || '',
           paymentDate: initialData.paymentDate || new Date().toISOString().split('T')[0],
-          dueDate: initialData.dueDate || '',
+          dueDate: initialData.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : '',
           paymentMethod: initialData.paymentMethod || 'YAPE',
           status: initialData.status || PaymentStatus.FUTURO,
           notes: initialData.notes || '',
