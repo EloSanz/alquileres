@@ -51,10 +51,15 @@ jobs:
 
           echo "🎨 [5/6] Compilando frontend..."
           cd web && npm run build
+          echo "📂 Copiando build al directorio de Nginx..."
+          mkdir -p /var/www/icards.fun/html/pentamont
+          # Usamos rsync para sincronizar exactamente lo que hay, borrando lo viejo
+          rsync -av --delete dist/ /var/www/icards.fun/html/pentamont/
           cd ..
 
           echo "🚀 [6/6] Reiniciando servicios..."
           pm2 restart alquileres-backend
           pm2 save
+          systemctl reload nginx
 
           echo "✅ Deploy completado!"
