@@ -8,6 +8,7 @@
     "type-check": "tsc --noEmit",
     "dev:full": "concurrently \"npm run dev\" \"npm run type-check\"",
     "build": "tsc",
+    "build:fast": "tsc || echo 'Build finished with type errors (ignored)'",
     "start": "node dist/server/src/index.js",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",

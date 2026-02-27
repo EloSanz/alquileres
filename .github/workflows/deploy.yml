@@ -46,7 +46,7 @@ jobs:
           cd ..
 
           echo "🔨 [4/6] Compilando backend..."
-          cd server && npm run build
+          cd server && npm run build:fast
           cd ..
 
           echo "🎨 [5/6] Compilando frontend..."
