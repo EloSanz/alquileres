@@ -2,7 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'alquileres-backend',
-      script: 'npm run start',
+      script: 'npm',
+      args: 'run start',
       cwd: './server',
       env: {
         NODE_ENV: 'production'
