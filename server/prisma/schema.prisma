@@ -127,7 +127,6 @@ model Payment {
   property             Property?     @relation(fields: [propertyId], references: [id])
   tenant               Tenant?       @relation(fields: [tenantId], references: [id])
 
-  @@unique([contractId, monthNumber])
   @@map("payments")
 }
 
@@ -218,41 +217,41 @@ model Maintenance {
 }
 
 model PatioTenant {
-  id             Int            @id @default(autoincrement())
-  nombre         String
+  id              Int            @id @default(autoincrement())
+  nombre          String
   nombreComercial String?
   razonSocial     String?
-  apodo          String?
-  numerosLocales String
-  telefono       String?
-  rubro          String?
+  apodo           String?
+  numerosLocales  String
+  telefono        String?
+  rubro           String?
   montoAlquiler   Decimal?
-  fechaIngreso   DateTime?
-  estadoPago     EstadoPago     @default(AL_DIA)
-  deletedAt      DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  pagos          PatioPayment[]
+  fechaIngreso    DateTime?
+  estadoPago      EstadoPago     @default(AL_DIA)
+  deletedAt       DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  pagos           PatioPayment[]
 
   @@map("patio_tenants")
 }
 
 model PatioPayment {
-  id               Int           @id @default(autoincrement())
-  patioTenantId    Int
-  monto            Decimal
-  fechaPago        DateTime      @default(now())
-  fechaVencimiento DateTime
-  metodoPago       PaymentMethod @default(YAPE)
-  estado           PaymentStatus @default(FUTURO)
-  notas            String?
-  pentamontSettled Boolean       @default(false)
+  id                   Int           @id @default(autoincrement())
+  patioTenantId        Int
+  monto                Decimal
+  fechaPago            DateTime      @default(now())
+  fechaVencimiento     DateTime
+  metodoPago           PaymentMethod @default(YAPE)
+  estado               PaymentStatus @default(FUTURO)
+  notas                String?
+  pentamontSettled     Boolean       @default(false)
   receiptImageUrl      String?
   receiptImagePublicId String?
-  deletedAt        DateTime?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  patioTenant      PatioTenant   @relation(fields: [patioTenantId], references: [id])
+  deletedAt            DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  patioTenant          PatioTenant   @relation(fields: [patioTenantId], references: [id])
 
   @@map("patio_payments")
 }
