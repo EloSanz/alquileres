@@ -241,6 +241,16 @@ export default function PatioPaymentEditModal({
                                 disabled={!isAdmin || isLoading}
                             />
                             <TextField
+                                fullWidth
+                                label="Mes Correspondiente"
+                                type="date"
+                                value={form.fechaVencimiento}
+                                onChange={(e) => setForm({ ...form, fechaVencimiento: e.target.value })}
+                                required
+                                InputLabelProps={{ shrink: true }}
+                                disabled={!isAdmin || isLoading}
+                            />
+                            <TextField
                                 select
                                 fullWidth
                                 label="Medio de Pago"
