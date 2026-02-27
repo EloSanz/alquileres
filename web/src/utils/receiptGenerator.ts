@@ -161,19 +161,26 @@ export async function generateReceiptPDF(payment: Payment): Promise<Blob> {
     return date.toLocaleDateString('es-PE', { month: 'long', timeZone: 'UTC' }).toUpperCase();
   };
 
+  const getMonthAndYear = (dateString: string) => {
+    const date = new Date(dateString);
+    const month = date.toLocaleDateString('es-PE', { month: 'long', timeZone: 'UTC' });
+    const year = date.toLocaleDateString('es-PE', { year: 'numeric', timeZone: 'UTC' });
+    // Capitalize first letter of month
+    return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
+  };
+
   addInfoRow('ID de Pago:', `#${payment.id}`);
   addInfoRow('Inquilino:', payment.tenantFullName || 'N/A');
   addInfoRow('Monto:', formatCurrency(payment.amount));
   addInfoRow('Método de Pago:', getPaymentMethodLabel(payment.paymentMethod));
   addInfoRow('Fecha de Pago:', formatDate(payment.paymentDate));
-  addInfoRow('Mes Correspondiente:', formatDate(payment.dueDate));
+  addInfoRow('Mes Correspondiente:', getMonthAndYear(payment.dueDate));
 
   const monthName = getUppercaseMonth(payment.dueDate);
   addInfoRow(
     'Estado:',
     payment.status === PaymentStatus.PAGADO ? `Pagado - ${monthName}` : payment.status
   );
-  addInfoRow('Fecha y Hora de Registro:', formatDateTime(payment.updatedAt));
 
   // Nota solo si tiene valor
   if (payment.notes && payment.notes.trim()) {
@@ -324,16 +331,23 @@ export async function generatePatioReceiptPDF(payment: any, tenantName: string):
     return date.toLocaleDateString('es-PE', { month: 'long', timeZone: 'UTC' }).toUpperCase();
   };
 
+  const getMonthAndYear = (dateString: string) => {
+    const date = new Date(dateString);
+    const month = date.toLocaleDateString('es-PE', { month: 'long', timeZone: 'UTC' });
+    const year = date.toLocaleDateString('es-PE', { year: 'numeric', timeZone: 'UTC' });
+    // Capitalize first letter of month
+    return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
+  };
+
   addInfoRow('ID de Pago:', `#P${payment.id}`);
   addInfoRow('Inquilino:', tenantName);
   addInfoRow('Monto:', formatCurrency(payment.monto));
   addInfoRow('Método de Pago:', getPaymentMethodLabel(payment.metodoPago || 'DEPOSITO'));
   addInfoRow('Fecha de Pago:', payment.fechaPago ? formatDate(payment.fechaPago) : 'N/A');
-  addInfoRow('Mes Correspondiente:', formatDate(payment.fechaVencimiento));
+  addInfoRow('Mes Correspondiente:', getMonthAndYear(payment.fechaVencimiento));
 
   const monthName = getUppercaseMonth(payment.fechaVencimiento);
   addInfoRow('Estado:', payment.estado === 'PAGADO' ? `Pagado - ${monthName}` : payment.estado);
-  addInfoRow('Fecha y Hora de Registro:', formatDateTime(payment.updatedAt));
 
   if (payment.notas && payment.notas.trim()) {
     addInfoRow('Nota:', payment.notas.trim());
