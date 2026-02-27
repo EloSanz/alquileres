@@ -38,8 +38,19 @@ CREATE TABLE "patio_payments" (
     CONSTRAINT "patio_payments_pkey" PRIMARY KEY ("id")
 );
 
+-- Clean up duplicates in payments table before creating the unique index
+DELETE FROM payments
+WHERE id IN (
+    SELECT id FROM (
+        SELECT id, ROW_NUMBER() OVER (PARTITION BY "contractId", "monthNumber" ORDER BY id DESC) as row_num
+        FROM payments
+        WHERE "contractId" IS NOT NULL AND "monthNumber" IS NOT NULL
+    ) t
+    WHERE t.row_num > 1
+);
+
 -- CreateIndex
-CREATE UNIQUE INDEX IF NOT EXISTS "payments_contractId_monthNumber_key" ON "payments"("contractId", "monthNumber");
+CREATE UNIQUE INDEX "payments_contractId_monthNumber_key" ON "payments"("contractId", "monthNumber");
 
 -- AddForeignKey
 ALTER TABLE "patio_payments" ADD CONSTRAINT "patio_payments_patioTenantId_fkey" FOREIGN KEY ("patioTenantId") REFERENCES "patio_tenants"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
