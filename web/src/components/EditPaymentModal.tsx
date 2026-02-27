@@ -274,6 +274,17 @@ export default function EditPaymentModal({
                   InputLabelProps={{ shrink: true }}
                   disabled={!isAdmin}
                 />
+                <TextField
+                  fullWidth
+                  label="Mes Correspondiente"
+                  type="date"
+                  value={editForm.dueDate}
+                  onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
+                  required
+                  sx={{ mb: 2 }}
+                  InputLabelProps={{ shrink: true }}
+                  disabled={!isAdmin}
+                />
 
                 <TextField
                   select

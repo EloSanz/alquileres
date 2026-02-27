@@ -166,8 +166,9 @@ export async function generateReceiptPDF(payment: Payment): Promise<Blob> {
   addInfoRow('Monto:', formatCurrency(payment.amount));
   addInfoRow('Método de Pago:', getPaymentMethodLabel(payment.paymentMethod));
   addInfoRow('Fecha de Pago:', formatDate(payment.paymentDate));
+  addInfoRow('Mes Correspondiente:', formatDate(payment.dueDate));
 
-  const monthName = getUppercaseMonth(payment.paymentDate);
+  const monthName = getUppercaseMonth(payment.dueDate);
   addInfoRow(
     'Estado:',
     payment.status === PaymentStatus.PAGADO ? `Pagado - ${monthName}` : payment.status
