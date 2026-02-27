@@ -108,3 +108,7 @@ pm2-*.log
 
 # Docker (if any)
 .dockerignore
+
+# Dependency lock files
+package-lock.json
+yarn.lock

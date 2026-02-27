@@ -138,3 +138,7 @@ vite.config.ts.timestamp-*
 # Keep service worker
 # sw.js
 # sw.js.map
+
+# Dependency lock files
+package-lock.json
+yarn.lock

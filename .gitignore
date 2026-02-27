@@ -151,9 +151,9 @@ docs/.vuepress/dist/
 coverage/
 .nyc_output/
 
-# Dependency lock files (opcional, si quieres commitearlos)
-# package-lock.json
-# yarn.lock
+# Dependency lock files
+package-lock.json
+yarn.lock
 
 
 # Local DB backups
