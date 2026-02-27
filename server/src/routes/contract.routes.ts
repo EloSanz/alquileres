@@ -3,10 +3,6 @@ import { ContractController } from '../controllers/contract.controller';
 import { ContractService } from '../implementations/services/ContractService';
 import { PrismaContractRepository } from '../implementations/repositories/PrismaContractRepository';
 import { PrismaPaymentRepository } from '../implementations/repositories/PrismaPaymentRepository';
-import { authPlugin } from '../plugins/auth.plugin';
-import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
-import { verify as jwtVerify } from 'jsonwebtoken';
-import { logError } from '../utils/logger';
 
 // Dependency injection
 const contractRepository = new PrismaContractRepository();

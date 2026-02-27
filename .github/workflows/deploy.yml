@@ -1,9 +1,7 @@
-name: Backend CI
+name: Deploy Alquileres
 
 on:
   push:
-    branches: [ develop ]
-  pull_request:
     branches: [ develop ]
 
 jobs:
@@ -11,7 +9,6 @@ jobs:
     name: Deploy to VPS
     runs-on: ubuntu-latest
     environment: hostinger
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
 
     steps:
     - name: Verify SSH credentials exist
@@ -20,22 +17,43 @@ jobs:
         if [ -z "${{ secrets.SSH_PASSWORD }}" ]; then echo "❌ SSH_PASSWORD no está configurado"; exit 1; fi
         echo "✔ Credenciales SSH verificadas"
 
-    - name: Deploy to server
+    - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}
         username: root
         password: ${{ secrets.SSH_PASSWORD }}
         port: 22
-        timeout: 30s
+        timeout: 300s
         script: |
           set -e
+          cd /root/alquileres
 
-          echo "➡️ Actualizando proyecto en VPS..."
-          echo "📂 Cambiando al directorio del proyecto..."
-          cd /root/alquileres-app || exit 1
-
-          echo "📥 Ejecutando git pull..."
+          echo "📥 [1/6] Git pull..."
           git pull origin develop
 
-          echo "✅ Git pull completado"
+          echo "📦 [2/6] Instalando dependencias..."
+          cd server && npm install --legacy-peer-deps
+          cd ../web && npm install --legacy-peer-deps
+          cd ..
+
+          echo "🗄️ [3/6] Aplicando migraciones de DB..."
+          cd server
+          npx prisma migrate deploy
+          npx prisma generate
+          echo "🌱 Seed de patio tenants (idempotente)..."
+          psql $DATABASE_URL -f prisma/patio_seed.sql
+          cd ..
+
+          echo "🔨 [4/6] Compilando backend..."
+          cd server && npm run build
+          cd ..
+
+          echo "🎨 [5/6] Compilando frontend..."
+          cd web && npm run build
+          cd ..
+
+          echo "🚀 [6/6] Reiniciando servicios..."
+          pm2 restart alquileres-backend
+
+          echo "✅ Deploy completado!"

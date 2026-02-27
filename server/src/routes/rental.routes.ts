@@ -4,10 +4,6 @@ import { RentalService } from '../implementations/services/RentalService';
 import { PrismaRentalRepository } from '../implementations/repositories/PrismaRentalRepository';
 import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
 import { PrismaPropertyRepository } from '../implementations/repositories/PrismaPropertyRepository';
-import { authPlugin } from '../plugins/auth.plugin';
-import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
-import { verify as jwtVerify } from 'jsonwebtoken';
-import { logError } from '../utils/logger';
 
 // Dependency injection
 const rentalRepository = new PrismaRentalRepository();

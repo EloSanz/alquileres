@@ -2,10 +2,6 @@ import { Elysia, t } from 'elysia';
 import { GuaranteeController } from '../controllers/guarantee.controller';
 import { GuaranteeService } from '../implementations/services/GuaranteeService';
 import { PrismaGuaranteeRepository } from '../implementations/repositories/PrismaGuaranteeRepository';
-import { authPlugin } from '../plugins/auth.plugin';
-import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
-import { verify as jwtVerify } from 'jsonwebtoken';
-import { logError } from '../utils/logger';
 
 // Dependency injection
 const guaranteeRepository = new PrismaGuaranteeRepository();

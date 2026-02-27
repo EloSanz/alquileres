@@ -4,10 +4,6 @@ import { PropertyService } from '../implementations/services/PropertyService';
 import { PrismaPropertyRepository } from '../implementations/repositories/PrismaPropertyRepository';
 import { PrismaTenantRepository } from '../implementations/repositories/PrismaTenantRepository';
 import { PrismaPaymentRepository } from '../implementations/repositories/PrismaPaymentRepository';
-import { authPlugin } from '../plugins/auth.plugin';
-import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
-import { verify as jwtVerify } from 'jsonwebtoken';
-import { logError } from '../utils/logger';
 
 // Dependency injection
 const propertyRepository = new PrismaPropertyRepository();

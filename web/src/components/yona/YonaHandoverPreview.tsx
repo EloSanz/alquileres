@@ -6,7 +6,7 @@ interface YonaHandoverPreviewProps {
     fullPage?: boolean;
 }
 
-function PlaceholderText({ value, placeholder, minWidth = '100px' }: { value: string | number | null | undefined; placeholder?: string, minWidth?: string }) {
+function PlaceholderText({ value, minWidth = '100px' }: { value: string | number | null | undefined; placeholder?: string, minWidth?: string }) {
     const stringValue = String(value || '').trim();
     if (!stringValue) {
         return (

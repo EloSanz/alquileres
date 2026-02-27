@@ -17,7 +17,8 @@ import {
   IconButton,
   Autocomplete,
 } from '@mui/material';
-import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon, ViewModule as ViewModuleIcon, TableChart as TableChartIcon, Add as AddIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon, ViewModule as ViewModuleIcon, TableChart as TableChartIcon, Add as AddIcon, Store as StoreIcon, Business as BusinessIcon } from '@mui/icons-material';
+import PatioPaymentView from '../components/PatioPaymentView';
 import RoleGuard from '../components/RoleGuard';
 import NavigationTabs from '../components/NavigationTabs';
 import { Property } from '../../../shared/types/Property';
@@ -102,6 +103,7 @@ const PaymentPage = () => {
   const [receiptImagePreview, setReceiptImagePreview] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [deepLinkPropertyId, setDeepLinkPropertyId] = useState<number | undefined>(undefined);
+  const [showPatio, setShowPatio] = useState(false);
   const [actionError, setActionError] = useState('');
 
   // Filtering Logic
@@ -418,7 +420,9 @@ const PaymentPage = () => {
       )}
 
       <Box sx={{ position: 'relative' }}>
-        {viewMode === 'grid' ? (
+        {showPatio ? (
+          <PatioPaymentView />
+        ) : viewMode === 'grid' ? (
           <PaymentByPropertyView openPropertyId={deepLinkPropertyId} />
         ) : (
           <PaymentTable
@@ -434,24 +438,48 @@ const PaymentPage = () => {
         )}
       </Box>
 
-      {/* Floating Action Button for switching view */}
+      {/* Floating Action Button: toggle Patio */}
       <Fab
-        color="secondary"
         variant="extended"
         size="large"
-        aria-label="switch view"
+        aria-label="toggle patio view"
         sx={{
           position: 'fixed',
-          bottom: 100,
+          bottom: 168,
           right: 16,
           px: 3,
-          py: 1.5
+          py: 1.5,
+          bgcolor: showPatio ? 'warning.main' : 'secondary.dark',
+          color: 'white',
+          '&:hover': { bgcolor: showPatio ? 'warning.dark' : 'secondary.main' },
+          zIndex: 1000,
         }}
-        onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
+        onClick={() => setShowPatio(prev => !prev)}
       >
-        {viewMode === 'grid' ? <TableChartIcon sx={{ mr: 1 }} /> : <ViewModuleIcon sx={{ mr: 1 }} />}
-        {viewMode === 'grid' ? 'Ver en Tabla' : 'Ver por Local'}
+        {showPatio ? <BusinessIcon sx={{ mr: 1 }} /> : <StoreIcon sx={{ mr: 1 }} />}
+        {showPatio ? 'Boulevard y San Martín' : 'Ver Patio'}
       </Fab>
+
+      {/* Floating Action Button for switching view (hidden in patio mode) */}
+      {!showPatio && (
+        <Fab
+          color="secondary"
+          variant="extended"
+          size="large"
+          aria-label="switch view"
+          sx={{
+            position: 'fixed',
+            bottom: 100,
+            right: 16,
+            px: 3,
+            py: 1.5
+          }}
+          onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
+        >
+          {viewMode === 'grid' ? <TableChartIcon sx={{ mr: 1 }} /> : <ViewModuleIcon sx={{ mr: 1 }} />}
+          {viewMode === 'grid' ? 'Ver en Tabla' : 'Ver por Local'}
+        </Fab>
+      )}
 
       {/* Create Payment Dialog */}
       <Dialog
