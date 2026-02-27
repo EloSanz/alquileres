@@ -4,12 +4,10 @@ Guía de comandos para aplicar los últimos cambios en el servidor de producció
 
 ---
 
-## Cambios incluidos en este deploy
-
-- Integración con **Cloudinary** para subir imágenes de comprobantes
-- Nuevos campos en la tabla `payments`: `receiptImageUrl`, `receiptImagePublicId`
-- Mejoras en el timeline de pagos 2026
-- Fixes en el modal de edición y generación de recibos PDF
+- **Módulo Patio Amadeo**: Gestión completa de inquilinos y pagos para el sector Patio.
+- **Recibos Dinámicos**: Generación de PDF personalizados para Patio (verde) y Boulevard (azul), incluyendo el mes en mayúsculas.
+- **Carga de Imágenes Optimizada**: Subida asíncrona a Cloudinary con loader visual en el modal de pagos del Patio.
+- **Base de Datos**: Nuevas tablas `PatioTenant` y `PatioPayment`.
 
 ---
 
@@ -112,6 +110,7 @@ pm2 restart alquileres-frontend
 ```
 
 > Si es el primer deploy desde cero:
+>
 > ```bash
 > pm2 start ecosystem.config.js
 > pm2 save

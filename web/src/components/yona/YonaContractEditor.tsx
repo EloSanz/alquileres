@@ -68,7 +68,7 @@ export default function YonaContractEditor({
     const [previewReady, setPreviewReady] = useState(false);
     const [splitView, setSplitView] = useState(!isMobile); // Vista dividida solo en desktop
     const [exportWarningOpen, setExportWarningOpen] = useState(false);
-    const [exportWarningFields, setExportWarningFields] = useState<string[]>([]);
+    const [exportWarningFields] = useState<string[]>([]);
 
     // Actualizar splitView cuando cambia el tamaño de pantalla
     useEffect(() => {

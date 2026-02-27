@@ -153,18 +153,6 @@ export const requestLogger = new Elysia({ name: 'request-logger' })
     const url = request.url.replace(request.origin || '', '');
     const authHeader = headers.authorization;
 
-    // Extract body if it exists (for non-GET requests)
-    let body = '';
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-      try {
-        // We can't easily await body here because it might consume the stream 
-        // depending on how Elysia handles it, but Elysia usually parses it before.
-        // However, a safer way in this middleware is to use the 'body' property if available in the context
-      } catch (e) {
-        // Ignore body errors
-      }
-    }
-
     // Extract userId from JWT if available
     let userId: number | undefined;
     if (authHeader?.startsWith('Bearer ')) {

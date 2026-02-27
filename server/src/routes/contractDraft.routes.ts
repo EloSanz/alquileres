@@ -2,10 +2,6 @@ import { Elysia, t } from 'elysia';
 import { ContractDraftController } from '../controllers/contractDraft.controller';
 import { ContractDraftService } from '../implementations/services/ContractDraftService';
 import { PrismaContractDraftRepository } from '../implementations/repositories/PrismaContractDraftRepository';
-import { authPlugin } from '../plugins/auth.plugin';
-import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
-import { verify as jwtVerify } from 'jsonwebtoken';
-import { logError } from '../utils/logger';
 
 // Dependency injection
 const contractDraftRepository = new PrismaContractDraftRepository();

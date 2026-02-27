@@ -2,10 +2,6 @@ import { Elysia, t } from 'elysia';
 import { TaxController } from '../controllers/tax.controller';
 import { TaxService } from '../implementations/services/TaxService';
 import { PrismaTaxRepository } from '../implementations/repositories/PrismaTaxRepository';
-import { authPlugin } from '../plugins/auth.plugin';
-import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
-import { verify as jwtVerify } from 'jsonwebtoken';
-import { logError } from '../utils/logger';
 
 // Dependency injection
 const taxRepository = new PrismaTaxRepository();

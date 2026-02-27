@@ -2,10 +2,6 @@ import { Elysia, t } from 'elysia';
 import { PaymentController } from '../controllers/payment.controller';
 import { PaymentService } from '../implementations/services/PaymentService';
 import { PrismaPaymentRepository } from '../implementations/repositories/PrismaPaymentRepository';
-import { authPlugin } from '../plugins/auth.plugin';
-import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
-import { verify as jwtVerify } from 'jsonwebtoken';
-import { logError } from '../utils/logger';
 
 // Dependency injection
 const paymentRepository = new PrismaPaymentRepository();

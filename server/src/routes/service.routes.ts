@@ -2,10 +2,6 @@ import { Elysia, t } from 'elysia';
 import { ServiceController } from '../controllers/service.controller';
 import { ServiceService } from '../implementations/services/ServiceService';
 import { PrismaServiceRepository } from '../implementations/repositories/PrismaServiceRepository';
-import { authPlugin } from '../plugins/auth.plugin';
-import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
-import { verify as jwtVerify } from 'jsonwebtoken';
-import { logError } from '../utils/logger';
 
 // Dependency injection
 const serviceRepository = new PrismaServiceRepository();

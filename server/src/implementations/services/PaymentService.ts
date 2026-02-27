@@ -3,7 +3,6 @@ import { IPaymentRepository } from '../../interfaces/repositories/IPaymentReposi
 import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '../../dtos/payment.dto';
 import { PaymentEntity } from '../../entities/Payment.entity';
 import { NotFoundError } from '../../exceptions';
-import { logInfo } from '../../utils/logger';
 
 export class PaymentService implements IPaymentService {
   constructor(private paymentRepository: IPaymentRepository) { }

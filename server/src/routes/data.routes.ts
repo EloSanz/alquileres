@@ -1,7 +1,4 @@
 import { Elysia } from 'elysia';
-import { authPlugin } from '../plugins/auth.plugin';
-import { JWTPayload, JWT_SECRET } from '../types/jwt.types';
-import { verify as jwtVerify } from 'jsonwebtoken';
 import { logError } from '../utils/logger';
 import { TenantService } from '../implementations/services/TenantService';
 import { PropertyService } from '../implementations/services/PropertyService';
