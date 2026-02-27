@@ -55,5 +55,6 @@ jobs:
 
           echo "🚀 [6/6] Reiniciando servicios..."
           pm2 restart alquileres-backend
+          pm2 save
 
           echo "✅ Deploy completado!"
