@@ -14,41 +14,34 @@ import {
   TextField,
   MenuItem,
   Button,
-  IconButton,
-  Autocomplete,
 } from '@mui/material';
-import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon, ViewModule as ViewModuleIcon, TableChart as TableChartIcon, Add as AddIcon, Store as StoreIcon, Business as BusinessIcon } from '@mui/icons-material';
+import { ViewModule as ViewModuleIcon, TableChart as TableChartIcon, Add as AddIcon, Store as StoreIcon, Business as BusinessIcon } from '@mui/icons-material';
 import PatioPaymentView from '../components/PatioPaymentView';
 import RoleGuard from '../components/RoleGuard';
 import NavigationTabs from '../components/NavigationTabs';
-import { Property } from '../../../shared/types/Property';
 import { usePayments } from '../hooks/usePayments';
-import { useProperties } from '../hooks/useProperties';
 import { useTenants } from '../hooks/useTenants';
 import { useContracts } from '../hooks/useContracts';
-import { Payment, CreatePayment, UpdatePayment } from '../../../shared/types/Payment';
+import { Payment, UpdatePayment } from '../../../shared/types/Payment';
 import EditPaymentModal from '../components/EditPaymentModal';
 import SearchBar from '../components/SearchBar';
 import FilterBar, { FilterConfig } from '../components/FilterBar';
 import PaymentDetailsModal from '../components/PaymentDetailsModal';
 import PaymentTable from '../components/PaymentTable';
 import PaymentByPropertyView from '../components/PaymentByPropertyView';
+import { formatDateUTC } from '../utils/dateUtils';
 
 const PaymentPage = () => {
   const {
     payments,
     isLoading: loading,
     error: queryError,
-    createPayment,
     updatePayment,
     deletePayment,
-    uploadImage,
-    isUploading
   } = usePayments();
 
-  const { properties } = useProperties();
   const { tenants } = useTenants();
-  const { contracts } = useContracts();
+  useContracts(); // Call it if we need it for some reason, or just remove if we don't
 
   const location = useLocation();
 
@@ -83,9 +76,7 @@ const PaymentPage = () => {
   ];
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [amountError, setAmountError] = useState('');
-  const [createForm, setCreateForm] = useState({
+  const [createForm] = useState({
     amount: '',
     paymentDate: new Date().toISOString().split('T')[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 días por defecto
@@ -99,8 +90,6 @@ const PaymentPage = () => {
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const [receiptImageFile, setReceiptImageFile] = useState<File | null>(null);
-  const [receiptImagePreview, setReceiptImagePreview] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [deepLinkPropertyId, setDeepLinkPropertyId] = useState<number | undefined>(undefined);
   const [showPatio, setShowPatio] = useState(false);
@@ -112,10 +101,10 @@ const PaymentPage = () => {
 
     // Filter by tenant if selected
     if (selectedTenantId !== null) {
-      result = result.filter(p => p.tenantId === selectedTenantId);
+      result = result.filter((p: Payment) => p.tenantId === selectedTenantId);
     }
 
-    return result.filter(payment => {
+    return result.filter((payment: Payment) => {
       // Filtro de búsqueda por texto
       if (searchQuery.trim()) {
         const lowerQuery = searchQuery.toLowerCase();
@@ -124,8 +113,8 @@ const PaymentPage = () => {
           payment.tenantFullName?.toLowerCase().includes(lowerQuery) ||
           payment.paymentMethod?.toLowerCase().includes(lowerQuery) ||
           payment.notes?.toLowerCase().includes(lowerQuery) ||
-          new Date(payment.paymentDate).toLocaleDateString('es-ES').toLowerCase().includes(lowerQuery) ||
-          new Date(payment.dueDate).toLocaleDateString('es-ES').toLowerCase().includes(lowerQuery);
+          formatDateUTC(payment.paymentDate).toLowerCase().includes(lowerQuery) ||
+          formatDateUTC(payment.dueDate).toLowerCase().includes(lowerQuery);
 
         if (!matchesQuery) return false;
       }
@@ -203,120 +192,6 @@ const PaymentPage = () => {
   const handleClearFilters = () => {
     setFilterValues({ paymentMethod: '', status: '' });
   };
-
-  const validateAmount = (value: string): string => {
-    const num = parseFloat(value);
-    if (isNaN(num)) {
-      return 'El monto debe ser un número válido';
-    }
-    if (num < 0) {
-      return 'El monto no puede ser negativo';
-    }
-    if (num === 0) {
-      return 'El monto debe ser mayor a cero';
-    }
-    return '';
-  };
-
-  const handleAmountChange = (value: string) => {
-    setCreateForm({ ...createForm, amount: value });
-    const error = validateAmount(value);
-    setAmountError(error);
-  };
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setReceiptImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setReceiptImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setReceiptImageFile(null);
-    setReceiptImagePreview(null);
-  };
-
-  const handleCreatePayment = async () => {
-    const amountError = validateAmount(createForm.amount);
-    if (amountError) {
-      setAmountError(amountError);
-      return;
-    }
-
-    if (!selectedProperty) {
-      setActionError('Debe seleccionar una propiedad');
-      return;
-    }
-
-    try {
-      setActionError('');
-      const tenantId = selectedProperty.tenantId;
-      if (!tenantId) {
-        setActionError('La propiedad seleccionada no tiene un inquilino asignado');
-        return;
-      }
-
-      let receiptImageUrl: string | undefined = undefined;
-      let receiptImagePublicId: string | undefined = undefined;
-
-      if (receiptImageFile) {
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(receiptImageFile);
-        });
-
-        const uploadResult = await uploadImage(base64);
-        receiptImageUrl = uploadResult.url;
-        receiptImagePublicId = uploadResult.publicId;
-      }
-
-      // Intenta encontrar el contrato activo para esta propiedad para vincular el pago automáticamente
-      const activeContract = contracts?.find(c =>
-        c.propertyId === selectedProperty.id &&
-        c.tenantId === tenantId &&
-        c.status === 'ACTIVE'
-      );
-
-      const paymentData: CreatePayment = {
-        tenantId,
-        propertyId: selectedProperty.id,
-        contractId: activeContract?.id || null,
-        monthNumber: new Date(createForm.dueDate).getUTCMonth() + 1, // Usar el mes del vencimiento
-        amount: parseFloat(createForm.amount),
-        dueDate: createForm.dueDate,
-        paymentDate: createForm.paymentDate,
-        paymentMethod: createForm.paymentMethod,
-        notes: createForm.notes || undefined,
-        receiptImageUrl,
-        receiptImagePublicId
-      };
-
-      await createPayment(paymentData);
-
-      setCreateDialogOpen(false);
-      setSelectedProperty(null);
-      setAmountError('');
-      setReceiptImageFile(null);
-      setReceiptImagePreview(null);
-      setCreateForm({
-        amount: '',
-        paymentDate: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        paymentMethod: 'YAPE',
-        notes: '',
-      });
-    } catch (err: any) {
-      setActionError(err.message || 'Failed to create payment');
-    }
-  };
-
 
   const handleEdit = (payment: Payment) => {
     setEditingPayment(payment);
@@ -481,170 +356,23 @@ const PaymentPage = () => {
         </Fab>
       )}
 
-      {/* Create Payment Dialog */}
-      <Dialog
-        open={createDialogOpen}
+      {/* Unified Create/Edit Payment Modal */}
+      <EditPaymentModal
+        open={createDialogOpen || editDialogOpen}
+        payment={editingPayment}
+        initialData={createDialogOpen ? {
+          paymentDate: createForm.paymentDate,
+          dueDate: createForm.dueDate,
+          paymentMethod: createForm.paymentMethod as any,
+          notes: createForm.notes,
+        } : undefined}
         onClose={() => {
           setCreateDialogOpen(false);
-          setReceiptImageFile(null);
-          setReceiptImagePreview(null);
+          setEditDialogOpen(false);
+          setEditingPayment(null);
         }}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Agregar Pago</DialogTitle>
-        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
-          <Box component="form" sx={{ mt: 2 }}>
-            <Autocomplete
-              fullWidth
-              options={properties || []}
-              getOptionLabel={(property) =>
-                `Local N° ${property.localNumber} - ${property.ubicacion === 'BOULEVAR' ? 'Boulevard' : property.ubicacion === 'SAN_MARTIN' ? 'San Martin' : property.ubicacion}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
-              }
-              value={selectedProperty}
-              onChange={(_, newValue) => {
-                setSelectedProperty(newValue);
-              }}
-              loading={false}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Seleccionar Local"
-                  required
-                  sx={{ mb: 2 }}
-                  helperText="Busque por nombre de propiedad, dirección o nombre del inquilino"
-                />
-              )}
-              noOptionsText="No se encontraron propiedades"
-              loadingText="Cargando propiedades..."
-            />
-            <TextField
-              fullWidth
-              label="Monto (S/)"
-              type="number"
-              value={createForm.amount}
-              onChange={(e) => handleAmountChange(e.target.value)}
-              error={!!amountError}
-              helperText={amountError}
-              required
-              sx={{ mb: 2 }}
-              inputProps={{ min: 0, step: 0.01 }}
-            />
-            <TextField
-              fullWidth
-              label="Fecha de Pago"
-              type="date"
-              value={createForm.paymentDate}
-              onChange={(e) => setCreateForm({ ...createForm, paymentDate: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              fullWidth
-              label="Fecha de Vencimiento"
-              type="date"
-              value={createForm.dueDate}
-              onChange={(e) => setCreateForm({ ...createForm, dueDate: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              select
-              fullWidth
-              label="Medio de Pago"
-              value={createForm.paymentMethod}
-              onChange={(e) => setCreateForm({ ...createForm, paymentMethod: e.target.value })}
-              required
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="YAPE">Yape</MenuItem>
-              <MenuItem value="DEPOSITO">Depósito</MenuItem>
-              <MenuItem value="TRANSFERENCIA_VIRTUAL">Transferencia Virtual</MenuItem>
-            </TextField>
-            <TextField
-              fullWidth
-              label="Notas"
-              value={createForm.notes}
-              onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
-              multiline
-              rows={2}
-              sx={{ mb: 2 }}
-            />
-
-            {/* Upload de Comprobante */}
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Comprobante de Pago
-              </Typography>
-              <input
-                accept="image/*"
-                style={{ display: 'none' }}
-                id="receipt-image-upload"
-                type="file"
-                onChange={handleImageChange}
-                key={receiptImageFile ? receiptImageFile.name : 'file-input'}
-              />
-              <label htmlFor="receipt-image-upload">
-                <Button
-                  variant="outlined"
-                  component="span"
-                  startIcon={<CloudUploadIcon />}
-                  fullWidth
-                  sx={{ mb: 2 }}
-                >
-                  {receiptImageFile ? receiptImageFile.name : 'Seleccionar Imagen del Comprobante'}
-                </Button>
-              </label>
-
-              {/* Preview de la imagen */}
-              {receiptImagePreview && (
-                <Box sx={{ mt: 2, position: 'relative' }}>
-                  <Box
-                    component="img"
-                    src={receiptImagePreview}
-                    alt="Preview del comprobante"
-                    sx={{
-                      maxWidth: '100%',
-                      maxHeight: '200px',
-                      objectFit: 'contain',
-                      borderRadius: 1,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      p: 1,
-                      bgcolor: 'grey.50',
-                    }}
-                  />
-                  <IconButton
-                    size="small"
-                    onClick={handleRemoveImage}
-                    sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      bgcolor: 'background.paper',
-                      '&:hover': { bgcolor: 'error.light', color: 'error.contrastText' }
-                    }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              )}
-            </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)} disabled={loading || isUploading}>Cancelar</Button>
-          <Button
-            onClick={handleCreatePayment}
-            variant="contained"
-            disabled={!selectedProperty || !!amountError || !createForm.amount || loading || isUploading}
-          >
-            {isUploading ? 'Subiendo...' : 'Crear Pago'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onSuccess={handleEditSuccess}
+      />
 
       {/* Create Payment FAB accessible only to ADMIN */}
       <RoleGuard allowedRoles={['ADMIN']}>
@@ -668,16 +396,6 @@ const PaymentPage = () => {
         </Fab>
       </RoleGuard>
 
-      {/* Edit Payment Modal */}
-      <EditPaymentModal
-        open={editDialogOpen}
-        payment={editingPayment}
-        onClose={() => {
-          setEditDialogOpen(false);
-          setEditingPayment(null);
-        }}
-        onSuccess={handleEditSuccess}
-      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

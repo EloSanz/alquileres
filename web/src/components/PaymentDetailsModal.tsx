@@ -11,6 +11,7 @@ import {
   Paper,
 } from '@mui/material';
 import type { Payment } from '../../../shared/types/Payment';
+import { formatDateLongUTC } from '../utils/dateUtils';
 
 export interface PaymentDetailsModalProps {
   open: boolean;
@@ -31,24 +32,7 @@ export default function PaymentDetailsModal({
   };
 
   const formatDateLong = (dateInput: string | Date | null | undefined): string => {
-    if (!dateInput) return '-';
-    const date = dateInput instanceof Date ? dateInput : (() => {
-      const str = String(dateInput);
-      const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (match) {
-        const [, year, month, day] = match;
-        return new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
-      }
-      return new Date(str);
-    })();
-
-    if (isNaN(date.getTime())) return String(dateInput);
-
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return formatDateLongUTC(dateInput);
   };
 
   const getPaymentMethodLabel = (method: string) => {

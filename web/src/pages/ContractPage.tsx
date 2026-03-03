@@ -33,6 +33,7 @@ import ContractDetailsModal from '../components/ContractDetailsModal';
 import ContractEditorModal from '../components/contract-editor/ContractEditorModal';
 import CreateContractModal from '../components/CreateContractModal';
 import RoleGuard from '../components/RoleGuard';
+import { formatDateUTC } from '../utils/dateUtils';
 
 // Función para extraer el año de una fecha (Date o string)
 const getYearFromDate = (date: Date | string | null | undefined): number | null => {
@@ -44,14 +45,7 @@ const getYearFromDate = (date: Date | string | null | undefined): number | null 
 
 // Función para formatear fecha a DD/MM/YYYY
 const formatDateDisplay = (date: Date | string | null | undefined): string => {
-  if (!date) return '-';
-  const dateObj = date instanceof Date ? date : new Date(date);
-  if (isNaN(dateObj.getTime())) return String(date);
-  return dateObj.toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
+  return formatDateUTC(date);
 };
 
 const ContractPage = () => {

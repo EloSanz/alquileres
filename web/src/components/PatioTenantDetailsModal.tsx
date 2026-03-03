@@ -27,6 +27,7 @@ import PatioPaymentEditModal from './PatioPaymentEditModal';
 import PentaMontReceiptModal from './PentaMontReceiptModal';
 import { useAuth } from '../contexts/AuthContext';
 import { generatePatioReceiptPDFDataUrl } from '../utils/receiptGenerator';
+import { formatDateUTC } from '../utils/dateUtils';
 
 interface PatioTenantDetailsModalProps {
     open: boolean;
@@ -235,7 +236,7 @@ export default function PatioTenantDetailsModal({
                                                         />
                                                         {payment.fechaPago && (
                                                             <Typography variant="caption" display="block" color="textSecondary" sx={{ mt: 0.5 }}>
-                                                                Pagado el: {new Date(payment.fechaPago).toLocaleDateString()}
+                                                                Pagado el: {formatDateUTC(payment.fechaPago)}
                                                             </Typography>
                                                         )}
                                                     </>

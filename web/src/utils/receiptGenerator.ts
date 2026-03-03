@@ -11,19 +11,6 @@ function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-/**
- * Formatea una fecha y hora en formato legible
- */
-function formatDateTime(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleString('es-PE', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 /**
  * Formatea una fecha en formato legible
@@ -34,6 +21,7 @@ function formatDate(dateString: string): string {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'UTC'
   });
 }
 
@@ -169,7 +157,8 @@ export async function generateReceiptPDF(payment: Payment): Promise<Blob> {
     return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
   };
 
-  addInfoRow('ID de Pago:', `#${payment.id}`);
+  const receiptId = payment.id && isNaN(Number(payment.id)) ? payment.id : crypto.randomUUID().split('-')[0].toUpperCase();
+  addInfoRow('ID de Recibo:', `#${receiptId}`);
   addInfoRow('Inquilino:', payment.tenantFullName || 'N/A');
   addInfoRow('Monto:', formatCurrency(payment.amount));
   addInfoRow('Método de Pago:', getPaymentMethodLabel(payment.paymentMethod));
@@ -285,7 +274,7 @@ export async function generatePatioReceiptPDF(payment: any, tenantName: string):
   doc.setTextColor(primaryColor);
   doc.setFontSize(24);
   doc.setFont('helvetica', 'bold');
-  const titleText = 'Recibo Patio Amadeo';
+  const titleText = 'Recibo Penta Mont';
   doc.text(titleText, pageWidth / 2, yPosition, { align: 'center' });
   yPosition += 15;
 
@@ -339,7 +328,8 @@ export async function generatePatioReceiptPDF(payment: any, tenantName: string):
     return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
   };
 
-  addInfoRow('ID de Pago:', `#P${payment.id}`);
+  const receiptId = payment.id && isNaN(Number(payment.id)) ? payment.id : crypto.randomUUID().split('-')[0].toUpperCase();
+  addInfoRow('ID de Recibo:', `#P${receiptId}`);
   addInfoRow('Inquilino:', tenantName);
   addInfoRow('Monto:', formatCurrency(payment.monto));
   addInfoRow('Método de Pago:', getPaymentMethodLabel(payment.metodoPago || 'DEPOSITO'));
@@ -361,7 +351,7 @@ export async function generatePatioReceiptPDF(payment: any, tenantName: string):
   yPosition += 8;
 
   addText(
-    'Este es un recibo generado automáticamente por el sistema Patio Amadeo',
+    'Este es un recibo generado automáticamente por el sistema Penta Mont',
     pageWidth / 2,
     yPosition,
     {

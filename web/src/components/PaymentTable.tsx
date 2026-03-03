@@ -15,7 +15,7 @@ import {
 import RoleGuard from './RoleGuard';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { Payment } from '../../../shared/types/Payment';
-import { formatDateLocal } from '../utils/dateUtils';
+import { formatDateUTC } from '../utils/dateUtils';
 
 export interface PaymentTableProps {
   payments: Payment[];
@@ -67,8 +67,8 @@ export default function PaymentTable({
             >
               <TableCell>{payment.tenantFullName || `ID: ${payment.tenantId}`}</TableCell>
               <TableCell>{formatCurrency(payment.amount)}</TableCell>
-              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatDateLocal(payment.paymentDate)}</TableCell>
-              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatDateLocal(payment.dueDate)}</TableCell>
+              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatDateUTC(payment.paymentDate)}</TableCell>
+              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatDateUTC(payment.dueDate)}</TableCell>
               <TableCell onClick={(e) => e.stopPropagation()}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography variant="body2">

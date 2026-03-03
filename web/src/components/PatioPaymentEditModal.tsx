@@ -7,21 +7,20 @@ import {
     Button,
     TextField,
     MenuItem,
-    Box,
-    Typography,
     Alert,
-    Paper,
     Grid,
     Stack,
-    CircularProgress,
+    Chip,
 } from '@mui/material';
-import { CloudUpload as CloudUploadIcon, Receipt as ReceiptIcon } from '@mui/icons-material';
+import { Receipt as ReceiptIcon } from '@mui/icons-material';
 import { usePatioPayments } from '../hooks/usePatioPayments';
 import { usePatioTenants } from '../hooks/usePatioTenants';
 import { PatioPayment, CreatePatioPayment, UpdatePatioPayment } from '../../../shared/types/PatioPayment';
 import { useAuth } from '../contexts/AuthContext';
 import { generatePatioReceiptPDFDataUrl } from '../utils/receiptGenerator';
 import PentaMontReceiptModal from './PentaMontReceiptModal';
+import { getMonthNameUTC, formatDateISO } from '../utils/dateUtils';
+import { PaymentReceiptUpload } from './PaymentReceiptUpload';
 
 export interface PatioPaymentEditModalProps {
     open: boolean;
@@ -56,10 +55,12 @@ export default function PatioPaymentEditModal({
         notas: '',
         patioTenantId: null as number | null,
     });
-
     const [receiptImagePreview, setReceiptImagePreview] = useState<string | null>(null);
     const [uploadedImageData, setUploadedImageData] = useState<{ url: string; publicId: string } | null>(null);
     const [error, setError] = useState('');
+
+    const [initialMonth, setInitialMonth] = useState<number | null>(null);
+    const [showMonthWarning, setShowMonthWarning] = useState(false);
 
     const isEditMode = !!payment;
     const isLoading = isUpdating || isCreating || isUploading;
@@ -67,59 +68,66 @@ export default function PatioPaymentEditModal({
     useEffect(() => {
         if (open) {
             if (payment) {
+                const dateStr = formatDateISO(payment.fechaVencimiento);
+                const month = new Date(payment.fechaVencimiento).getUTCMonth() + 1;
                 setForm({
                     monto: payment.monto.toString(),
-                    fechaPago: payment.fechaPago ? new Date(payment.fechaPago).toISOString().split('T')[0] : '',
-                    fechaVencimiento: new Date(payment.fechaVencimiento).toISOString().split('T')[0],
+                    fechaPago: payment.fechaPago ? formatDateISO(payment.fechaPago) : '',
+                    fechaVencimiento: dateStr,
                     metodoPago: payment.metodoPago,
                     estado: payment.estado,
                     notas: payment.notas || '',
                     patioTenantId: payment.patioTenantId,
                 });
+                setInitialMonth(month);
             } else if (initialData) {
+                const defaultDueDate = (initialData.fechaVencimiento as string) || formatDateISO(new Date());
+                const defaultMonth = new Date(defaultDueDate).getUTCMonth() + 1;
                 setForm({
                     monto: initialData.monto?.toString() || '',
-                    fechaPago: initialData.fechaPago || new Date().toISOString().split('T')[0],
-                    fechaVencimiento: initialData.fechaVencimiento || '',
+                    fechaPago: initialData.fechaPago || formatDateISO(new Date()),
+                    fechaVencimiento: defaultDueDate,
                     metodoPago: initialData.metodoPago || 'YAPE',
                     estado: initialData.estado || 'PAGADO',
                     notas: initialData.notas || '',
                     patioTenantId: initialData.patioTenantId ?? null,
                 });
+                setInitialMonth(defaultMonth);
             }
             setReceiptImagePreview(null);
             setUploadedImageData(null);
             setError('');
+            setShowMonthWarning(false);
         }
     }, [open, payment, initialData]);
 
-    const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            setError('');
-
-            // Show preview immediately
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setReceiptImagePreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-
-            // Upload immediately
-            try {
-                const base64 = await new Promise<string>((resolve, reject) => {
-                    const r = new FileReader();
-                    r.onloadend = () => resolve(r.result as string);
-                    r.onerror = reject;
-                    r.readAsDataURL(file);
-                });
-
-                const result = await uploadImage(base64);
-                setUploadedImageData(result);
-            } catch (err: any) {
-                setError(err.message || 'Error al subir la imagen');
-                setReceiptImagePreview(null);
+    // Sync guardrails
+    useEffect(() => {
+        if (form.fechaVencimiento) {
+            const selectedMonth = new Date(form.fechaVencimiento).getUTCMonth() + 1;
+            if (initialMonth !== null && selectedMonth !== initialMonth) {
+                setShowMonthWarning(true);
+            } else {
+                setShowMonthWarning(false);
             }
+        }
+    }, [form.fechaVencimiento, initialMonth]);
+
+    const handleImageChange = async (file: File) => {
+        try {
+            setError('');
+            const base64 = await new Promise<string>((resolve, reject) => {
+                const r = new FileReader();
+                r.onloadend = () => resolve(r.result as string);
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
+
+            const result = await uploadImage(base64);
+            setUploadedImageData(result);
+            setReceiptImagePreview(result.url);
+        } catch (err: any) {
+            setError(err.message || 'Error al subir la imagen');
         }
     };
 
@@ -211,13 +219,17 @@ export default function PatioPaymentEditModal({
         }
     };
 
-    const displayImage = receiptImagePreview || payment?.receiptImageUrl || null;
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
             <DialogTitle>{isEditMode ? 'Editar Pago' : 'Crear Pago'}</DialogTitle>
             <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+                {showMonthWarning && (
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                        Atención: Estás registrando un pago para <strong>{getMonthNameUTC(form.fechaVencimiento)}</strong>, pero la vista actual corresponde a un periodo diferente.
+                    </Alert>
+                )}
 
                 <Grid container spacing={3}>
                     <Grid item xs={12} md={5}>
@@ -240,16 +252,26 @@ export default function PatioPaymentEditModal({
                                 InputLabelProps={{ shrink: true }}
                                 disabled={!isAdmin || isLoading}
                             />
-                            <TextField
-                                fullWidth
-                                label="Mes Correspondiente"
-                                type="date"
-                                value={form.fechaVencimiento}
-                                onChange={(e) => setForm({ ...form, fechaVencimiento: e.target.value })}
-                                required
-                                InputLabelProps={{ shrink: true }}
-                                disabled={!isAdmin || isLoading}
-                            />
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <TextField
+                                    fullWidth
+                                    label="Mes Correspondiente"
+                                    type="date"
+                                    value={form.fechaVencimiento}
+                                    onChange={(e) => setForm({ ...form, fechaVencimiento: e.target.value })}
+                                    required
+                                    InputLabelProps={{ shrink: true }}
+                                    disabled={!isAdmin || isLoading}
+                                />
+                                {form.fechaVencimiento && (
+                                    <Chip
+                                        label={getMonthNameUTC(form.fechaVencimiento)}
+                                        color="primary"
+                                        variant="outlined"
+                                        sx={{ fontWeight: 'bold', height: 56, px: 2 }}
+                                    />
+                                )}
+                            </Stack>
                             <TextField
                                 select
                                 fullWidth
@@ -287,99 +309,38 @@ export default function PatioPaymentEditModal({
                     </Grid>
 
                     <Grid item xs={12} md={7}>
-                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-                            Comprobante de Pago
-                        </Typography>
-                        <Paper
-                            variant="outlined"
-                            sx={{
-                                p: 2,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                bgcolor: 'grey.50',
-                                borderRadius: 2,
-                                minHeight: '400px',
-                                position: 'relative',
-                            }}
-                        >
-                            <Box sx={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
-                                <Box
-                                    component="img"
-                                    src={displayImage || `${import.meta.env.BASE_URL || '/'}comprobante.png`.replace(/\/+/g, '/')}
-                                    alt="Comprobante"
-                                    sx={{
-                                        maxWidth: '100%',
-                                        maxHeight: '500px',
-                                        objectFit: 'contain',
-                                        borderRadius: 1,
-                                        mb: 2,
-                                        opacity: isUploading ? 0.5 : (displayImage ? 1 : 0.4),
-                                        transition: 'opacity 0.3s',
-                                    }}
-                                />
-                                {isUploading && (
-                                    <Box
-                                        sx={{
-                                            position: 'absolute',
-                                            top: '50%',
-                                            left: '50%',
-                                            transform: 'translate(-50%, -50%)',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            gap: 1,
-                                            zIndex: 2,
-                                        }}
-                                    >
-                                        <CircularProgress size={40} />
-                                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                                            Subiendo imagen...
-                                        </Typography>
-                                    </Box>
-                                )}
-                            </Box>
-                            {isAdmin && (
-                                <Box>
-                                    <input
-                                        accept="image/*"
-                                        style={{ display: 'none' }}
-                                        id="patio-receipt-upload"
-                                        type="file"
-                                        onChange={handleImageChange}
-                                    />
-                                    <label htmlFor="patio-receipt-upload">
-                                        <Button
-                                            variant="contained"
-                                            color="secondary"
-                                            component="span"
-                                            startIcon={<CloudUploadIcon />}
-                                            disabled={isLoading}
-                                        >
-                                            {displayImage ? 'Cambiar Imagen' : 'Subir Imagen'}
-                                        </Button>
-                                    </label>
-                                </Box>
-                            )}
-                        </Paper>
+                        <PaymentReceiptUpload
+                            imageUrl={receiptImagePreview || payment?.receiptImageUrl || null}
+                            isUploading={isUploading}
+                            isAdmin={isAdmin}
+                            onImageSelect={handleImageChange}
+                        />
                     </Grid>
                 </Grid>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} disabled={isLoading || isGeneratingReceipt}>Cancelar</Button>
+            <DialogActions sx={{ p: 2, gap: 1 }}>
+                <Button onClick={onClose} disabled={isLoading || isGeneratingReceipt}>
+                    Cancelar
+                </Button>
                 {isAdmin && (
                     <>
                         <Button
                             onClick={handleGenerateReceipt}
                             color="info"
+                            variant="outlined"
                             startIcon={<ReceiptIcon />}
                             disabled={isLoading || isGeneratingReceipt || !form.patioTenantId}
+                            sx={{ borderRadius: 2 }}
                         >
-                            {isGeneratingReceipt ? 'Generando...' : 'Generar Recibo'}
+                            {isGeneratingReceipt ? 'Generando...' : 'GENERAR RECIBO'}
                         </Button>
-                        <Button onClick={handleSave} variant="contained" disabled={isLoading || isGeneratingReceipt}>
-                            {isLoading ? 'Guardando...' : (isEditMode ? 'Actualizar' : 'Crear Pago')}
+                        <Button
+                            onClick={handleSave}
+                            variant="contained"
+                            disabled={isLoading || isGeneratingReceipt}
+                            sx={{ borderRadius: 2, px: 4 }}
+                        >
+                            {isLoading ? 'Guardando...' : (isEditMode ? 'ACTUALIZAR' : 'CREAR PAGO')}
                         </Button>
                     </>
                 )}

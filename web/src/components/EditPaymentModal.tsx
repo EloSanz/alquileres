@@ -10,15 +10,19 @@ import {
   Box,
   Typography,
   Alert,
-  Paper,
   Grid,
+  Autocomplete,
+  Chip,
 } from '@mui/material';
-import { CloudUpload as CloudUploadIcon, Receipt as ReceiptIcon } from '@mui/icons-material';
+import { Receipt as ReceiptIcon } from '@mui/icons-material';
 import { usePayments } from '../hooks/usePayments';
-import { Payment, type UpdatePayment, type CreatePayment, PaymentStatus, UpdatePaymentSchema, CreatePaymentSchema } from '../../../shared/types/Payment';
+import { Payment, type CreatePayment, PaymentStatus, UpdatePaymentSchema, CreatePaymentSchema } from '../../../shared/types/Payment';
+import { useProperties } from '../hooks/useProperties';
 import { generateReceiptPDFDataUrl } from '../utils/receiptGenerator';
 import PentaMontReceiptModal from './PentaMontReceiptModal';
 import { useAuth } from '../contexts/AuthContext';
+import { getMonthNameUTC, formatDateISO } from '../utils/dateUtils';
+import { PaymentReceiptUpload } from './PaymentReceiptUpload';
 
 export interface EditPaymentModalProps {
   open: boolean;
@@ -38,161 +42,144 @@ export default function EditPaymentModal({
   const { hasRole } = useAuth();
   const isAdmin = hasRole(['ADMIN']);
   const { updatePayment, createPayment, isUpdating, isCreating, uploadImage, isUploading } = usePayments();
+  const { properties } = useProperties();
+
   const [editForm, setEditForm] = useState({
     amount: '',
     paymentDate: '',
     dueDate: '',
-    paymentMethod: 'YAPE',
+    paymentMethod: 'YAPE' as any,
     status: PaymentStatus.FUTURO,
     notes: '',
     contractId: null as number | null,
     monthNumber: null as number | null,
     tenantId: null as number | null,
     propertyId: null as number | null,
+    receiptImageUrl: null as string | null,
+    receiptImagePublicId: null as string | null,
   });
-  const [editReceiptImageFile, setEditReceiptImageFile] = useState<File | null>(null);
-  const [editReceiptImagePreview, setEditReceiptImagePreview] = useState<string | null>(null);
-  const [error, setError] = useState('');
 
+  const [error, setError] = useState<string | null>(null);
   const [generatingReceipt, setGeneratingReceipt] = useState(false);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [receiptPdfUrl, setReceiptPdfUrl] = useState<string | null>(null);
 
+  const [initialMonth, setInitialMonth] = useState<number | null>(null);
+  const [showMonthWarning, setShowMonthWarning] = useState(false);
+
   const isEditMode = !!payment;
   const isLoading = isUpdating || isCreating || isUploading || generatingReceipt;
 
-  // Cargar datos del pago cuando se abre el modal
   useEffect(() => {
     if (open) {
       if (payment) {
         // Edit Mode
+        const dateStr = formatDateISO(payment.dueDate);
+        const month = new Date(payment.dueDate).getUTCMonth() + 1;
         setEditForm({
           amount: payment.amount.toString(),
-          paymentDate: new Date(payment.paymentDate).toISOString().split('T')[0],
-          dueDate: new Date(payment.dueDate).toISOString().split('T')[0],
+          paymentDate: formatDateISO(payment.paymentDate),
+          dueDate: dateStr,
           paymentMethod: payment.paymentMethod || 'YAPE',
           status: payment.status || PaymentStatus.FUTURO,
           notes: payment.notes || '',
           contractId: payment.contractId,
-          monthNumber: payment.monthNumber,
+          monthNumber: payment.monthNumber || month,
           tenantId: payment.tenantId,
           propertyId: payment.propertyId,
+          receiptImageUrl: payment.receiptImageUrl || null,
+          receiptImagePublicId: payment.receiptImagePublicId || null,
         });
-        setEditReceiptImagePreview(null);
-      } else if (initialData) {
-        // Create Mode with initial data
-        setEditForm({
-          amount: initialData.amount?.toString() || '',
-          paymentDate: initialData.paymentDate || new Date().toISOString().split('T')[0],
-          dueDate: initialData.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : '',
-          paymentMethod: initialData.paymentMethod || 'YAPE',
-          status: initialData.status || PaymentStatus.FUTURO,
-          notes: initialData.notes || '',
-          contractId: initialData.contractId ?? null,
-          monthNumber: initialData.monthNumber ?? null,
-          tenantId: initialData.tenantId ?? null,
-          propertyId: initialData.propertyId ?? null,
-        });
-        setEditReceiptImagePreview(null);
+        setInitialMonth(payment.monthNumber || month);
       } else {
-        // Default Create Mode
+        // Create Mode
+        const defaultDueDate = (initialData?.dueDate as any) || formatDateISO(new Date());
+        const defaultMonth = new Date(defaultDueDate).getUTCMonth() + 1;
+
         setEditForm({
-          amount: '',
-          paymentDate: new Date().toISOString().split('T')[0],
-          dueDate: '',
-          paymentMethod: 'YAPE',
+          amount: initialData?.amount?.toString() || '',
+          paymentDate: (initialData?.paymentDate as any) || formatDateISO(new Date()),
+          dueDate: defaultDueDate,
+          paymentMethod: (initialData?.paymentMethod as any) || 'YAPE',
           status: PaymentStatus.FUTURO,
-          notes: '',
+          notes: initialData?.notes || '',
           contractId: null,
-          monthNumber: null,
-          tenantId: null,
-          propertyId: null,
+          monthNumber: defaultMonth,
+          tenantId: initialData?.tenantId || null,
+          propertyId: initialData?.propertyId || null,
+          receiptImageUrl: null,
+          receiptImagePublicId: null,
         });
-        setEditReceiptImagePreview(null);
+        setInitialMonth(defaultMonth);
       }
-      setEditReceiptImageFile(null);
-      setError('');
+      setError(null);
+      setShowMonthWarning(false);
     }
   }, [open, payment, initialData]);
 
-  const handleEditImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setEditReceiptImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditReceiptImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  // Sync monthNumber and Check Guardrails
+  useEffect(() => {
+    if (editForm.dueDate) {
+      const selectedMonth = new Date(editForm.dueDate).getUTCMonth() + 1;
+      setEditForm(prev => ({ ...prev, monthNumber: selectedMonth }));
+
+      if (initialMonth !== null && selectedMonth !== initialMonth) {
+        setShowMonthWarning(true);
+      } else {
+        setShowMonthWarning(false);
+      }
+    }
+  }, [editForm.dueDate, initialMonth]);
+
+  const handleImageSelect = async (file: File) => {
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const result = await uploadImage(base64);
+      setEditForm(prev => ({
+        ...prev,
+        receiptImageUrl: result.url,
+        receiptImagePublicId: result.publicId
+      }));
+    } catch (err: any) {
+      setError('Error al subir la imagen: ' + err.message);
     }
   };
 
   const handleSave = async () => {
-    setError('');
-
     try {
-      let receiptImageUrl: string | null | undefined = undefined;
-      let receiptImagePublicId: string | null | undefined = undefined;
-
-      if (editReceiptImageFile) {
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(editReceiptImageFile!);
-        });
-
-        const uploadResult = await uploadImage(base64);
-        receiptImageUrl = uploadResult.url;
-        receiptImagePublicId = uploadResult.publicId;
-      }
+      setError(null);
+      const data = {
+        amount: parseFloat(editForm.amount),
+        paymentDate: editForm.paymentDate,
+        dueDate: editForm.dueDate,
+        paymentMethod: editForm.paymentMethod,
+        status: editForm.status,
+        notes: editForm.notes,
+        contractId: editForm.contractId,
+        monthNumber: editForm.monthNumber,
+        tenantId: editForm.tenantId,
+        propertyId: editForm.propertyId,
+        receiptImageUrl: editForm.receiptImageUrl,
+        receiptImagePublicId: editForm.receiptImagePublicId,
+      };
 
       if (isEditMode && payment) {
-        const paymentData: UpdatePayment = {
-          amount: parseFloat(editForm.amount),
-          paymentDate: editForm.paymentDate,
-          dueDate: editForm.dueDate,
-          paymentMethod: editForm.paymentMethod,
-          status: editForm.status,
-          notes: editForm.notes || undefined,
-          receiptImageUrl,
-          receiptImagePublicId
-        };
-
-        UpdatePaymentSchema.parse(paymentData);
-        await updatePayment({ id: payment.id, data: paymentData });
+        const validated = UpdatePaymentSchema.parse(data);
+        await updatePayment({ id: payment.id, data: validated });
       } else {
-        const finalContractId = editForm.contractId ?? initialData?.contractId ?? null;
-        const finalMonthNumber = editForm.monthNumber ?? initialData?.monthNumber ?? null;
-        const finalPropertyId = editForm.propertyId ?? initialData?.propertyId ?? null;
-        const finalTenantId = editForm.tenantId ?? initialData?.tenantId;
-
-        if (!finalTenantId) {
-          throw new Error("Faltan datos requeridos (Inquilino) para crear el pago.");
-        }
-
-        const paymentData: CreatePayment = {
-          tenantId: finalTenantId,
-          propertyId: finalPropertyId,
-          contractId: finalContractId,
-          monthNumber: finalMonthNumber,
-          amount: parseFloat(editForm.amount),
-          paymentDate: editForm.paymentDate,
-          dueDate: editForm.dueDate,
-          paymentMethod: editForm.paymentMethod,
-          status: editForm.status,
-          notes: editForm.notes || undefined,
-          receiptImageUrl,
-          receiptImagePublicId
-        };
-
-        CreatePaymentSchema.parse(paymentData);
-        await createPayment(paymentData);
+        const validated = CreatePaymentSchema.parse(data);
+        await createPayment(validated);
       }
-
-      if (onSuccess) onSuccess();
+      onSuccess?.();
       onClose();
     } catch (err: any) {
+      console.error('Validation error:', err);
       if (err.issues) {
         setError(err.issues[0].message);
       } else {
@@ -201,29 +188,27 @@ export default function EditPaymentModal({
     }
   };
 
-  const handleClose = () => {
-    if (!isLoading) {
-      setEditReceiptImageFile(null);
-      setEditReceiptImagePreview(null);
-      onClose();
-    }
-  };
-
   const handleGenerateReceipt = async () => {
-    if (!payment) return;
+    if (!editForm.propertyId || !editForm.amount) return;
+
     setGeneratingReceipt(true);
-    setError('');
     try {
-      // Usar la nota del formulario por si el usuario escribió algo sin guardar
-      const paymentWithCurrentNotes = {
-        ...payment,
-        notes: editForm.notes?.trim() || payment.notes,
+      const property = properties?.find(p => p.id === editForm.propertyId);
+      const tenantName = property?.tenant ? `${property.tenant.firstName} ${property.tenant.lastName}` : 'Cliente';
+
+      const mockPayment: any = {
+        ...editForm,
+        id: payment?.id || 'temp',
+        amount: parseFloat(editForm.amount),
+        property: property,
+        tenantFullName: tenantName
       };
-      const receiptPdf = await generateReceiptPDFDataUrl(paymentWithCurrentNotes);
-      setReceiptPdfUrl(receiptPdf);
+
+      const dataUrl = await generateReceiptPDFDataUrl(mockPayment);
+      setReceiptPdfUrl(dataUrl);
       setReceiptModalOpen(true);
-    } catch (receiptError) {
-      setError('Error al generar el recibo. Por favor, intente nuevamente.');
+    } catch (err: any) {
+      setError('Error al generar recibo: ' + err.message);
     } finally {
       setGeneratingReceipt(false);
     }
@@ -234,189 +219,176 @@ export default function EditPaymentModal({
     setReceiptPdfUrl(null);
   };
 
-  // Si hay preview local lo mostramos; si el backend ya envió una URL real la usamos;
-  // si es null, el render mostrará el mock comprobante.png
-  const displayImage = editReceiptImagePreview || payment?.receiptImageUrl || null;
-
   return (
-    <>
-      <Dialog open={open} onClose={handleClose} maxWidth="xl" fullWidth>
-        <DialogTitle>{isAdmin ? (isEditMode ? 'Editar Pago' : 'Crear Pago') : 'Detalle del Pago'}</DialogTitle>
-        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
+          {isEditMode ? 'Editar Pago' : 'Crear Pago'}
+        </Typography>
+        {editForm.dueDate && (
+          <Chip
+            label={`Mes Correspondiente: ${getMonthNameUTC(editForm.dueDate)}`}
+            color="primary"
+            variant="outlined"
+            size="small"
+            sx={{ fontWeight: 600 }}
+          />
+        )}
+      </DialogTitle>
+      <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {showMonthWarning && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Atención: La fecha seleccionada corresponde a <strong>{getMonthNameUTC(editForm.dueDate)}</strong>,
+            pero la vista actual corresponde a un periodo diferente.
+          </Alert>
+        )}
 
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={5} lg={4}>
-              <Box component="form">
-                <TextField
+        <Grid container spacing={3}>
+          {/* Form Side - 5 columns */}
+          <Grid item xs={12} md={5}>
+            <Box component="form" sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {!isEditMode && !initialData?.propertyId && (
+                <Autocomplete
                   fullWidth
-                  label="Monto (S/)"
-                  type="number"
-                  value={editForm.amount}
-                  onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
-                  required
-                  sx={{ mb: 2 }}
-                  inputProps={{ min: 0, step: 0.01 }}
-                  disabled={!isAdmin}
-                />
-                <TextField
-                  fullWidth
-                  label="Fecha de Pago"
-                  type="date"
-                  value={editForm.paymentDate}
-                  onChange={(e) => setEditForm({ ...editForm, paymentDate: e.target.value })}
-                  required
-                  sx={{ mb: 2 }}
-                  InputLabelProps={{ shrink: true }}
-                  disabled={!isAdmin}
-                />
-                <TextField
-                  fullWidth
-                  label="Mes Correspondiente"
-                  type="date"
-                  value={editForm.dueDate}
-                  onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
-                  required
-                  sx={{ mb: 2 }}
-                  InputLabelProps={{ shrink: true }}
-                  disabled={!isAdmin}
-                />
-
-                <TextField
-                  select
-                  fullWidth
-                  label="Medio de Pago"
-                  value={editForm.paymentMethod}
-                  onChange={(e) => setEditForm({ ...editForm, paymentMethod: e.target.value })}
-                  required
-                  sx={{ mb: 2 }}
-                  disabled={!isAdmin}
-                >
-                  <MenuItem value="YAPE">Yape</MenuItem>
-                  <MenuItem value="DEPOSITO">Depósito</MenuItem>
-                  <MenuItem value="TRANSFERENCIA_VIRTUAL">Transferencia Virtual</MenuItem>
-                </TextField>
-                <TextField
-                  select
-                  fullWidth
-                  label="Estado"
-                  value={editForm.status}
-                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value as PaymentStatus })}
-                  required
-                  sx={{ mb: 2 }}
-                  disabled={!isAdmin}
-                >
-                  <MenuItem value={PaymentStatus.PAGADO}>Pagado</MenuItem>
-                  <MenuItem value={PaymentStatus.VENCIDO}>Vencido</MenuItem>
-                  <MenuItem value={PaymentStatus.FUTURO}>Futuro</MenuItem>
-                </TextField>
-                <TextField
-                  fullWidth
-                  label="Notas"
-                  value={editForm.notes}
-                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                  multiline
-                  rows={4}
-                  sx={{ mb: 2 }}
-                  disabled={!isAdmin}
-                />
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} md={7} lg={8}>
-              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-                Comprobante de Pago
-              </Typography>
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  bgcolor: 'grey.50',
-                  borderRadius: 2,
-                  minHeight: '400px',
-                  height: '100%',
-                  position: 'relative'
-                }}
-              >
-                <Box
-                  component="img"
-                  src={displayImage || `${import.meta.env.BASE_URL || '/'}comprobante.png`.replace(/\/+/g, '/')}
-                  alt="Comprobante"
-                  sx={{
-                    maxWidth: '100%',
-                    maxHeight: '600px',
-                    objectFit: 'contain',
-                    borderRadius: 1,
-                    mb: 2,
-                    opacity: displayImage ? 1 : 0.4
+                  options={properties || []}
+                  getOptionLabel={(property) =>
+                    `Local N° ${property.localNumber} - ${property.ubicacion === 'BOULEVAR' ? 'Boulevard' : property.ubicacion === 'SAN_MARTIN' ? 'San Martin' : property.ubicacion}, ${property.tenant?.firstName || ''} ${property.tenant?.lastName || ''} (${property.monthlyRent} S/)`
+                  }
+                  value={properties?.find(p => p.id === editForm.propertyId) || null}
+                  onChange={(_, newValue) => {
+                    setEditForm(prev => ({
+                      ...prev,
+                      propertyId: newValue?.id || null,
+                      tenantId: newValue?.tenantId || null,
+                      amount: newValue?.monthlyRent?.toString() || prev.amount
+                    }));
                   }}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `${import.meta.env.BASE_URL || '/'}comprobante.png`.replace(/\/+/g, '/');
-                  }}
-                />
-
-                {isAdmin && (
-                  <Box sx={{ mt: 2, width: '100%', maxWidth: 300 }}>
-                    <input
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      id="edit-receipt-image-upload"
-                      type="file"
-                      onChange={handleEditImageChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Seleccionar Local/Inquilino"
+                      required
+                      error={!editForm.propertyId && !!error}
                     />
-                    <label htmlFor="edit-receipt-image-upload">
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        component="span"
-                        startIcon={<CloudUploadIcon />}
-                        fullWidth
-                        disabled={isLoading}
-                      >
-                        {displayImage ? 'Cambiar Imagen' : 'Subir Imagen'}
-                      </Button>
-                    </label>
-                  </Box>
-                )}
-              </Paper>
-            </Grid>
+                  )}
+                  noOptionsText="No se encontraron locales"
+                  disabled={!isAdmin || isLoading}
+                />
+              )}
+
+              <TextField
+                fullWidth
+                label="Monto (S/)"
+                type="number"
+                value={editForm.amount}
+                onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+                required
+                inputProps={{ min: 0, step: 0.01 }}
+                disabled={!isAdmin || isLoading}
+              />
+              <TextField
+                fullWidth
+                label="Fecha de Pago Realizada"
+                type="date"
+                value={editForm.paymentDate}
+                onChange={(e) => setEditForm({ ...editForm, paymentDate: e.target.value })}
+                required
+                InputLabelProps={{ shrink: true }}
+                disabled={!isAdmin || isLoading}
+              />
+              <TextField
+                fullWidth
+                label="Mes Correspondiente"
+                type="date"
+                value={editForm.dueDate}
+                onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
+                required
+                InputLabelProps={{ shrink: true }}
+                disabled={!isAdmin || isLoading}
+                helperText="Define el mes de alquiler a liquidar"
+              />
+              <TextField
+                select
+                fullWidth
+                label="Medio de Pago"
+                value={editForm.paymentMethod}
+                onChange={(e) => setEditForm({ ...editForm, paymentMethod: e.target.value as any })}
+                disabled={!isAdmin || isLoading}
+              >
+                <MenuItem value="YAPE">Yape</MenuItem>
+                <MenuItem value="DEPOSITO">Depósito</MenuItem>
+                <MenuItem value="TRANSFERENCIA_VIRTUAL">Transferencia Virtual</MenuItem>
+              </TextField>
+              <TextField
+                select
+                fullWidth
+                label="Estado"
+                value={editForm.status}
+                onChange={(e) => setEditForm({ ...editForm, status: e.target.value as PaymentStatus })}
+                required
+                disabled={!isAdmin || isLoading}
+              >
+                <MenuItem value={PaymentStatus.PAGADO}>Pagado</MenuItem>
+                <MenuItem value={PaymentStatus.VENCIDO}>Vencido</MenuItem>
+                <MenuItem value={PaymentStatus.FUTURO}>Futuro</MenuItem>
+              </TextField>
+              <TextField
+                fullWidth
+                label="Notas"
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                multiline
+                rows={4}
+                disabled={!isAdmin || isLoading}
+              />
+            </Box>
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} disabled={isLoading}>
-            {isAdmin ? 'Cancelar' : 'Cerrar'}
-          </Button>
-          {isAdmin && payment && payment.status === PaymentStatus.PAGADO && (
+
+          {/* Image Side - 7 columns */}
+          <Grid item xs={12} md={7}>
+            <PaymentReceiptUpload
+              imageUrl={editForm.receiptImageUrl}
+              isUploading={isUploading}
+              isAdmin={isAdmin}
+              onImageSelect={handleImageSelect}
+            />
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions sx={{ p: 2, gap: 1 }}>
+        <Button onClick={onClose} disabled={isLoading || generatingReceipt}>
+          Cancelar
+        </Button>
+        {isAdmin && (
+          <>
             <Button
               onClick={handleGenerateReceipt}
+              color="info"
               variant="outlined"
               startIcon={<ReceiptIcon />}
-              disabled={isLoading}
-              sx={{ mr: 1 }}
+              disabled={isLoading || generatingReceipt || !editForm.propertyId}
+              sx={{ borderRadius: 2 }}
             >
-              {generatingReceipt ? 'Generando...' : 'Generar Recibo Penta Mont'}
+              {generatingReceipt ? 'GENERANDO...' : 'GENERAR RECIBO'}
             </Button>
-          )}
-          {isAdmin && (
-            <Button onClick={handleSave} variant="contained" disabled={isLoading}>
-              {isLoading ? 'Guardando...' : (isEditMode ? 'Actualizar' : 'Crear Pago')}
+            <Button
+              onClick={handleSave}
+              variant="contained"
+              disabled={isLoading || generatingReceipt || !editForm.propertyId || !editForm.amount}
+              sx={{ borderRadius: 2, px: 4 }}
+            >
+              {isLoading ? 'GUARDANDO...' : (isEditMode ? 'ACTUALIZAR' : 'CREAR PAGO')}
             </Button>
-          )}
-        </DialogActions>
-      </Dialog>
+          </>
+        )}
+      </DialogActions>
+
       <PentaMontReceiptModal
         open={receiptModalOpen}
         receiptPdfUrl={receiptPdfUrl}
         onClose={handleReceiptModalClose}
       />
-    </>
+    </Dialog>
   );
 }

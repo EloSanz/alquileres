@@ -10,17 +10,11 @@ import {
 } from '@mui/material';
 import type { Contract } from '../../../shared/types/Contract';
 import ContractPaymentsTimeline from './ContractPaymentsTimeline';
+import { formatDateUTC } from '../utils/dateUtils';
 
 // Función para formatear fecha a DD/MM/YYYY
 const formatDateDisplay = (date: Date | string | null | undefined): string => {
-  if (!date) return '-';
-  const dateObj = date instanceof Date ? date : new Date(date);
-  if (isNaN(dateObj.getTime())) return String(date);
-  return dateObj.toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
+  return formatDateUTC(date);
 };
 
 export interface ContractDetailsModalProps {
