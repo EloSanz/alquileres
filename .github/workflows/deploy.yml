@@ -41,8 +41,6 @@ jobs:
           cd server
           npx prisma migrate deploy
           npx prisma generate
-          echo "🌱 Seed de patio tenants (idempotente)..."
-          npx prisma db execute --file prisma/patio_seed.sql --schema prisma/schema.prisma
           cd ..
 
           echo "🔨 [4/6] Compilando backend..."

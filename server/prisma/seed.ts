@@ -24,14 +24,6 @@ async function main() {
       console.log('   - Ejecutando seed.sql...');
       await client.query(sqlContent);
 
-      // 2. Ejecutar seed de patio
-      const patioSqlPath = path.join(__dirname, 'patio_seed.sql');
-      if (fs.existsSync(patioSqlPath)) {
-        const patioSqlContent = fs.readFileSync(patioSqlPath, 'utf-8');
-        console.log('   - Ejecutando patio_seed.sql...');
-        await client.query(patioSqlContent);
-      }
-
     } finally {
       await client.end();
     }
