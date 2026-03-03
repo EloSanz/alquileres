@@ -37,6 +37,12 @@ jobs:
           cd ../web && npm install --legacy-peer-deps
           cd ..
 
+          echo "🗄️ [2.5/6] Realizando backup de seguridad..."
+          mkdir -p /root/backups/alquileres
+          sudo -u postgres pg_dump -Fc alquileres_db > /root/backups/alquileres/backup_$(date +%Y%m%d_%H%M%S).dump
+          # Mantener solo los últimos 10 backups para no llenar el disco
+          ls -t /root/backups/alquileres/backup_*.dump | tail -n +11 | xargs -r rm
+
           echo "🗄️ [3/6] Aplicando migraciones de DB..."
           cd server
           npx prisma migrate deploy
