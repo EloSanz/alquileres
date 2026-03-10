@@ -149,13 +149,7 @@ export async function generateReceiptPDF(payment: Payment): Promise<Blob> {
     return date.toLocaleDateString('es-PE', { month: 'long', timeZone: 'UTC' }).toUpperCase();
   };
 
-  const getMonthAndYear = (dateString: string) => {
-    const date = new Date(dateString);
-    const month = date.toLocaleDateString('es-PE', { month: 'long', timeZone: 'UTC' });
-    const year = date.toLocaleDateString('es-PE', { year: 'numeric', timeZone: 'UTC' });
-    // Capitalize first letter of month
-    return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
-  };
+
 
   const receiptId = payment.id && isNaN(Number(payment.id)) ? payment.id : crypto.randomUUID().split('-')[0].toUpperCase();
   addInfoRow('ID de Recibo:', `#${receiptId}`);
@@ -163,7 +157,6 @@ export async function generateReceiptPDF(payment: Payment): Promise<Blob> {
   addInfoRow('Monto:', formatCurrency(payment.amount));
   addInfoRow('Método de Pago:', getPaymentMethodLabel(payment.paymentMethod));
   addInfoRow('Fecha de Pago:', formatDate(payment.paymentDate));
-  addInfoRow('Mes Correspondiente:', getMonthAndYear(payment.dueDate));
 
   const monthName = getUppercaseMonth(payment.dueDate);
   addInfoRow(
@@ -320,13 +313,7 @@ export async function generatePatioReceiptPDF(payment: any, tenantName: string):
     return date.toLocaleDateString('es-PE', { month: 'long', timeZone: 'UTC' }).toUpperCase();
   };
 
-  const getMonthAndYear = (dateString: string) => {
-    const date = new Date(dateString);
-    const month = date.toLocaleDateString('es-PE', { month: 'long', timeZone: 'UTC' });
-    const year = date.toLocaleDateString('es-PE', { year: 'numeric', timeZone: 'UTC' });
-    // Capitalize first letter of month
-    return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
-  };
+
 
   const receiptId = payment.id && isNaN(Number(payment.id)) ? payment.id : crypto.randomUUID().split('-')[0].toUpperCase();
   addInfoRow('ID de Recibo:', `#P${receiptId}`);
@@ -334,7 +321,6 @@ export async function generatePatioReceiptPDF(payment: any, tenantName: string):
   addInfoRow('Monto:', formatCurrency(payment.monto));
   addInfoRow('Método de Pago:', getPaymentMethodLabel(payment.metodoPago || 'DEPOSITO'));
   addInfoRow('Fecha de Pago:', payment.fechaPago ? formatDate(payment.fechaPago) : 'N/A');
-  addInfoRow('Mes Correspondiente:', getMonthAndYear(payment.fechaVencimiento));
 
   const monthName = getUppercaseMonth(payment.fechaVencimiento);
   addInfoRow('Estado:', payment.estado === 'PAGADO' ? `Pagado - ${monthName}` : payment.estado);

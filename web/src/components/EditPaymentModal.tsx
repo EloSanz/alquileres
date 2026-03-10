@@ -12,7 +12,6 @@ import {
   Alert,
   Grid,
   Autocomplete,
-  Chip,
 } from '@mui/material';
 import { Receipt as ReceiptIcon } from '@mui/icons-material';
 import { usePayments } from '../hooks/usePayments';
@@ -21,7 +20,7 @@ import { useProperties } from '../hooks/useProperties';
 import { generateReceiptPDFDataUrl } from '../utils/receiptGenerator';
 import PentaMontReceiptModal from './PentaMontReceiptModal';
 import { useAuth } from '../contexts/AuthContext';
-import { getMonthNameUTC, formatDateISO } from '../utils/dateUtils';
+import { formatDateISO } from '../utils/dateUtils';
 import { PaymentReceiptUpload } from './PaymentReceiptUpload';
 
 export interface EditPaymentModalProps {
@@ -64,8 +63,6 @@ export default function EditPaymentModal({
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [receiptPdfUrl, setReceiptPdfUrl] = useState<string | null>(null);
 
-  const [initialMonth, setInitialMonth] = useState<number | null>(null);
-  const [showMonthWarning, setShowMonthWarning] = useState(false);
 
   const isEditMode = !!payment;
   const isLoading = isUpdating || isCreating || isUploading || generatingReceipt;
@@ -75,7 +72,6 @@ export default function EditPaymentModal({
       if (payment) {
         // Edit Mode
         const dateStr = formatDateISO(payment.dueDate);
-        const month = new Date(payment.dueDate).getUTCMonth() + 1;
         setEditForm({
           amount: payment.amount.toString(),
           paymentDate: formatDateISO(payment.paymentDate),
@@ -84,17 +80,15 @@ export default function EditPaymentModal({
           status: payment.status || PaymentStatus.FUTURO,
           notes: payment.notes || '',
           contractId: payment.contractId,
-          monthNumber: payment.monthNumber || month,
+          monthNumber: payment.monthNumber || (payment.dueDate ? new Date(payment.dueDate).getUTCMonth() + 1 : null),
           tenantId: payment.tenantId,
           propertyId: payment.propertyId,
           receiptImageUrl: payment.receiptImageUrl || null,
           receiptImagePublicId: payment.receiptImagePublicId || null,
         });
-        setInitialMonth(payment.monthNumber || month);
       } else {
         // Create Mode
         const defaultDueDate = (initialData?.dueDate as any) || formatDateISO(new Date());
-        const defaultMonth = new Date(defaultDueDate).getUTCMonth() + 1;
 
         setEditForm({
           amount: initialData?.amount?.toString() || '',
@@ -104,32 +98,24 @@ export default function EditPaymentModal({
           status: PaymentStatus.FUTURO,
           notes: initialData?.notes || '',
           contractId: null,
-          monthNumber: defaultMonth,
+          monthNumber: new Date(defaultDueDate).getUTCMonth() + 1,
           tenantId: initialData?.tenantId || null,
           propertyId: initialData?.propertyId || null,
           receiptImageUrl: null,
           receiptImagePublicId: null,
         });
-        setInitialMonth(defaultMonth);
       }
       setError(null);
-      setShowMonthWarning(false);
     }
   }, [open, payment, initialData]);
 
-  // Sync monthNumber and Check Guardrails
+  // Sync monthNumber
   useEffect(() => {
     if (editForm.dueDate) {
       const selectedMonth = new Date(editForm.dueDate).getUTCMonth() + 1;
       setEditForm(prev => ({ ...prev, monthNumber: selectedMonth }));
-
-      if (initialMonth !== null && selectedMonth !== initialMonth) {
-        setShowMonthWarning(true);
-      } else {
-        setShowMonthWarning(false);
-      }
     }
-  }, [editForm.dueDate, initialMonth]);
+  }, [editForm.dueDate]);
 
   const handleImageSelect = async (file: File) => {
     try {
@@ -225,24 +211,9 @@ export default function EditPaymentModal({
         <Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
           {isEditMode ? 'Editar Pago' : 'Crear Pago'}
         </Typography>
-        {editForm.dueDate && (
-          <Chip
-            label={`Mes Correspondiente: ${getMonthNameUTC(editForm.dueDate)}`}
-            color="primary"
-            variant="outlined"
-            size="small"
-            sx={{ fontWeight: 600 }}
-          />
-        )}
       </DialogTitle>
       <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {showMonthWarning && (
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            Atención: La fecha seleccionada corresponde a <strong>{getMonthNameUTC(editForm.dueDate)}</strong>,
-            pero la vista actual corresponde a un periodo diferente.
-          </Alert>
-        )}
 
         <Grid container spacing={3}>
           {/* Form Side - 5 columns */}
@@ -296,17 +267,6 @@ export default function EditPaymentModal({
                 required
                 InputLabelProps={{ shrink: true }}
                 disabled={!isAdmin || isLoading}
-              />
-              <TextField
-                fullWidth
-                label="Mes Correspondiente"
-                type="date"
-                value={editForm.dueDate}
-                onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
-                required
-                InputLabelProps={{ shrink: true }}
-                disabled={!isAdmin || isLoading}
-                helperText="Define el mes de alquiler a liquidar"
               />
               <TextField
                 select

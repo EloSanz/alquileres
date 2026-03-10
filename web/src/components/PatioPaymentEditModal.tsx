@@ -10,7 +10,6 @@ import {
     Alert,
     Grid,
     Stack,
-    Chip,
 } from '@mui/material';
 import { Receipt as ReceiptIcon } from '@mui/icons-material';
 import { usePatioPayments } from '../hooks/usePatioPayments';
@@ -19,7 +18,7 @@ import { PatioPayment, CreatePatioPayment, UpdatePatioPayment } from '../../../s
 import { useAuth } from '../contexts/AuthContext';
 import { generatePatioReceiptPDFDataUrl } from '../utils/receiptGenerator';
 import PentaMontReceiptModal from './PentaMontReceiptModal';
-import { getMonthNameUTC, formatDateISO } from '../utils/dateUtils';
+import { formatDateISO } from '../utils/dateUtils';
 import { PaymentReceiptUpload } from './PaymentReceiptUpload';
 
 export interface PatioPaymentEditModalProps {
@@ -59,8 +58,6 @@ export default function PatioPaymentEditModal({
     const [uploadedImageData, setUploadedImageData] = useState<{ url: string; publicId: string } | null>(null);
     const [error, setError] = useState('');
 
-    const [initialMonth, setInitialMonth] = useState<number | null>(null);
-    const [showMonthWarning, setShowMonthWarning] = useState(false);
 
     const isEditMode = !!payment;
     const isLoading = isUpdating || isCreating || isUploading;
@@ -69,7 +66,6 @@ export default function PatioPaymentEditModal({
         if (open) {
             if (payment) {
                 const dateStr = formatDateISO(payment.fechaVencimiento);
-                const month = new Date(payment.fechaVencimiento).getUTCMonth() + 1;
                 setForm({
                     monto: payment.monto.toString(),
                     fechaPago: payment.fechaPago ? formatDateISO(payment.fechaPago) : '',
@@ -79,10 +75,8 @@ export default function PatioPaymentEditModal({
                     notas: payment.notas || '',
                     patioTenantId: payment.patioTenantId,
                 });
-                setInitialMonth(month);
             } else if (initialData) {
                 const defaultDueDate = (initialData.fechaVencimiento as string) || formatDateISO(new Date());
-                const defaultMonth = new Date(defaultDueDate).getUTCMonth() + 1;
                 setForm({
                     monto: initialData.monto?.toString() || '',
                     fechaPago: initialData.fechaPago || formatDateISO(new Date()),
@@ -92,26 +86,13 @@ export default function PatioPaymentEditModal({
                     notas: initialData.notas || '',
                     patioTenantId: initialData.patioTenantId ?? null,
                 });
-                setInitialMonth(defaultMonth);
             }
             setReceiptImagePreview(null);
             setUploadedImageData(null);
             setError('');
-            setShowMonthWarning(false);
         }
     }, [open, payment, initialData]);
 
-    // Sync guardrails
-    useEffect(() => {
-        if (form.fechaVencimiento) {
-            const selectedMonth = new Date(form.fechaVencimiento).getUTCMonth() + 1;
-            if (initialMonth !== null && selectedMonth !== initialMonth) {
-                setShowMonthWarning(true);
-            } else {
-                setShowMonthWarning(false);
-            }
-        }
-    }, [form.fechaVencimiento, initialMonth]);
 
     const handleImageChange = async (file: File) => {
         try {
@@ -225,11 +206,6 @@ export default function PatioPaymentEditModal({
             <DialogTitle>{isEditMode ? 'Editar Pago' : 'Crear Pago'}</DialogTitle>
             <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-                {showMonthWarning && (
-                    <Alert severity="warning" sx={{ mb: 2 }}>
-                        Atención: Estás registrando un pago para <strong>{getMonthNameUTC(form.fechaVencimiento)}</strong>, pero la vista actual corresponde a un periodo diferente.
-                    </Alert>
-                )}
 
                 <Grid container spacing={3}>
                     <Grid item xs={12} md={5}>
@@ -252,26 +228,6 @@ export default function PatioPaymentEditModal({
                                 InputLabelProps={{ shrink: true }}
                                 disabled={!isAdmin || isLoading}
                             />
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <TextField
-                                    fullWidth
-                                    label="Mes Correspondiente"
-                                    type="date"
-                                    value={form.fechaVencimiento}
-                                    onChange={(e) => setForm({ ...form, fechaVencimiento: e.target.value })}
-                                    required
-                                    InputLabelProps={{ shrink: true }}
-                                    disabled={!isAdmin || isLoading}
-                                />
-                                {form.fechaVencimiento && (
-                                    <Chip
-                                        label={getMonthNameUTC(form.fechaVencimiento)}
-                                        color="primary"
-                                        variant="outlined"
-                                        sx={{ fontWeight: 'bold', height: 56, px: 2 }}
-                                    />
-                                )}
-                            </Stack>
                             <TextField
                                 select
                                 fullWidth
