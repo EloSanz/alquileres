@@ -364,3 +364,163 @@ export async function generatePatioReceiptPDFDataUrl(payment: any, tenantName: s
     reader.readAsDataURL(pdfBlob);
   });
 }
+
+export interface ServiceReceiptData {
+  serviceType: string;
+  serviceLabel?: string;
+  amount: number;
+  paymentDate: string;
+  tenantName?: string;
+  notes?: string;
+}
+
+function getServiceTypeLabel(type: string): string {
+  switch (type) {
+    case 'AGUA': return 'Agua y Desagüe';
+    case 'LUZ': return 'Energía Eléctrica';
+    case 'ARBITRIOS': return 'Arbitrios Municipales';
+    default: return type;
+  }
+}
+
+/**
+ * Genera un PDF de recibo de servicio (agua/luz/arbitrios)
+ */
+export async function generateServiceReceiptPDF(data: ServiceReceiptData): Promise<Blob> {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 20;
+  const contentWidth = pageWidth - 2 * margin;
+  let yPosition = margin;
+
+  const primaryColor = '#00796b'; // Teal para servicios
+  const textColor = '#333333';
+  const secondaryTextColor = '#666666';
+
+  const addText = (
+    text: string,
+    x: number,
+    y: number,
+    options: {
+      fontSize?: number;
+      fontWeight?: 'normal' | 'bold';
+      color?: string;
+      align?: 'left' | 'center' | 'right';
+      maxWidth?: number;
+    } = {}
+  ) => {
+    const {
+      fontSize = 12,
+      fontWeight = 'normal',
+      color = textColor,
+      align = 'left',
+      maxWidth = contentWidth,
+    } = options;
+
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', fontWeight);
+    doc.setTextColor(color);
+
+    const lines = doc.splitTextToSize(text, maxWidth);
+    doc.text(lines, x, y, { align });
+    return lines.length * (fontSize * 0.35);
+  };
+
+  // Título
+  doc.setTextColor(primaryColor);
+  doc.setFontSize(24);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Recibo de Servicio', pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 6;
+
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Penta Mont', pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 10;
+
+  doc.setDrawColor(primaryColor);
+  doc.setLineWidth(0.5);
+  doc.line(margin, yPosition, pageWidth - margin, yPosition);
+  yPosition += 10;
+
+  const lineHeight = 8;
+  const labelWidth = 60;
+
+  const addInfoRow = (label: string, value: string) => {
+    if (yPosition > pageHeight - margin - 20) {
+      doc.addPage();
+      yPosition = margin;
+    }
+
+    addText(label, margin, yPosition, {
+      fontSize: 11,
+      fontWeight: 'bold',
+      color: secondaryTextColor,
+      maxWidth: labelWidth,
+    });
+
+    const valueHeight = addText(value, margin + labelWidth + 5, yPosition, {
+      fontSize: 11,
+      fontWeight: 'normal',
+      color: textColor,
+      maxWidth: contentWidth - labelWidth - 5,
+    });
+
+    yPosition += Math.max(lineHeight, valueHeight) + 3;
+    doc.setDrawColor('#e0e0e0');
+    doc.setLineWidth(0.1);
+    doc.line(margin, yPosition - 1, pageWidth - margin, yPosition - 1);
+    yPosition += 2;
+  };
+
+  const receiptId = crypto.randomUUID().split('-')[0].toUpperCase();
+  addInfoRow('ID de Recibo:', `#S${receiptId}`);
+  if (data.tenantName) {
+    addInfoRow('Pagador:', data.tenantName);
+  }
+  addInfoRow('Servicio:', data.serviceLabel || getServiceTypeLabel(data.serviceType));
+  addInfoRow('Monto:', formatCurrency(data.amount));
+  addInfoRow('Fecha de Pago:', formatDate(data.paymentDate));
+
+  if (data.notes && data.notes.trim()) {
+    addInfoRow('Notas:', data.notes.trim());
+  }
+
+  // Footer
+  yPosition = pageHeight - margin - 10;
+  doc.setDrawColor(primaryColor);
+  doc.setLineWidth(0.5);
+  doc.line(margin, yPosition, pageWidth - margin, yPosition);
+  yPosition += 8;
+
+  addText(
+    'Este es un recibo generado automáticamente por el sistema Penta Mont',
+    pageWidth / 2,
+    yPosition,
+    {
+      fontSize: 9,
+      fontWeight: 'normal',
+      color: secondaryTextColor,
+      align: 'center',
+      maxWidth: contentWidth,
+    }
+  );
+
+  return doc.output('blob');
+}
+
+export async function generateServiceReceiptPDFDataUrl(data: ServiceReceiptData): Promise<string> {
+  const pdfBlob = await generateServiceReceiptPDF(data);
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(pdfBlob);
+  });
+}

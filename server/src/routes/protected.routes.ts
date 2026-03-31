@@ -12,6 +12,8 @@ import { maintenanceRoutes } from './maintenance.routes';
 import { dataRoutes } from './data.routes';
 import { patioTenantRoutes } from './patio-tenant.routes';
 import { patioPaymentRoutes } from './patio-payment.routes';
+import { serviceReceiptRoutes } from './serviceReceipt.routes';
+import { serviceCategoryRoutes } from './serviceCategory.routes';
 
 
 // Grupo de rutas protegidas que aplican autenticación automáticamente
@@ -28,5 +30,7 @@ export const protectedRoutes = new Elysia()
   .use(guaranteeRoutes)
   .use(maintenanceRoutes)
   .use(patioTenantRoutes)
-  .use(patioPaymentRoutes);
+  .use(patioPaymentRoutes)
+  .use(serviceReceiptRoutes)
+  .use(serviceCategoryRoutes);
 

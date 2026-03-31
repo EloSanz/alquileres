@@ -36,6 +36,7 @@ model Tenant {
   payments            Payment[]
   properties          Property[]
   rentals             Rental[]
+  serviceReceipts     ServiceReceipt[]
 
   @@map("tenants")
 }
@@ -146,6 +147,35 @@ model Service {
   property    Property?   @relation(fields: [propertyId], references: [id])
 
   @@map("services")
+}
+
+model ServiceCategory {
+  id       Int              @id @default(autoincrement())
+  name     String           @unique
+  label    String
+  receipts ServiceReceipt[]
+
+  @@map("service_categories")
+}
+
+model ServiceReceipt {
+  id                   Int             @id @default(autoincrement())
+  categoryId           Int
+  tenantId             Int?
+  tenantName           String?
+  paymentDate          DateTime
+  amount               Decimal?
+  receiptImageUrl      String?
+  receiptImagePublicId String?
+  kind                 ReceiptKind     @default(GENERATED)
+  notes                String?
+  deletedAt            DateTime?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  category             ServiceCategory @relation(fields: [categoryId], references: [id])
+  tenant               Tenant?         @relation(fields: [tenantId], references: [id])
+
+  @@map("service_receipts")
 }
 
 model ContractDraft {
@@ -313,7 +343,11 @@ enum PaymentStatus {
 enum ServiceType {
   AGUA
   LUZ
-  ARBITRIOS
+}
+
+enum ReceiptKind {
+  GENERATED
+  UPLOADED
 }
 
 enum TaxType {

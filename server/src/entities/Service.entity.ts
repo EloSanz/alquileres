@@ -1,5 +1,5 @@
 // ServiceType enum - matches Prisma enum
-export type ServiceType = 'AGUA' | 'LUZ' | 'ARBITRIOS';
+export type ServiceType = 'AGUA' | 'LUZ';
 import { ServiceDTO } from '../dtos/service.dto';
 import { Service } from '../../../shared/types/Service';
 
@@ -118,7 +118,7 @@ export class ServiceEntity {
     if (this.amount <= 0) {
       throw new Error('Service amount must be greater than 0');
     }
-    const validTypes: ServiceType[] = ['AGUA', 'LUZ', 'ARBITRIOS'];
+    const validTypes: ServiceType[] = ['AGUA', 'LUZ'];
     if (!validTypes.includes(this.serviceType)) {
       throw new Error(`Invalid service type: ${this.serviceType}`);
     }
