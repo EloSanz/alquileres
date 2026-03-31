@@ -1,12 +1,6 @@
 -- CreateEnum
 CREATE TYPE "ReceiptKind" AS ENUM ('GENERATED', 'UPLOADED');
 
--- Remove ARBITRIOS from ServiceType enum (safe: no production data uses it)
-ALTER TYPE "ServiceType" RENAME TO "ServiceType_old";
-CREATE TYPE "ServiceType" AS ENUM ('AGUA', 'LUZ');
-ALTER TABLE "services" ALTER COLUMN "serviceType" TYPE "ServiceType" USING "serviceType"::text::"ServiceType";
-DROP TYPE "ServiceType_old";
-
 -- CreateTable ServiceCategory
 CREATE TABLE "service_categories" (
     "id" SERIAL NOT NULL,
